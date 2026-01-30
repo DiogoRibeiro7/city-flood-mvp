@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pip install poetry==1.8.4
+
+      - name: Install deps
+        run: |
+          poetry config virtualenvs.create true
+          poetry install --no-interaction --no-ansi
+
+      - name: Lint
+        run: |
+          poetry run ruff check .
+          poetry run mypy src
+
+      - name: Tests
+        run: poetry run pytest -q
