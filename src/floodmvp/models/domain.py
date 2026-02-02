@@ -45,13 +45,45 @@ class ListResponse(BaseModel):
 
 class ObservationOut(BaseModel):
     ts: dt.datetime
-    value: float
+    value: float | None
 
 
 class ObservationsOut(BaseModel):
     metric: str
     series: list[ObservationOut]
     request_id: str
+
+
+class ScenarioRunOut(BaseModel):
+    scenario_id: str
+    name: str
+    start_ts: dt.datetime
+    end_ts: dt.datetime
+
+
+class ExportJobQuery(BaseModel):
+    asset_ids: list[str]
+    metric: str
+    from_ts: dt.datetime = Field(..., alias="from")
+    to_ts: dt.datetime = Field(..., alias="to")
+    granularity: str = "5m"
+    agg: str = "avg"
+
+
+class ExportJobRequest(BaseModel):
+    type: Literal["export_csv"]
+    query: ExportJobQuery
+
+
+class ExportJobOut(BaseModel):
+    job_id: str
+    job_type: str
+    status: str
+    progress: float
+    file_path: str | None = None
+    error_message: str | None = None
+    created_at: dt.datetime
+    updated_at: dt.datetime
 
 
 class CityStatusOut(BaseModel):
@@ -69,6 +101,14 @@ class HotspotOut(BaseModel):
     details: dict = Field(default_factory=dict)
 
 
+class CitySummaryOut(BaseModel):
+    city_id: str
+    now: dt.datetime
+    rain_mmph: float
+    river_level_m: float
+    status_counts: dict
+
+
 class EventOut(BaseModel):
     event_id: str
     event_type: str
@@ -77,3 +117,31 @@ class EventOut(BaseModel):
     end_ts: dt.datetime
     asset_ids: list[str]
     summary: str
+
+
+class IngestEventIn(BaseModel):
+    ts: dt.datetime
+    type: str
+    value: float
+    quality_flag: str = "ok"
+
+
+class IngestRequest(BaseModel):
+    device_id: str
+    sent_at: dt.datetime
+    events: list[IngestEventIn]
+
+
+class IngestEventResult(BaseModel):
+    ts: dt.datetime
+    type: str
+    status: Literal["accepted", "rejected"]
+    reason: str | None = None
+
+
+class IngestResponse(BaseModel):
+    device_id: str
+    received: int
+    accepted: int
+    rejected: int
+    results: list[IngestEventResult]

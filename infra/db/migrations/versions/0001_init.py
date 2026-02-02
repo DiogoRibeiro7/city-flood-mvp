@@ -38,6 +38,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()")),
     )
     op.create_index("ix_asset_city_type", "asset", ["city_id", "asset_type"])
+    op.execute("CREATE INDEX IF NOT EXISTS ix_asset_geom_gist ON asset USING GIST (geom);")
 
     op.create_table(
         "telemetry_observation",
@@ -53,6 +54,14 @@ def upgrade() -> None:
 
     # Convert telemetry_observation into a hypertable (Timescale)
     op.execute("SELECT create_hypertable('telemetry_observation', 'ts', if_not_exists => TRUE);")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_telemetry_observation_asset_ts "
+        "ON telemetry_observation (asset_id, ts DESC);"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_telemetry_observation_ts_brin "
+        "ON telemetry_observation USING BRIN (ts);"
+    )
 
     op.create_table(
         "analytics_event",
@@ -89,10 +98,13 @@ def upgrade() -> None:
     )
 
 def downgrade() -> None:
+    op.execute("DROP INDEX IF EXISTS ix_telemetry_observation_ts_brin;")
+    op.execute("DROP INDEX IF EXISTS ix_telemetry_observation_asset_ts;")
     op.drop_table("asset_status_latest")
     op.drop_table("analytics_hotspot_daily")
     op.drop_table("analytics_event")
     op.drop_table("telemetry_observation")
+    op.execute("DROP INDEX IF EXISTS ix_asset_geom_gist;")
     op.drop_index("ix_asset_city_type", table_name="asset")
     op.drop_table("asset")
     op.drop_table("city")

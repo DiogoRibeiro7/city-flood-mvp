@@ -21,5 +21,10 @@ async def city(city_id: str, session: AsyncSession = Depends(get_session)) -> Ci
     c = await get_city(session, city_id)
     if c is None:
         from floodmvp.common.errors import AppError
-        raise AppError(code="CITY_NOT_FOUND", message="City not found", details={"city_id": city_id})
+        raise AppError(
+            code="CITY_NOT_FOUND",
+            message="City not found",
+            details={"city_id": city_id},
+            status_code=404,
+        )
     return CityOut(city_id=c.city_id, name=c.name, country=c.country)

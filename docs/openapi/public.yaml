@@ -1,1 +1,6 @@
-# Generated at runtime by FastAPI at /openapi.json
+# Generated via `python scripts/export_openapi.py`
+openapi: 3.1.0
+info:
+  title: City Flood MVP API
+  version: 0.1.0
+paths: {}

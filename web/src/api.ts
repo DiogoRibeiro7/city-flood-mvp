@@ -17,30 +17,53 @@ export async function fetchCities(): Promise<City[]> {
   return r.json();
 }
 
-export async function fetchAssets(cityId: string, type?: string, bbox?: string): Promise<Asset[]> {
+export async function fetchAssets(
+  cityId: string,
+  type?: string,
+  bbox?: string,
+  tags?: string[]
+): Promise<Asset[]> {
   const q = new URLSearchParams();
   if (type) q.set("type", type);
   if (bbox) q.set("bbox", bbox);
+  if (tags) {
+    tags.filter(Boolean).forEach((t) => q.append("tag", t));
+  }
   const r = await fetch(`${API_BASE}/v1/cities/${cityId}/assets?${q.toString()}`);
   if (!r.ok) throw new Error(`assets: ${r.status}`);
   return r.json();
 }
 
-export async function fetchMetrics(assetId: string): Promise<string[]> {
-  const r = await fetch(`${API_BASE}/v1/assets/${assetId}/metrics`);
+export async function fetchMetrics(assetId: string, scenarioId?: string): Promise<string[]> {
+  const q = new URLSearchParams();
+  if (scenarioId) q.set("scenario_id", scenarioId);
+  const r = await fetch(`${API_BASE}/v1/assets/${assetId}/metrics?${q.toString()}`);
   if (!r.ok) throw new Error(`metrics: ${r.status}`);
   return r.json();
 }
 
-export async function fetchObservations(assetId: string, metric: string, from: string, to: string) {
+export async function fetchObservations(
+  assetId: string,
+  metric: string,
+  from: string,
+  to: string,
+  scenarioId?: string
+) {
   const q = new URLSearchParams();
   q.set("metric", metric);
   q.set("from", from);
   q.set("to", to);
   q.set("granularity", "5m");
   q.set("agg", "avg");
+  if (scenarioId) q.set("scenario_id", scenarioId);
   const r = await fetch(`${API_BASE}/v1/assets/${assetId}/observations?${q.toString()}`);
   if (!r.ok) throw new Error(`observations: ${r.status}`);
+  return r.json();
+}
+
+export async function fetchScenarios() {
+  const r = await fetch(`${API_BASE}/v1/telemetry/scenarios`);
+  if (!r.ok) throw new Error(`scenarios: ${r.status}`);
   return r.json();
 }
 
@@ -57,5 +80,13 @@ export async function fetchHotspots(cityId: string, top = 20) {
   q.set("top", String(top));
   const r = await fetch(`${API_BASE}/v1/hotspots?${q.toString()}`);
   if (!r.ok) throw new Error(`hotspots: ${r.status}`);
+  return r.json();
+}
+
+export async function fetchCitySummary(cityId: string, minutes = 15) {
+  const q = new URLSearchParams();
+  q.set("minutes", String(minutes));
+  const r = await fetch(`${API_BASE}/v1/cities/${cityId}/summary?${q.toString()}`);
+  if (!r.ok) throw new Error(`summary: ${r.status}`);
   return r.json();
 }

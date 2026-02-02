@@ -2,6 +2,20 @@
 
 Base: `/v1`
 
+## OpenAPI snapshot
+- Generate: `python scripts/export_openapi.py`
+- Output: `docs/openapi/public.yaml`
+
+## Timescale policies
+- See `docs/runbooks/timescale.md` for retention + continuous aggregate details.
+
+## Observability
+- Metrics: `GET /metrics`
+- See `docs/runbooks/observability.md`
+
+## Security
+- See `docs/runbooks/security.md`
+
 ## Assets
 - `GET /cities`
 - `GET /cities/{city_id}`
@@ -16,6 +30,23 @@ Base: `/v1`
 - `GET /cities/{city_id}/status`
 - `GET /hotspots?city_id=...&metric=overflow_risk&top=20`
 - `GET /events?city_id=...&type=overflow&from=...&to=...`
+- `POST /analytics/jobs` (export CSV)
+- `GET /analytics/jobs/{job_id}/download`
 
 ## Protected ingestion (kept for future)
 - `POST /telemetry/events:batch` with header `Authorization: Bearer <INGEST_TOKEN>`
+
+Request body:
+```
+{
+  "device_id": "asset_id",
+  "sent_at": "ISO8601",
+  "events": [
+    { "ts": "ISO8601", "type": "fill_ratio", "value": 0.7, "quality_flag": "ok" }
+  ]
+}
+```
+
+Notes:
+- `type` maps to telemetry `metric`
+- Supports `Idempotency-Key` header (7-day retention)

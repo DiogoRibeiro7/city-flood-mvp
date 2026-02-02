@@ -13,6 +13,12 @@ class Settings(BaseSettings):
 
     database_url: str
     ingest_token: str = "dev-ingest-token"
+    export_dir: str = "data/exports"
+    analytics_api_key: str | None = None
+    rate_limit_rps: float = 5.0
+    rate_limit_burst: int = 20
+    request_max_bytes: int = 1_000_000
+    request_timeout_s: float = 10.0
 
 
 settings = Settings()
