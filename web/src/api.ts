@@ -21,7 +21,9 @@ export async function fetchAssets(
   cityId: string,
   type?: string,
   bbox?: string,
-  tags?: string[]
+  tags?: string[],
+  limit?: number,
+  offset?: number
 ): Promise<Asset[]> {
   const q = new URLSearchParams();
   if (type) q.set("type", type);
@@ -29,6 +31,8 @@ export async function fetchAssets(
   if (tags) {
     tags.filter(Boolean).forEach((t) => q.append("tag", t));
   }
+  if (limit !== undefined) q.set("limit", String(limit));
+  if (offset !== undefined) q.set("offset", String(offset));
   const r = await fetch(`${API_BASE}/v1/cities/${cityId}/assets?${q.toString()}`);
   if (!r.ok) throw new Error(`assets: ${r.status}`);
   return r.json();
@@ -88,5 +92,23 @@ export async function fetchCitySummary(cityId: string, minutes = 15) {
   q.set("minutes", String(minutes));
   const r = await fetch(`${API_BASE}/v1/cities/${cityId}/summary?${q.toString()}`);
   if (!r.ok) throw new Error(`summary: ${r.status}`);
+  return r.json();
+}
+
+export async function fetchEvents(
+  cityId: string,
+  from: string,
+  to: string,
+  type?: string,
+  limit = 50
+) {
+  const q = new URLSearchParams();
+  q.set("city_id", cityId);
+  q.set("from", from);
+  q.set("to", to);
+  q.set("limit", String(limit));
+  if (type) q.set("type", type);
+  const r = await fetch(`${API_BASE}/v1/events?${q.toString()}`);
+  if (!r.ok) throw new Error(`events: ${r.status}`);
   return r.json();
 }

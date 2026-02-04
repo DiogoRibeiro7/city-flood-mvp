@@ -10,6 +10,7 @@ from floodmvp.config.settings import settings
 from floodmvp.models.db import (
     AnalyticsEvent,
     AnalyticsHotspotDaily,
+    AnalyticsRun,
     Asset,
     AssetStatusLatest,
     ExportJob,
@@ -75,6 +76,7 @@ async def list_events(
     start: dt.datetime,
     end: dt.datetime,
     limit: int,
+    offset: int,
 ) -> list[AnalyticsEvent]:
     q = (
         select(AnalyticsEvent)
@@ -84,7 +86,7 @@ async def list_events(
     )
     if event_type:
         q = q.where(AnalyticsEvent.event_type == event_type)
-    q = q.order_by(desc(AnalyticsEvent.start_ts)).limit(limit)
+    q = q.order_by(desc(AnalyticsEvent.start_ts)).offset(offset).limit(limit)
     res = await session.execute(q)
     return list(res.scalars().all())
 
@@ -101,6 +103,9 @@ async def update_export_job(
     progress: float,
     file_path: str | None = None,
     error_message: str | None = None,
+    started_at: dt.datetime | None = None,
+    completed_at: dt.datetime | None = None,
+    row_count: int | None = None,
 ) -> None:
     await session.execute(
         text(
@@ -110,6 +115,9 @@ async def update_export_job(
                 progress = :progress,
                 file_path = :file_path,
                 error_message = :error_message,
+                started_at = COALESCE(:started_at, started_at),
+                completed_at = COALESCE(:completed_at, completed_at),
+                row_count = COALESCE(:row_count, row_count),
                 updated_at = now()
             WHERE job_id = :job_id
             """
@@ -119,6 +127,9 @@ async def update_export_job(
             "progress": progress,
             "file_path": file_path,
             "error_message": error_message,
+            "started_at": started_at,
+            "completed_at": completed_at,
+            "row_count": row_count,
             "job_id": job_id,
         },
     )
@@ -129,9 +140,21 @@ async def get_export_job(session: AsyncSession, job_id: str) -> ExportJob | None
     return res.scalar_one_or_none()
 
 
+async def list_analytics_runs(
+    session: AsyncSession, city_id: str, limit: int = 50
+) -> list[AnalyticsRun]:
+    res = await session.execute(
+        select(AnalyticsRun)
+        .where(AnalyticsRun.city_id == city_id)
+        .order_by(AnalyticsRun.created_at.desc())
+        .limit(limit)
+    )
+    return list(res.scalars().all())
+
+
 async def run_export_csv(
     session: AsyncSession, job_id: str, query: ExportJobQuery
-) -> str:
+) -> tuple[str, int]:
     export_dir = pathlib.Path(settings.export_dir)
     export_dir.mkdir(parents=True, exist_ok=True)
     file_path = export_dir / f"{job_id}.csv"
@@ -171,7 +194,7 @@ async def run_export_csv(
             val_str = "" if value is None else str(float(value))
             f.write(f"{asset_id},{metric},{bucket.isoformat()},{val_str}\n")
 
-    return str(file_path)
+    return str(file_path), len(rows)
 
 
 async def get_city_summary(session: AsyncSession, city_id: str, minutes: int) -> dict:

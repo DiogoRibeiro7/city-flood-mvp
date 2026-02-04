@@ -20,5 +20,17 @@ class Settings(BaseSettings):
     request_max_bytes: int = 1_000_000
     request_timeout_s: float = 10.0
 
+    analytics_version: str = "v1"
+    analytics_window_days: int = 1
+    rain_event_threshold_mmph: float = 5.0
+    rain_event_min_duration_minutes: int = 15
+    overflow_fill_threshold: float = 1.0
+    overflow_min_duration_minutes: int = 10
+    risk_fill_watch: float = 1.15
+    risk_fill_warning: float = 1.4
+
+    telemetry_gap_granularity_minutes: int = 5
+    telemetry_gap_window_days: int = 1
+
 
 settings = Settings()

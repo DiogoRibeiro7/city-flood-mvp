@@ -12,9 +12,11 @@ from floodmvp.analytics.overflow_events import detect_overflow_events
 from floodmvp.analytics.rain_events import detect_rain_events
 from floodmvp.analytics.status import risk_from_fill
 from floodmvp.common.ids import new_id
+from floodmvp.config.settings import settings
 from floodmvp.models.db import (
     AnalyticsEvent,
     AnalyticsHotspotDaily,
+    AnalyticsRun,
     Asset,
     AssetStatusLatest,
     TelemetryObservation,
@@ -25,9 +27,32 @@ from floodmvp.storage.db import SessionLocal
 async def main() -> None:
     city_id = "city_porto_mvp"
     now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
-    start = now - dt.timedelta(days=1)
+    start = now - dt.timedelta(days=settings.analytics_window_days)
+    run_id = new_id("run")
 
     async with SessionLocal() as session:
+        session.add(
+            AnalyticsRun(
+                run_id=run_id,
+                city_id=city_id,
+                start_ts=start,
+                end_ts=now,
+                status="running",
+                version=settings.analytics_version,
+                params={
+                    "window_days": settings.analytics_window_days,
+                    "rain_threshold_mmph": settings.rain_event_threshold_mmph,
+                    "rain_min_duration_minutes": settings.rain_event_min_duration_minutes,
+                    "overflow_fill_threshold": settings.overflow_fill_threshold,
+                    "overflow_min_duration_minutes": settings.overflow_min_duration_minutes,
+                    "risk_fill_watch": settings.risk_fill_watch,
+                    "risk_fill_warning": settings.risk_fill_warning,
+                },
+                metrics={},
+            )
+        )
+        await session.flush()
+
         # reset derived tables for idempotent runs
         await session.execute(delete(AnalyticsEvent).where(AnalyticsEvent.city_id == city_id))
         await session.execute(delete(AnalyticsHotspotDaily).where(AnalyticsHotspotDaily.city_id == city_id))
@@ -38,7 +63,12 @@ async def main() -> None:
             select(Asset).where(Asset.city_id == city_id).where(Asset.asset_type == "rain_gauge").limit(1)
         )).scalar_one()
         rain_df = await _load_metric_df(session, rain_gauge.asset_id, "rain_mmph", start, now)
-        for s, e, peak in detect_rain_events(rain_df):
+        rain_events = detect_rain_events(
+            rain_df,
+            threshold_mmph=settings.rain_event_threshold_mmph,
+            min_duration_minutes=settings.rain_event_min_duration_minutes,
+        )
+        for s, e, peak in rain_events:
             session.add(
                 AnalyticsEvent(
                     event_id=new_id("evt"),
@@ -58,13 +88,23 @@ async def main() -> None:
         )).scalars().all()
 
         day = now.date()
+        overflow_event_count = 0
+        hotspots_count = 0
         for p in pipes:
             fill_df = await _load_metric_df(session, p.asset_id, "fill_ratio", start, now)
-            events = detect_overflow_events(fill_df, threshold=1.0, min_duration_minutes=10)
+            events = detect_overflow_events(
+                fill_df,
+                threshold=settings.overflow_fill_threshold,
+                min_duration_minutes=settings.overflow_min_duration_minutes,
+            )
             score = overflow_minutes_score(events)
 
             peak_fill = float(fill_df["value"].max()) if len(fill_df) else 0.0
-            status, risk = risk_from_fill(peak_fill)
+            status, risk = risk_from_fill(
+                peak_fill,
+                watch_threshold=settings.risk_fill_watch,
+                warning_threshold=settings.risk_fill_warning,
+            )
 
             session.add(
                 AssetStatusLatest(
@@ -77,8 +117,10 @@ async def main() -> None:
             )
 
             if score > 0:
+                hotspots_count += 1
                 # event entry (collapsed)
                 for s, e, peak in events[:3]:  # cap spam
+                    overflow_event_count += 1
                     session.add(
                         AnalyticsEvent(
                             event_id=new_id("evt"),
@@ -103,9 +145,24 @@ async def main() -> None:
                     )
                 )
 
+        # update run metrics
+        run_metrics = {
+            "rain_events": len(rain_events),
+            "overflow_events": overflow_event_count,
+            "hotspots": hotspots_count,
+            "assets_scored": len(pipes),
+        }
+        run = await session.get(AnalyticsRun, run_id)
+        if run is not None:
+            run.status = "completed"
+            run.metrics = run_metrics
+            run.updated_at = now
+
         await session.commit()
 
-    print(f"Analytics computed for city_id={city_id} ({start.isoformat()} -> {now.isoformat()})")
+    print(
+        f"Analytics run {run_id} for city_id={city_id} ({start.isoformat()} -> {now.isoformat()})"
+    )
 
 
 async def _load_metric_df(

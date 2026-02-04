@@ -37,6 +37,7 @@ async def list_assets(
     radius_m: float | None,
     tags: list[tuple[str, str]] | None,
     limit: int,
+    offset: int,
 ) -> list[Asset]:
     q = select(Asset).where(Asset.city_id == city_id)
     if asset_type:
@@ -63,7 +64,7 @@ async def list_assets(
             .having(func.count(func.distinct(func.concat(AssetTag.key, ":", AssetTag.value))) == len(tags))
         )
         q = q.where(Asset.asset_id.in_(tag_subq))
-    q = q.limit(limit)
+    q = q.order_by(Asset.asset_id).offset(offset).limit(limit)
     res = await session.execute(q)
     return list(res.scalars().all())
 

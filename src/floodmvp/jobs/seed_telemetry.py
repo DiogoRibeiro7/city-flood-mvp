@@ -22,7 +22,8 @@ from floodmvp.storage.db import SessionLocal
 async def main(scenario_id: str | None = None) -> None:
     city_id = "city_porto_mvp"
     end = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
-    start = end - dt.timedelta(days=7)
+    days = int(os.environ.get("TELEMETRY_DAYS", "7"))
+    start = end - dt.timedelta(days=days)
     scenario = os.environ.get("TELEMETRY_SCENARIO", "heavy_rain_high_river")
     if scenario not in SCENARIOS:
         raise ValueError(f"TELEMETRY_SCENARIO must be one of {sorted(SCENARIOS)}")
@@ -44,8 +45,12 @@ async def main(scenario_id: str | None = None) -> None:
         await _upsert_series(session, river, scenario_id=scenario_id)
 
         # subset of pipes for telemetry to keep DB smaller (UI still good)
+        pipe_limit = int(os.environ.get("PIPE_TELEMETRY_LIMIT", "150"))
         pipes = (await session.execute(
-            select(Asset).where(Asset.city_id == city_id).where(Asset.asset_type == "pipe").limit(150)
+            select(Asset)
+            .where(Asset.city_id == city_id)
+            .where(Asset.asset_type == "pipe")
+            .limit(pipe_limit)
         )).scalars().all()
 
         rng = np.random.default_rng(42)
@@ -88,12 +93,15 @@ async def _upsert_series(session: AsyncSession, series, scenario_id: str | None 
     ]
     if not rows:
         return
-    # Use SQLAlchemy core for ON CONFLICT
+    # Use SQLAlchemy core for ON CONFLICT; chunk to avoid bind param limits.
     from sqlalchemy.dialects.postgresql import insert
 
-    stmt = insert(TelemetryObservation).values(rows)
-    stmt = stmt.on_conflict_do_nothing(index_elements=["asset_id", "metric", "ts"])
-    await session.execute(stmt)
+    chunk_size = 2000
+    for start in range(0, len(rows), chunk_size):
+        batch = rows[start : start + chunk_size]
+        stmt = insert(TelemetryObservation).values(batch)
+        stmt = stmt.on_conflict_do_nothing(index_elements=["asset_id", "metric", "ts"])
+        await session.execute(stmt)
 
 
 if __name__ == "__main__":

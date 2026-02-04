@@ -84,6 +84,9 @@ class ExportJob(Base):
     query: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     file_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
     updated_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default="now()", server_onupdate="now()"
@@ -124,3 +127,34 @@ class AssetStatusLatest(Base):
     risk_score: Mapped[float] = mapped_column(Float, nullable=False)
     updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
     details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+
+class AnalyticsRun(Base):
+    __tablename__ = "analytics_run"
+
+    run_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), index=True)
+    start_ts: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    end_ts: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    version: Mapped[str] = mapped_column(String(32), nullable=False)
+    params: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    metrics: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default="now()", server_onupdate="now()"
+    )
+
+
+class TelemetryQaDaily(Base):
+    __tablename__ = "telemetry_qa_daily"
+
+    city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), primary_key=True)
+    day: Mapped[dt.date] = mapped_column(Date, primary_key=True)
+    metric: Mapped[str] = mapped_column(String(64), primary_key=True)
+    assets: Mapped[int] = mapped_column(Integer, nullable=False)
+    buckets_expected: Mapped[int] = mapped_column(Integer, nullable=False)
+    buckets_present: Mapped[int] = mapped_column(Integer, nullable=False)
+    gaps: Mapped[int] = mapped_column(Integer, nullable=False)
+    suspect_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")

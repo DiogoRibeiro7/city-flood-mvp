@@ -5,7 +5,7 @@ import datetime as dt
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from floodmvp.models.db import TelemetryObservation
+from floodmvp.models.db import TelemetryObservation, TelemetryQaDaily
 
 
 ALLOWED_AGG = {"avg", "min", "max"}
@@ -51,6 +51,19 @@ async def list_scenarios(session: AsyncSession) -> list[dict]:
         {"scenario_id": r[0], "name": r[1], "start_ts": r[2], "end_ts": r[3]}
         for r in res.all()
     ]
+
+
+async def list_qa_daily(
+    session: AsyncSession,
+    city_id: str,
+    day: dt.date | None,
+) -> list[TelemetryQaDaily]:
+    q = select(TelemetryQaDaily).where(TelemetryQaDaily.city_id == city_id)
+    if day is not None:
+        q = q.where(TelemetryQaDaily.day == day)
+    q = q.order_by(TelemetryQaDaily.day.desc(), TelemetryQaDaily.metric)
+    res = await session.execute(q)
+    return list(res.scalars().all())
 
 
 async def get_observations(

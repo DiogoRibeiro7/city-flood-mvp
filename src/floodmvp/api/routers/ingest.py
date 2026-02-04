@@ -8,6 +8,11 @@ from sqlalchemy import delete, func, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.api.openapi_examples import (
+    RESP_FORBIDDEN_BEARER,
+    RESP_UNAUTHORIZED_BEARER,
+    error_response,
+)
 from floodmvp.common.errors import AppError
 from floodmvp.config.settings import settings
 from floodmvp.models.db import Asset, IngestIdempotency, TelemetryObservation
@@ -28,8 +33,8 @@ def _authorize(authorization: str | None) -> None:
     token = authorization.removeprefix("Bearer ").strip()
     if token != settings.ingest_token:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Unauthorized",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -41,7 +46,33 @@ def _is_finite_number(value: Any) -> bool:
         return False
 
 
-@router.post("/telemetry/events:batch", response_model=IngestResponse)
+@router.post(
+    "/telemetry/events:batch",
+    response_model=IngestResponse,
+    responses={
+        401: RESP_UNAUTHORIZED_BEARER,
+        403: RESP_FORBIDDEN_BEARER,
+        400: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "INVALID_ARGUMENT",
+                            "message": "type is required",
+                            "details": {},
+                            "request_id": "req_example",
+                        }
+                    }
+                }
+            }
+        },
+        404: error_response(
+            code="ASSET_NOT_FOUND",
+            message="Asset not found",
+            details={"asset_id": "asset_missing"},
+        ),
+    },
+)
 async def ingest_events_batch(
     payload: IngestRequest,
     authorization: str | None = Header(default=None, alias="Authorization"),

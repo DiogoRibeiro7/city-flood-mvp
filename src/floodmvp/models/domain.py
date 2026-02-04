@@ -61,6 +61,17 @@ class ScenarioRunOut(BaseModel):
     end_ts: dt.datetime
 
 
+class TelemetryQaOut(BaseModel):
+    city_id: str
+    day: dt.date
+    metric: str
+    assets: int
+    buckets_expected: int
+    buckets_present: int
+    gaps: int
+    suspect_count: int
+
+
 class ExportJobQuery(BaseModel):
     asset_ids: list[str]
     metric: str
@@ -82,6 +93,9 @@ class ExportJobOut(BaseModel):
     progress: float
     file_path: str | None = None
     error_message: str | None = None
+    started_at: dt.datetime | None = None
+    completed_at: dt.datetime | None = None
+    row_count: int | None = None
     created_at: dt.datetime
     updated_at: dt.datetime
 
@@ -117,6 +131,19 @@ class EventOut(BaseModel):
     end_ts: dt.datetime
     asset_ids: list[str]
     summary: str
+
+
+class AnalyticsRunOut(BaseModel):
+    run_id: str
+    city_id: str
+    start_ts: dt.datetime
+    end_ts: dt.datetime
+    status: str
+    version: str
+    params: dict
+    metrics: dict
+    created_at: dt.datetime
+    updated_at: dt.datetime
 
 
 class IngestEventIn(BaseModel):

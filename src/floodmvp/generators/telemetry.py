@@ -89,7 +89,7 @@ def generate_river_level_series(
     if high_river:
         level += 0.4  # elevated boundary
 
-    df = pd.DataFrame({"ts": ts.to_pydatetime(), "value": level.astype(float)})
+    df = pd.DataFrame({"ts": ts.dt.to_pydatetime(), "value": level.astype(float)})
     return TelemetrySeries(asset_id=asset_id, metric="water_level_m", df=df)
 
 
@@ -114,7 +114,7 @@ def generate_pipe_fill_ratio_series(
     fill += rng.normal(0, 0.03, size=n)
     fill = np.clip(fill, 0, None)
 
-    df = pd.DataFrame({"ts": ts.to_pydatetime(), "value": fill.astype(float)})
+    df = pd.DataFrame({"ts": ts.dt.to_pydatetime(), "value": fill.astype(float)})
     return TelemetrySeries(asset_id=asset_id, metric="fill_ratio", df=df)
 
 
@@ -159,9 +159,9 @@ def generate_pipe_hydraulics_series(
     flow += rng.normal(0, 0.02 * max(capacity_est_m3s, 0.05), size=n)
     flow = np.clip(flow, 0, None)
 
-    depth_df = pd.DataFrame({"ts": ts.to_pydatetime(), "value": depth.astype(float)})
-    fill_df = pd.DataFrame({"ts": ts.to_pydatetime(), "value": fill_ratio.astype(float)})
-    flow_df = pd.DataFrame({"ts": ts.to_pydatetime(), "value": flow.astype(float)})
+    depth_df = pd.DataFrame({"ts": ts.dt.to_pydatetime(), "value": depth.astype(float)})
+    fill_df = pd.DataFrame({"ts": ts.dt.to_pydatetime(), "value": fill_ratio.astype(float)})
+    flow_df = pd.DataFrame({"ts": ts.dt.to_pydatetime(), "value": flow.astype(float)})
     return [
         TelemetrySeries(asset_id=asset_id, metric="water_depth_m", df=depth_df),
         TelemetrySeries(asset_id=asset_id, metric="fill_ratio", df=fill_df),

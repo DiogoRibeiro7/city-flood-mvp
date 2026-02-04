@@ -1,6 +1,1517 @@
-# Generated via `python scripts/export_openapi.py`
 openapi: 3.1.0
 info:
   title: City Flood MVP API
   version: 0.1.0
-paths: {}
+paths:
+  /metrics:
+    get:
+      summary: Metrics
+      operationId: metrics_metrics_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /v1/health:
+    get:
+      tags:
+      - health
+      summary: Health
+      operationId: health_v1_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Health V1 Health Get
+  /v1/cities:
+    get:
+      tags:
+      - cities
+      summary: Cities
+      operationId: cities_v1_cities_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CityOut'
+                type: array
+                title: Response Cities V1 Cities Get
+              example:
+              - city_id: city_porto_mvp
+                name: MVP City
+                country: PT
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+  /v1/cities/{city_id}:
+    get:
+      tags:
+      - cities
+      summary: City
+      operationId: city_v1_cities__city_id__get
+      parameters:
+      - name: city_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: City Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CityOut'
+              example:
+                city_id: city_porto_mvp
+                name: MVP City
+                country: PT
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/cities/{city_id}/assets:
+    get:
+      tags:
+      - assets
+      summary: City Assets
+      operationId: city_assets_v1_cities__city_id__assets_get
+      parameters:
+      - name: city_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: asset_type filter
+          title: Type
+        description: asset_type filter
+      - name: bbox
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: minLon,minLat,maxLon,maxLat
+          title: Bbox
+        description: minLon,minLat,maxLon,maxLat
+      - name: near
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: lon,lat for radial search
+          title: Near
+        description: lon,lat for radial search
+      - name: radius_m
+        in: query
+        required: false
+        schema:
+          type: number
+          maximum: 50000
+          minimum: 1
+          default: 500.0
+          title: Radius M
+      - name: tag
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+          description: tag filter key:value (repeatable)
+          title: Tag
+        description: tag filter key:value (repeatable)
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 5000
+          minimum: 1
+          default: 2000
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetOut'
+                title: Response City Assets V1 Cities  City Id  Assets Get
+              example:
+              - asset_id: pipe_123
+                city_id: city_porto_mvp
+                asset_type: pipe
+                name: Pipe 0001
+                geom_geojson:
+                  type: LineString
+                  coordinates:
+                  - - -8.69
+                    - 41.07
+                  - - -8.68
+                    - 41.08
+                props:
+                  diameter_m: 0.5
+                  material: PVC
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/assets/{asset_id}:
+    get:
+      tags:
+      - assets
+      summary: Asset
+      operationId: asset_v1_assets__asset_id__get
+      parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Asset Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetOut'
+              example:
+                asset_id: pipe_123
+                city_id: city_porto_mvp
+                asset_type: pipe
+                name: Pipe 0001
+                geom_geojson:
+                  type: LineString
+                  coordinates:
+                  - - -8.69
+                    - 41.07
+                  - - -8.68
+                    - 41.08
+                props:
+                  diameter_m: 0.5
+                  material: PVC
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/assets/{asset_id}/upstream:
+    get:
+      tags:
+      - assets
+      summary: Asset Upstream
+      operationId: asset_upstream_v1_assets__asset_id__upstream_get
+      parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Asset Id
+      - name: depth
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 20
+          minimum: 1
+          default: 3
+          title: Depth
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetOut'
+                title: Response Asset Upstream V1 Assets  Asset Id  Upstream Get
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/assets/{asset_id}/downstream:
+    get:
+      tags:
+      - assets
+      summary: Asset Downstream
+      operationId: asset_downstream_v1_assets__asset_id__downstream_get
+      parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Asset Id
+      - name: depth
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 20
+          minimum: 1
+          default: 3
+          title: Depth
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetOut'
+                title: Response Asset Downstream V1 Assets  Asset Id  Downstream Get
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/telemetry/scenarios:
+    get:
+      tags:
+      - telemetry
+      summary: Telemetry Scenarios
+      operationId: telemetry_scenarios_v1_telemetry_scenarios_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ScenarioRunOut'
+                type: array
+                title: Response Telemetry Scenarios V1 Telemetry Scenarios Get
+              example:
+              - scenario_id: scenario_123
+                name: heavy_rain_high_river
+                start_ts: '2026-02-01T00:00:00Z'
+                end_ts: '2026-02-02T00:00:00Z'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+  /v1/telemetry/qa:
+    get:
+      tags:
+      - telemetry
+      summary: Telemetry Qa
+      operationId: telemetry_qa_v1_telemetry_qa_get
+      parameters:
+      - name: city_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: day
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: YYYY-MM-DD
+          title: Day
+        description: YYYY-MM-DD
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelemetryQaOut'
+                title: Response Telemetry Qa V1 Telemetry Qa Get
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/assets/{asset_id}/metrics:
+    get:
+      tags:
+      - telemetry
+      summary: Metrics
+      operationId: metrics_v1_assets__asset_id__metrics_get
+      parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Asset Id
+      - name: scenario_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: scenario id or 'latest'
+          title: Scenario Id
+        description: scenario id or 'latest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                title: Response Metrics V1 Assets  Asset Id  Metrics Get
+              example:
+              - fill_ratio
+              - flow_m3s
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/assets/{asset_id}/observations:
+    get:
+      tags:
+      - telemetry
+      summary: Observations
+      operationId: observations_v1_assets__asset_id__observations_get
+      parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Asset Id
+      - name: metric
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Metric
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          title: From
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          title: To
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          description: Timescale time_bucket interval, e.g. 1m,5m,1h
+          default: 5m
+          title: Granularity
+        description: Timescale time_bucket interval, e.g. 1m,5m,1h
+      - name: agg
+        in: query
+        required: false
+        schema:
+          type: string
+          description: avg|min|max
+          default: avg
+          title: Agg
+        description: avg|min|max
+      - name: include_gaps
+        in: query
+        required: false
+        schema:
+          type: boolean
+          description: include empty buckets as null values
+          default: false
+          title: Include Gaps
+        description: include empty buckets as null values
+      - name: scenario_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: scenario id or 'latest'
+          title: Scenario Id
+        description: scenario id or 'latest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObservationsOut'
+              example:
+                metric: fill_ratio
+                series:
+                - ts: '2026-02-01T10:00:00Z'
+                  value: 0.42
+                - ts: '2026-02-01T10:05:00Z'
+                  value: 0.55
+                request_id: req_example
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/telemetry/events:batch:
+    post:
+      tags:
+      - ingest
+      summary: Ingest Events Batch
+      operationId: ingest_events_batch_v1_telemetry_events_batch_post
+      parameters:
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedBearer'
+        '403':
+          $ref: '#/components/responses/ForbiddenBearer'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+  /v1/cities/{city_id}/status:
+    get:
+      tags:
+      - analytics
+      summary: City Status
+      operationId: city_status_v1_cities__city_id__status_get
+      parameters:
+      - name: city_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: City Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CityStatusOut'
+              example:
+                city_id: city_porto_mvp
+                risk: low
+                active_events: 0
+                hotspots: 0
+                updated_at: '2026-02-02T12:23:13Z'
+                request_id: req_example
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/cities/{city_id}/summary:
+    get:
+      tags:
+      - analytics
+      summary: City Summary
+      operationId: city_summary_v1_cities__city_id__summary_get
+      parameters:
+      - name: city_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: minutes
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 1440
+          minimum: 1
+          default: 15
+          title: Minutes
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitySummaryOut'
+              example:
+                city_id: city_porto_mvp
+                now: '2026-02-02T12:00:00Z'
+                rain_mmph: 3.2
+                river_level_m: 1.8
+                status_counts:
+                  normal: 120
+                  watch: 5
+                  warning: 1
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/hotspots:
+    get:
+      tags:
+      - analytics
+      summary: Hotspots
+      operationId: hotspots_v1_hotspots_get
+      parameters:
+      - name: city_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: metric
+        in: query
+        required: false
+        schema:
+          type: string
+          default: overflow_risk
+          title: Metric
+      - name: top
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 20
+          title: Top
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HotspotOut'
+                title: Response Hotspots V1 Hotspots Get
+              example:
+              - asset_id: pipe_123
+                score: 42.5
+                details: {}
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/analytics/runs:
+    get:
+      tags:
+      - analytics
+      summary: Analytics Runs
+      operationId: analytics_runs_v1_analytics_runs_get
+      parameters:
+      - name: city_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnalyticsRunOut'
+                title: Response Analytics Runs V1 Analytics Runs Get
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/analytics/jobs:
+    post:
+      tags:
+      - analytics
+      summary: Create Job
+      operationId: create_job_v1_analytics_jobs_post
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportJobRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportJobOut'
+        '401':
+          $ref: '#/components/responses/UnauthorizedApiKey'
+        '403':
+          $ref: '#/components/responses/ForbiddenApiKey'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - ApiKeyAuth: []
+  /v1/analytics/jobs/{job_id}/download:
+    get:
+      tags:
+      - analytics
+      summary: Download Job
+      operationId: download_job_v1_analytics_jobs__job_id__download_get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '401':
+          $ref: '#/components/responses/UnauthorizedApiKey'
+        '403':
+          $ref: '#/components/responses/ForbiddenApiKey'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - ApiKeyAuth: []
+  /v1/events:
+    get:
+      tags:
+      - events
+      summary: Events
+      operationId: events_v1_events_get
+      parameters:
+      - name: city_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: event_type filter
+          title: Type
+        description: event_type filter
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          title: From
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          title: To
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 1000
+          minimum: 1
+          default: 200
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventOut'
+                title: Response Events V1 Events Get
+              example:
+              - event_id: evt_123
+                event_type: overflow
+                severity: 2
+                start_ts: '2026-02-01T10:00:00Z'
+                end_ts: '2026-02-01T12:00:00Z'
+                asset_ids:
+                - pipe_123
+                - pipe_456
+                summary: Overflow risk detected across 2 pipes.
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+components:
+  schemas:
+    AnalyticsRunOut:
+      properties:
+        run_id:
+          type: string
+          title: Run Id
+        city_id:
+          type: string
+          title: City Id
+        start_ts:
+          type: string
+          format: date-time
+          title: Start Ts
+        end_ts:
+          type: string
+          format: date-time
+          title: End Ts
+        status:
+          type: string
+          title: Status
+        version:
+          type: string
+          title: Version
+        params:
+          additionalProperties: true
+          type: object
+          title: Params
+        metrics:
+          additionalProperties: true
+          type: object
+          title: Metrics
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - run_id
+      - city_id
+      - start_ts
+      - end_ts
+      - status
+      - version
+      - params
+      - metrics
+      - created_at
+      - updated_at
+      title: AnalyticsRunOut
+    AssetOut:
+      properties:
+        asset_id:
+          type: string
+          title: Asset Id
+        city_id:
+          type: string
+          title: City Id
+        asset_type:
+          type: string
+          enum:
+          - river_segment
+          - node
+          - pipe
+          - outfall
+          - rain_gauge
+          - river_gauge
+          - tank
+          - pump
+          title: Asset Type
+        name:
+          type: string
+          title: Name
+        geom_geojson:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Geom Geojson
+        props:
+          additionalProperties: true
+          type: object
+          title: Props
+      type: object
+      required:
+      - asset_id
+      - city_id
+      - asset_type
+      - name
+      title: AssetOut
+    CityOut:
+      properties:
+        city_id:
+          type: string
+          title: City Id
+        name:
+          type: string
+          title: Name
+        country:
+          type: string
+          title: Country
+      type: object
+      required:
+      - city_id
+      - name
+      - country
+      title: CityOut
+    CityStatusOut:
+      properties:
+        city_id:
+          type: string
+          title: City Id
+        risk:
+          type: string
+          title: Risk
+        active_events:
+          type: integer
+          title: Active Events
+        hotspots:
+          type: integer
+          title: Hotspots
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+        request_id:
+          type: string
+          title: Request Id
+      type: object
+      required:
+      - city_id
+      - risk
+      - active_events
+      - hotspots
+      - updated_at
+      - request_id
+      title: CityStatusOut
+    CitySummaryOut:
+      properties:
+        city_id:
+          type: string
+          title: City Id
+        now:
+          type: string
+          format: date-time
+          title: Now
+        rain_mmph:
+          type: number
+          title: Rain Mmph
+        river_level_m:
+          type: number
+          title: River Level M
+        status_counts:
+          additionalProperties: true
+          type: object
+          title: Status Counts
+      type: object
+      required:
+      - city_id
+      - now
+      - rain_mmph
+      - river_level_m
+      - status_counts
+      title: CitySummaryOut
+    EventOut:
+      properties:
+        event_id:
+          type: string
+          title: Event Id
+        event_type:
+          type: string
+          title: Event Type
+        severity:
+          type: integer
+          title: Severity
+        start_ts:
+          type: string
+          format: date-time
+          title: Start Ts
+        end_ts:
+          type: string
+          format: date-time
+          title: End Ts
+        asset_ids:
+          items:
+            type: string
+          type: array
+          title: Asset Ids
+        summary:
+          type: string
+          title: Summary
+      type: object
+      required:
+      - event_id
+      - event_type
+      - severity
+      - start_ts
+      - end_ts
+      - asset_ids
+      - summary
+      title: EventOut
+    ExportJobOut:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        job_type:
+          type: string
+          title: Job Type
+        status:
+          type: string
+          title: Status
+        progress:
+          type: number
+          title: Progress
+        file_path:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: File Path
+        error_message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error Message
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        completed_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Completed At
+        row_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Row Count
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - job_id
+      - job_type
+      - status
+      - progress
+      - created_at
+      - updated_at
+      title: ExportJobOut
+    ExportJobQuery:
+      properties:
+        asset_ids:
+          items:
+            type: string
+          type: array
+          title: Asset Ids
+        metric:
+          type: string
+          title: Metric
+        from:
+          type: string
+          format: date-time
+          title: From
+        to:
+          type: string
+          format: date-time
+          title: To
+        granularity:
+          type: string
+          title: Granularity
+          default: 5m
+        agg:
+          type: string
+          title: Agg
+          default: avg
+      type: object
+      required:
+      - asset_ids
+      - metric
+      - from
+      - to
+      title: ExportJobQuery
+    ExportJobRequest:
+      properties:
+        type:
+          type: string
+          const: export_csv
+          title: Type
+        query:
+          $ref: '#/components/schemas/ExportJobQuery'
+      type: object
+      required:
+      - type
+      - query
+      title: ExportJobRequest
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HotspotOut:
+      properties:
+        asset_id:
+          type: string
+          title: Asset Id
+        score:
+          type: number
+          title: Score
+        details:
+          additionalProperties: true
+          type: object
+          title: Details
+      type: object
+      required:
+      - asset_id
+      - score
+      title: HotspotOut
+    IngestEventIn:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        type:
+          type: string
+          title: Type
+        value:
+          type: number
+          title: Value
+        quality_flag:
+          type: string
+          title: Quality Flag
+          default: ok
+      type: object
+      required:
+      - ts
+      - type
+      - value
+      title: IngestEventIn
+    IngestEventResult:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        type:
+          type: string
+          title: Type
+        status:
+          type: string
+          enum:
+          - accepted
+          - rejected
+          title: Status
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+      type: object
+      required:
+      - ts
+      - type
+      - status
+      title: IngestEventResult
+    IngestRequest:
+      properties:
+        device_id:
+          type: string
+          title: Device Id
+        sent_at:
+          type: string
+          format: date-time
+          title: Sent At
+        events:
+          items:
+            $ref: '#/components/schemas/IngestEventIn'
+          type: array
+          title: Events
+      type: object
+      required:
+      - device_id
+      - sent_at
+      - events
+      title: IngestRequest
+    IngestResponse:
+      properties:
+        device_id:
+          type: string
+          title: Device Id
+        received:
+          type: integer
+          title: Received
+        accepted:
+          type: integer
+          title: Accepted
+        rejected:
+          type: integer
+          title: Rejected
+        results:
+          items:
+            $ref: '#/components/schemas/IngestEventResult'
+          type: array
+          title: Results
+      type: object
+      required:
+      - device_id
+      - received
+      - accepted
+      - rejected
+      - results
+      title: IngestResponse
+    ObservationOut:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Value
+      type: object
+      required:
+      - ts
+      - value
+      title: ObservationOut
+    ObservationsOut:
+      properties:
+        metric:
+          type: string
+          title: Metric
+        series:
+          items:
+            $ref: '#/components/schemas/ObservationOut'
+          type: array
+          title: Series
+        request_id:
+          type: string
+          title: Request Id
+      type: object
+      required:
+      - metric
+      - series
+      - request_id
+      title: ObservationsOut
+    ScenarioRunOut:
+      properties:
+        scenario_id:
+          type: string
+          title: Scenario Id
+        name:
+          type: string
+          title: Name
+        start_ts:
+          type: string
+          format: date-time
+          title: Start Ts
+        end_ts:
+          type: string
+          format: date-time
+          title: End Ts
+      type: object
+      required:
+      - scenario_id
+      - name
+      - start_ts
+      - end_ts
+      title: ScenarioRunOut
+    TelemetryQaOut:
+      properties:
+        city_id:
+          type: string
+          title: City Id
+        day:
+          type: string
+          format: date
+          title: Day
+        metric:
+          type: string
+          title: Metric
+        assets:
+          type: integer
+          title: Assets
+        buckets_expected:
+          type: integer
+          title: Buckets Expected
+        buckets_present:
+          type: integer
+          title: Buckets Present
+        gaps:
+          type: integer
+          title: Gaps
+        suspect_count:
+          type: integer
+          title: Suspect Count
+      type: object
+      required:
+      - city_id
+      - day
+      - metric
+      - assets
+      - buckets_expected
+      - buckets_present
+      - gaps
+      - suspect_count
+      title: TelemetryQaOut
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+            request_id:
+              type: string
+          required:
+          - code
+          - message
+          - details
+          - request_id
+      required:
+      - error
+  responses:
+    InvalidArgument:
+      description: 'INVALID_ARGUMENT: Validation error'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: INVALID_ARGUMENT
+              message: Validation error
+              details: {}
+              request_id: req_example
+    UnauthorizedApiKey:
+      description: 'UNAUTHORIZED: Missing API key'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Missing API key
+              details: {}
+              request_id: req_example
+    ForbiddenApiKey:
+      description: 'FORBIDDEN: Invalid API key'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: FORBIDDEN
+              message: Invalid API key
+              details: {}
+              request_id: req_example
+    UnauthorizedBearer:
+      description: 'UNAUTHORIZED: Unauthorized'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Unauthorized
+              details: {}
+              request_id: req_example
+    ForbiddenBearer:
+      description: 'FORBIDDEN: Forbidden'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: FORBIDDEN
+              message: Forbidden
+              details: {}
+              request_id: req_example
+    NotFound:
+      description: 'NOT_FOUND: Resource not found'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: NOT_FOUND
+              message: Resource not found
+              details: {}
+              request_id: req_example
+    Conflict:
+      description: 'CONFLICT: Conflict'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: CONFLICT
+              message: Conflict
+              details: {}
+              request_id: req_example
+    UnprocessableEntity:
+      description: 'UNPROCESSABLE_ENTITY: Unprocessable entity'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: UNPROCESSABLE_ENTITY
+              message: Unprocessable entity
+              details: {}
+              request_id: req_example
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+security: []

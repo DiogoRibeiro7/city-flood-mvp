@@ -10,11 +10,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from floodmvp.common.errors import AppError, as_error_payload, as_error_payload_raw
 from floodmvp.common.logging import configure_logging, log_json
 from floodmvp.config.settings import settings
+from floodmvp.observability.metrics import HTTP_ERRORS, REQUEST_COUNT, REQUEST_LATENCY
 
 from floodmvp.api.routers import health, cities, assets, telemetry, analytics, events, ingest
 
@@ -22,22 +23,6 @@ from floodmvp.api.routers import health, cities, assets, telemetry, analytics, e
 configure_logging()
 
 app = FastAPI(title="City Flood MVP API", version="0.1.0")
-
-REQUEST_COUNT = Counter(
-    "http_requests_total",
-    "Total HTTP requests",
-    ["method", "path", "status"],
-)
-REQUEST_LATENCY = Histogram(
-    "http_request_latency_seconds",
-    "HTTP request latency in seconds",
-    ["method", "path"],
-)
-HTTP_ERRORS = Counter(
-    "http_requests_errors_total",
-    "Total HTTP error responses",
-    ["method", "path", "status_class"],
-)
 
 
 class _TokenBucket:

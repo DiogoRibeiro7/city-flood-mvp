@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.api.openapi_examples import RESP_INVALID_ARGUMENT, error_response
 from floodmvp.common.errors import AppError
 from floodmvp.models.domain import AssetOut
 from floodmvp.storage.db import get_session
@@ -43,16 +44,46 @@ def _parse_tags(tags: list[str] | None) -> list[tuple[str, str]] | None:
     return parsed
 
 
-@router.get("/cities/{city_id}/assets", response_model=list[AssetOut])
+@router.get(
+    "/cities/{city_id}/assets",
+    response_model=list[AssetOut],
+    responses={
+        200: {
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "asset_id": "pipe_123",
+                            "city_id": "city_porto_mvp",
+                            "asset_type": "pipe",
+                            "name": "Pipe 0001",
+                            "geom_geojson": {
+                                "type": "LineString",
+                                "coordinates": [[-8.69, 41.07], [-8.68, 41.08]],
+                            },
+                            "props": {"diameter_m": 0.5, "material": "PVC"},
+                        }
+                    ]
+                }
+            }
+        }
+        ,
+        400: error_response(
+            code="INVALID_ARGUMENT",
+            message="bbox must be 'minLon,minLat,maxLon,maxLat'",
+        ),
+    },
+)
 async def city_assets(
     city_id: str,
+    response: Response,
     type: str | None = Query(default=None, description="asset_type filter"),
     bbox: str | None = Query(default=None, description="minLon,minLat,maxLon,maxLat"),
     near: str | None = Query(default=None, description="lon,lat for radial search"),
     radius_m: float = Query(default=500.0, ge=1, le=50_000),
     tag: list[str] | None = Query(default=None, description="tag filter key:value (repeatable)"),
     limit: int = Query(default=2000, ge=1, le=5000),
-    response: Response | None = None,
+    offset: int = Query(default=0, ge=0),
     session: AsyncSession = Depends(get_session),
 ) -> list[AssetOut]:
     try:
@@ -71,16 +102,44 @@ async def city_assets(
         radius_m=radius_m if near_pt else None,
         tags=tags,
         limit=limit,
+        offset=offset,
     )
-    if response is not None:
-        response.headers["Cache-Control"] = "public, max-age=60"
+    response.headers["Cache-Control"] = "public, max-age=60"
     return [AssetOut(**asset_to_out(a)) for a in rows]
 
 
-@router.get("/assets/{asset_id}", response_model=AssetOut)
+@router.get(
+    "/assets/{asset_id}",
+    response_model=AssetOut,
+    responses={
+        200: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "asset_id": "pipe_123",
+                        "city_id": "city_porto_mvp",
+                        "asset_type": "pipe",
+                        "name": "Pipe 0001",
+                        "geom_geojson": {
+                            "type": "LineString",
+                            "coordinates": [[-8.69, 41.07], [-8.68, 41.08]],
+                        },
+                        "props": {"diameter_m": 0.5, "material": "PVC"},
+                    }
+                }
+            }
+        }
+        ,
+        404: error_response(
+            code="ASSET_NOT_FOUND",
+            message="Asset not found",
+            details={"asset_id": "asset_missing"},
+        ),
+    },
+)
 async def asset(
     asset_id: str,
-    response: Response | None = None,
+    response: Response,
     session: AsyncSession = Depends(get_session),
 ) -> AssetOut:
     a = await get_asset(session, asset_id)
@@ -91,8 +150,7 @@ async def asset(
             details={"asset_id": asset_id},
             status_code=404,
         )
-    if response is not None:
-        response.headers["Cache-Control"] = "public, max-age=60"
+    response.headers["Cache-Control"] = "public, max-age=60"
     return AssetOut(**asset_to_out(a))
 
 

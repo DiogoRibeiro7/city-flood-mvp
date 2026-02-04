@@ -35,6 +35,7 @@ async def main() -> None:
                 geom=to_wkt(net.city_polygon),
             )
         )
+        await session.flush()
 
         # River segment asset
         session.add(

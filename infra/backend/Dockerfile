@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1     PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1     PYTHONUNBUFFERED=1     PYTHONPATH=/app/src
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir poetry==1.8.4
 # Copy only dependency files first (better caching)
 COPY pyproject.toml poetry.lock* /app/
 
-RUN poetry config virtualenvs.create false     && poetry install --no-interaction --no-ansi
+RUN poetry config virtualenvs.create false     && poetry install --no-interaction --no-ansi --no-root
 
 COPY src /app/src
 COPY infra/db /app/infra/db
