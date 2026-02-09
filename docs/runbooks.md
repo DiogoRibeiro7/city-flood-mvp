@@ -48,3 +48,6 @@
 - Persist Prometheus data to a volume for longer retention.
 - Increase scrape interval for lower overhead if needed.
 - Use Grafana provisioning for dashboards and datasources in `infra/observability/grafana`.
+
+## Telemetry realism
+- See `docs/runbooks/realism.md` for Tier 2 data-driven telemetry (Porto).

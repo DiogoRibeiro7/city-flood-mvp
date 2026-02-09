@@ -36,3 +36,6 @@ Indexes:
 
 ## telemetry_qa_daily
 - daily telemetry QA summary (gaps + suspect counts)
+
+## export_job_log
+- job-level audit log entries (status transitions + errors)

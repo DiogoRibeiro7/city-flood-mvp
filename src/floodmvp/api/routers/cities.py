@@ -19,7 +19,7 @@ router = APIRouter(tags=["cities"])
             "content": {
                 "application/json": {
                     "example": [
-                        {"city_id": "city_porto_mvp", "name": "MVP City", "country": "PT"}
+                        {"city_id": "city_porto_mvp", "name": "Porto", "country": "PT"}
                     ]
                 }
             }
@@ -40,7 +40,7 @@ async def cities(session: AsyncSession = Depends(get_session)) -> list[CityOut]:
         200: {
             "content": {
                 "application/json": {
-                    "example": {"city_id": "city_porto_mvp", "name": "MVP City", "country": "PT"}
+                    "example": {"city_id": "city_porto_mvp", "name": "Porto", "country": "PT"}
                 }
             }
         }

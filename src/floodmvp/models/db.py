@@ -93,6 +93,17 @@ class ExportJob(Base):
     )
 
 
+class ExportJobLog(Base):
+    __tablename__ = "export_job_log"
+
+    log_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    job_id: Mapped[str] = mapped_column(String(64), ForeignKey("export_job.job_id"), index=True)
+    level: Mapped[str] = mapped_column(String(16), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+
+
 class AnalyticsEvent(Base):
     __tablename__ = "analytics_event"
 

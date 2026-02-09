@@ -31,6 +31,7 @@ Base: `/v1`
 - `GET /hotspots?city_id=...&metric=overflow_risk&top=20`
 - `GET /events?city_id=...&type=overflow&from=...&to=...`
 - `POST /analytics/jobs` (export CSV)
+- `GET /analytics/jobs/{job_id}` (job status + logs)
 - `GET /analytics/jobs/{job_id}/download`
 
 ## Protected ingestion (kept for future)

@@ -1,58 +1,49 @@
 # City Flood MVP — Roadmap
 
-## Repo analysis (current state)
-- Backend: FastAPI app in `src/floodmvp/api` with routers for cities, assets, telemetry, analytics, ingest, and health.
-- Storage: Async SQLAlchemy + TimescaleDB + PostGIS; migrations in `infra/db/migrations` and DB init in `infra/db/init.sql`.
-- Data generation: Synthetic network + telemetry + scenarios under `src/floodmvp/generators` and jobs in `src/floodmvp/jobs`.
-- Analytics: Rain events, overflow events, hotspots, and city status in `src/floodmvp/analytics`.
-- Web: Vite + React + Leaflet + Recharts app under `web/` consuming public REST endpoints.
-- Ops: Docker Compose for local stack; observability configs for Prometheus + Grafana in `infra/observability`.
-- Tests: Unit + integration tests in `tests/` covering generators, analytics, ingest, exports, and telemetry QA.
+## Goals
+- Move from demo-ready to pilot-ready: multi-city support, real data adapters, and stronger reliability.
+- Make analytics configurable, auditable, and comparable across cities and scenarios.
+- Improve UX for investigations, reports, and stakeholder communication.
 
-## Roadmap
+## New milestones (post-MVP)
 
-### Milestone 0 — Baseline validation (1–2 days)
-- [ ] Confirm local stack boots end-to-end (`docker compose up -d --build`).
-- [ ] Run seed scripts and verify data lands in Timescale/PostGIS.
-- [ ] Run API smoke tests + web UI manual check (map loads, basic queries work).
-- [ ] Capture initial performance baselines (seed time, API p95 for key endpoints).
+### Milestone 7 — Multi-city + tenancy (2–3 weeks)
+- [ ] Seed and validate 2–3 distinct city datasets (different topology, scale, and climate).
+- [ ] Add city-aware configuration (thresholds, assets, event definitions) with overrides.
+- [ ] Ensure all endpoints and analytics are fully city-scoped and isolated.
+- [ ] Add data export by city and a simple city switcher in the UI.
 
-### Milestone 1 — Data model hardening (3–5 days)
-- [ ] Review migrations for production readiness (extensions, indexes, retention policies).
-- [ ] Add/verify spatial indexes for asset geometry + bbox queries.
-- [ ] Validate telemetry hypertable + continuous aggregate policies (if used).
-- [ ] Define schema contracts in `docs/data-model.md` for assets, telemetry, and analytics outputs.
+### Milestone 8 — Real data adapters (2–4 weeks)
+- [ ] Define ingestion contracts for external telemetry (CSV + JSON + streaming).
+- [ ] Build at least one real-world adapter (rain gauge or water level feeds).
+- [ ] Add validation + normalization pipeline with rejection reasons and stats.
+- [ ] Document onboarding steps for a new city data source.
 
-### Milestone 2 — API robustness (3–5 days)
-- [ ] Validate request/response envelopes and consistent error handling.
-- [ ] Add pagination + filtering for assets and events endpoints.
-- [ ] Tighten ingest security (token rotation guidance, rate limits, idempotency behavior).
-- [ ] Expand OpenAPI to include examples for all public endpoints.
+### Milestone 9 — Reliability + scale (2–4 weeks)
+- [ ] Add background job queue with retries for analytics and exports.
+- [ ] Add DB retention + rollup policies with storage cost estimates.
+- [ ] Add load testing and establish performance budgets per endpoint.
+- [ ] Add alerting rules tied to SLA objectives (API, ingest, analytics delays).
 
-### Milestone 3 — Analytics accuracy + auditability (4–7 days)
-- [ ] Define thresholds and event definitions in config (not hard-coded).
-- [ ] Add QA metrics for telemetry gaps and event detection.
-- [ ] Create reproducible analytics runs (scenario inputs, run metadata, output versioning).
-- [ ] Add export job status/traceability (job logs and failure reasons).
+### Milestone 10 — Analytics evolution (2–4 weeks)
+- [ ] Add calibration tools for event thresholds (per city / seasonality).
+- [ ] Support scenario comparison and “what-if” deltas in the API.
+- [ ] Add confidence scores for events/hotspots.
+- [ ] Version analytics outputs and surface diffs between versions.
 
-### Milestone 4 — Web UX iteration (4–7 days)
-- [x] Refine map layers (asset types, status overlays, hotspots).
-- [x] Add interactive time range controls for telemetry + events.
-- [x] Improve loading/error states and performance (query caching, bbox debouncing).
-- [x] Document UI workflows for demo readiness.
+### Milestone 11 — Decision-ready UX (2–3 weeks)
+- [ ] Add incident timeline view and event drill-downs.
+- [ ] Add report builder (PDF/CSV) for stakeholder summaries.
+- [ ] Improve map storytelling (annotations, bookmarks, shareable links).
+- [ ] Add role-based access and saved views.
 
-### Milestone 5 — Observability + ops (2–4 days)
-- [x] Validate Prometheus scrape + Grafana dashboards.
-- [x] Add API latency and DB query metrics where missing.
-- [x] Document runbooks for backup/restore, retention, and scaling.
+### Milestone 12 — Deployment hardening (2–3 weeks)
+- [ ] Define cloud deployment reference (single-tenant + multi-tenant).
+- [ ] Add IaC templates and secrets management guidance.
+- [ ] Add backup/restore drills and disaster recovery RTO/RPO targets.
+- [ ] Finalize security review checklist and compliance notes.
 
-### Milestone 6 — Release readiness (2–3 days)
-- [ ] Establish CI (lint, typecheck, tests) and tighten pre-commit.
-- [ ] Add reproducible demo dataset and a single command to reset the environment.
-- [ ] Produce a short demo script + screenshots for stakeholders.
-
-## Open questions / decisions
-- Do we need multi-city datasets in the default seed, or keep one canonical city?
-- What level of realism is required for telemetry distributions and event definitions?
-- What SLA/latency targets should the API meet for the demo?
-- Which endpoints must remain stable for external consumers?
+## Open questions
+- Which city should be the first real-data pilot?
+- What level of operational uptime is required (business hours vs 24/7)?
+- Which analytics outputs need formal sign-off (regulatory or contractual)?

@@ -50,6 +50,9 @@ jobs:
       - name: Build
         run: yarn build
 
+      - name: Typecheck
+        run: yarn typecheck
+
   docker-build:
     runs-on: ubuntu-latest
     steps:
@@ -60,3 +63,38 @@ jobs:
 
       - name: Build web image
         run: docker build -f web/Dockerfile web
+
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start stack
+        run: docker compose up -d --build db backend web prometheus grafana
+
+      - name: Seed demo data
+        run: ./scripts/seed_all.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          cache-dependency-path: web/yarn.lock
+
+      - name: Install web deps
+        run: yarn install --frozen-lockfile
+        working-directory: web
+
+      - name: Install Playwright browser
+        run: yarn playwright install chromium
+        working-directory: web
+
+      - name: Capture screenshots
+        run: yarn capture:screenshots
+        working-directory: web
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-screenshots
+          path: docs/screenshots/*.png

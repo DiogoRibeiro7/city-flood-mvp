@@ -21,15 +21,18 @@ from floodmvp.models.domain import (
     CityStatusOut,
     CitySummaryOut,
     ExportJobOut,
+    ExportJobLogOut,
     ExportJobRequest,
     HotspotOut,
 )
 from floodmvp.storage.db import get_session
 from floodmvp.storage.repos.analytics import (
+    add_export_job_log,
     create_export_job,
     get_city_status,
     get_city_summary,
     get_export_job,
+    list_export_job_logs,
     list_hotspots,
     list_analytics_runs,
     run_export_csv,
@@ -46,6 +49,23 @@ def _require_analytics_key(x_api_key: str | None) -> None:
         raise AppError(code="UNAUTHORIZED", message="Missing API key", status_code=401)
     if x_api_key != settings.analytics_api_key:
         raise AppError(code="FORBIDDEN", message="Invalid API key", status_code=403)
+
+
+def _export_job_out(job: ExportJob, logs: list[ExportJobLogOut]) -> ExportJobOut:
+    return ExportJobOut(
+        job_id=job.job_id,
+        job_type=job.job_type,
+        status=job.status,
+        progress=float(job.progress),
+        file_path=job.file_path,
+        error_message=job.error_message,
+        started_at=job.started_at,
+        completed_at=job.completed_at,
+        row_count=job.row_count,
+        created_at=job.created_at,
+        updated_at=job.updated_at,
+        logs=logs,
+    )
 
 
 @router.get(
@@ -195,8 +215,8 @@ async def create_job(
         raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
     if payload.query.agg not in {"avg", "min", "max"}:
         raise AppError(code="INVALID_ARGUMENT", message="agg must be one of ['avg','min','max']")
-    if not payload.query.asset_ids:
-        raise AppError(code="INVALID_ARGUMENT", message="asset_ids must not be empty")
+    if not payload.query.asset_ids and not payload.query.city_id:
+        raise AppError(code="INVALID_ARGUMENT", message="asset_ids or city_id must be provided")
 
     job_id = new_id("job")
     await create_export_job(
@@ -210,8 +230,21 @@ async def create_job(
             started_at=dt.datetime.now(dt.timezone.utc),
         ),
     )
+    await add_export_job_log(
+        session,
+        job_id=job_id,
+        level="info",
+        message="Export job created",
+        details={"type": payload.type},
+    )
 
     try:
+        await add_export_job_log(
+            session,
+            job_id=job_id,
+            level="info",
+            message="Export job started",
+        )
         file_path, row_count = await run_export_csv(session, job_id, payload.query)
         await update_export_job(
             session,
@@ -222,6 +255,13 @@ async def create_job(
             completed_at=dt.datetime.now(dt.timezone.utc),
             row_count=row_count,
         )
+        await add_export_job_log(
+            session,
+            job_id=job_id,
+            level="info",
+            message="Export job completed",
+            details={"file_path": file_path, "row_count": row_count},
+        )
     except Exception as e:  # noqa: BLE001
         await update_export_job(
             session,
@@ -231,25 +271,74 @@ async def create_job(
             error_message=str(e),
             completed_at=dt.datetime.now(dt.timezone.utc),
         )
+        await add_export_job_log(
+            session,
+            job_id=job_id,
+            level="error",
+            message="Export job failed",
+            details={"error": str(e)},
+        )
         await session.commit()
         raise
 
     await session.commit()
     saved = await get_export_job(session, job_id)
     assert saved is not None
-    return ExportJobOut(
-        job_id=saved.job_id,
-        job_type=saved.job_type,
-        status=saved.status,
-        progress=float(saved.progress),
-        file_path=saved.file_path,
-        error_message=saved.error_message,
-        started_at=saved.started_at,
-        completed_at=saved.completed_at,
-        row_count=saved.row_count,
-        created_at=saved.created_at,
-        updated_at=saved.updated_at,
-    )
+    log_rows = await list_export_job_logs(session, job_id)
+    logs = [
+        ExportJobLogOut(
+            ts=r.created_at,
+            level=r.level,
+            message=r.message,
+            details=r.details or {},
+        )
+        for r in log_rows
+    ]
+    return _export_job_out(saved, logs)
+
+
+@router.get(
+    "/analytics/jobs/{job_id}",
+    response_model=ExportJobOut,
+    responses={
+        401: RESP_UNAUTHORIZED_API_KEY,
+        403: RESP_FORBIDDEN_API_KEY,
+        404: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "JOB_NOT_FOUND",
+                            "message": "Job not found",
+                            "details": {"job_id": "job_missing"},
+                            "request_id": "req_example",
+                        }
+                    }
+                }
+            }
+        },
+    },
+)
+async def get_job(
+    job_id: str,
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    session: AsyncSession = Depends(get_session),
+) -> ExportJobOut:
+    _require_analytics_key(x_api_key)
+    job = await get_export_job(session, job_id)
+    if job is None:
+        raise AppError(code="JOB_NOT_FOUND", message="Job not found", status_code=404)
+    log_rows = await list_export_job_logs(session, job_id)
+    logs = [
+        ExportJobLogOut(
+            ts=r.created_at,
+            level=r.level,
+            message=r.message,
+            details=r.details or {},
+        )
+        for r in log_rows
+    ]
+    return _export_job_out(job, logs)
 
 
 @router.get(

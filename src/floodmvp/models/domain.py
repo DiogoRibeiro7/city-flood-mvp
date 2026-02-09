@@ -74,6 +74,8 @@ class TelemetryQaOut(BaseModel):
 
 class ExportJobQuery(BaseModel):
     asset_ids: list[str]
+    city_id: str | None = None
+    asset_type: AssetType | None = None
     metric: str
     from_ts: dt.datetime = Field(..., alias="from")
     to_ts: dt.datetime = Field(..., alias="to")
@@ -84,6 +86,13 @@ class ExportJobQuery(BaseModel):
 class ExportJobRequest(BaseModel):
     type: Literal["export_csv"]
     query: ExportJobQuery
+
+
+class ExportJobLogOut(BaseModel):
+    ts: dt.datetime
+    level: str
+    message: str
+    details: dict = Field(default_factory=dict)
 
 
 class ExportJobOut(BaseModel):
@@ -98,6 +107,7 @@ class ExportJobOut(BaseModel):
     row_count: int | None = None
     created_at: dt.datetime
     updated_at: dt.datetime
+    logs: list[ExportJobLogOut] = Field(default_factory=list)
 
 
 class CityStatusOut(BaseModel):

@@ -14,9 +14,11 @@ from floodmvp.models.db import (
     Asset,
     AssetStatusLatest,
     ExportJob,
+    ExportJobLog,
     TelemetryObservation,
 )
 from floodmvp.models.domain import ExportJobQuery
+from floodmvp.common.ids import new_id
 
 
 async def get_city_status(session: AsyncSession, city_id: str) -> dict:
@@ -140,6 +142,38 @@ async def get_export_job(session: AsyncSession, job_id: str) -> ExportJob | None
     return res.scalar_one_or_none()
 
 
+async def add_export_job_log(
+    session: AsyncSession,
+    job_id: str,
+    level: str,
+    message: str,
+    details: dict | None = None,
+) -> None:
+    session.add(
+        ExportJobLog(
+            log_id=new_id("log"),
+            job_id=job_id,
+            level=level,
+            message=message,
+            details=details or {},
+        )
+    )
+
+
+async def list_export_job_logs(
+    session: AsyncSession,
+    job_id: str,
+    limit: int = 200,
+) -> list[ExportJobLog]:
+    res = await session.execute(
+        select(ExportJobLog)
+        .where(ExportJobLog.job_id == job_id)
+        .order_by(ExportJobLog.created_at.asc())
+        .limit(limit)
+    )
+    return list(res.scalars().all())
+
+
 async def list_analytics_runs(
     session: AsyncSession, city_id: str, limit: int = 50
 ) -> list[AnalyticsRun]:
@@ -158,6 +192,19 @@ async def run_export_csv(
     export_dir = pathlib.Path(settings.export_dir)
     export_dir.mkdir(parents=True, exist_ok=True)
     file_path = export_dir / f"{job_id}.csv"
+
+    asset_ids = list(query.asset_ids)
+    if not asset_ids and query.city_id:
+        asset_q = select(Asset.asset_id).where(Asset.city_id == query.city_id)
+        if query.asset_type:
+            asset_q = asset_q.where(Asset.asset_type == query.asset_type)
+        res_assets = await session.execute(asset_q)
+        asset_ids = [r[0] for r in res_assets.all()]
+
+    if not asset_ids:
+        with file_path.open("w", encoding="utf-8") as f:
+            f.write("asset_id,metric,ts,value\n")
+        return str(file_path), 0
 
     q = text(
         """
@@ -178,7 +225,7 @@ async def run_export_csv(
     res = await session.execute(
         q,
         {
-            "asset_ids": query.asset_ids,
+            "asset_ids": asset_ids,
             "metric": query.metric,
             "start": query.from_ts,
             "end": query.to_ts,

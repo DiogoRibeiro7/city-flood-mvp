@@ -727,6 +727,44 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
       security:
       - ApiKeyAuth: []
+  /v1/analytics/jobs/{job_id}:
+    get:
+      tags:
+      - analytics
+      summary: Get Job
+      operationId: get_job_v1_analytics_jobs__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportJobOut'
+        '401':
+          $ref: '#/components/responses/UnauthorizedApiKey'
+        '403':
+          $ref: '#/components/responses/ForbiddenApiKey'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - ApiKeyAuth: []
   /v1/analytics/jobs/{job_id}/download:
     get:
       tags:
@@ -1095,6 +1133,11 @@ components:
           type: string
           format: date-time
           title: Updated At
+        logs:
+          items:
+            $ref: '#/components/schemas/ExportJobLogOut'
+          type: array
+          title: Logs
       type: object
       required:
       - job_id
@@ -1104,6 +1147,28 @@ components:
       - created_at
       - updated_at
       title: ExportJobOut
+    ExportJobLogOut:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        level:
+          type: string
+          title: Level
+        message:
+          type: string
+          title: Message
+        details:
+          type: object
+          title: Details
+      type: object
+      required:
+      - ts
+      - level
+      - message
+      - details
+      title: ExportJobLogOut
     ExportJobQuery:
       properties:
         asset_ids:
