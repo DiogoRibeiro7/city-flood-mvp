@@ -93,13 +93,45 @@ class ExportJob(Base):
     )
 
 
+class ExportJobLog(Base):
+    __tablename__ = "export_job_log"
+
+    log_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    job_id: Mapped[str] = mapped_column(String(64), ForeignKey("export_job.job_id"), index=True)
+    level: Mapped[str] = mapped_column(String(16), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+
+
+class JobQueue(Base):
+    __tablename__ = "job_queue"
+
+    job_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    job_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, index=True, default="queued")
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    scheduled_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    locked_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    locked_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default="now()", server_onupdate="now()"
+    )
+
+
 class AnalyticsEvent(Base):
     __tablename__ = "analytics_event"
 
     event_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    run_id: Mapped[str] = mapped_column(String(64), ForeignKey("analytics_run.run_id"), index=True)
     city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), index=True)
     event_type: Mapped[str] = mapped_column(String(40), index=True)
     severity: Mapped[int] = mapped_column(Integer, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
     start_ts: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_ts: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     asset_ids: Mapped[list[str]] = mapped_column(ARRAY(String(64)), nullable=False)
@@ -110,11 +142,15 @@ class AnalyticsEvent(Base):
 class AnalyticsHotspotDaily(Base):
     __tablename__ = "analytics_hotspot_daily"
 
+    run_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("analytics_run.run_id"), primary_key=True
+    )
     city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), primary_key=True)
     day: Mapped[dt.date] = mapped_column(Date, primary_key=True)
     metric: Mapped[str] = mapped_column(String(64), primary_key=True)
     asset_id: Mapped[str] = mapped_column(String(64), ForeignKey("asset.asset_id"), primary_key=True)
     score: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
     details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
 
@@ -157,4 +193,15 @@ class TelemetryQaDaily(Base):
     buckets_present: Mapped[int] = mapped_column(Integer, nullable=False)
     gaps: Mapped[int] = mapped_column(Integer, nullable=False)
     suspect_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+
+
+class AnalyticsThresholdOverride(Base):
+    __tablename__ = "analytics_threshold_override"
+
+    override_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), index=True)
+    season: Mapped[str] = mapped_column(String(16), nullable=False, default="all")
+    thresholds: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtualenv
+.venv/
+
+# Pytest
+.pytest_cache/
+
+# Local env
+.env
+
+# Data/artifacts
+data/
+
+test-results/
+
+# Frontend
+web/node_modules/
+web/.pnp.*
+web/.yarn/cache/
+web/.yarn/unplugged/
+web/.yarn/build-state.yml
+web/.yarn/install-state.gz
+
+# OS
+.DS_Store

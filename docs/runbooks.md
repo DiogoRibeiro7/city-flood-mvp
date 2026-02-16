@@ -48,3 +48,12 @@
 - Persist Prometheus data to a volume for longer retention.
 - Increase scrape interval for lower overhead if needed.
 - Use Grafana provisioning for dashboards and datasources in `infra/observability/grafana`.
+
+## Performance
+- See `docs/runbooks/performance.md` for load testing and p95 latency budgets.
+
+## Telemetry realism
+- See `docs/runbooks/realism.md` for Tier 2 data-driven telemetry (Porto).
+
+## Analytics calibration
+- See `docs/runbooks/calibration.md` for threshold recommendations and overrides.

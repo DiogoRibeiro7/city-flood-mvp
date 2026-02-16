@@ -1,0 +1,2 @@
+{"device_id":"rain_gauge_0","metric":"rain_mmph","ts":"2026-02-01T00:00:00Z","value":3.4}
+{"device_id":"river_gauge_0","metric":"water_level_m","ts":"2026-02-01T00:00:00Z","value":1.8}

@@ -17,7 +17,7 @@ from floodmvp.common.logging import configure_logging, log_json
 from floodmvp.config.settings import settings
 from floodmvp.observability.metrics import HTTP_ERRORS, REQUEST_COUNT, REQUEST_LATENCY
 
-from floodmvp.api.routers import health, cities, assets, telemetry, analytics, events, ingest
+from floodmvp.api.routers import health, cities, assets, telemetry, analytics, events, ingest, jobs
 
 
 configure_logging()
@@ -191,5 +191,6 @@ app.include_router(cities.router, prefix="/v1")
 app.include_router(assets.router, prefix="/v1")
 app.include_router(telemetry.router, prefix="/v1")
 app.include_router(ingest.router, prefix="/v1")
+app.include_router(jobs.router, prefix="/v1")
 app.include_router(analytics.router, prefix="/v1")
 app.include_router(events.router, prefix="/v1")

@@ -29,16 +29,22 @@ End-to-end MVP for a **city-level flood monitoring** web app:
   docker compose up -d --build
   ```
 
-3. Seed synthetic assets + telemetry + analytics:
+3. Seed synthetic assets + telemetry + analytics (multi-city by default):
 
   ```bash
   ./scripts/seed_all.sh
   ```
 
-4. Open:
+4. Reset the full demo environment (optional):
 
-5. API: <http://localhost:8000/docs>
-6. Web: <http://localhost:5173>
+  ```bash
+  ./scripts/reset_demo.sh
+  ```
+
+5. Open:
+
+6. API: <http://localhost:8000/docs>
+7. Web: <http://localhost:5173>
 
 ## Useful endpoints
 
@@ -54,3 +60,11 @@ End-to-end MVP for a **city-level flood monitoring** web app:
 
 - Everything is **source-agnostic**: assets and telemetry have a unified schema so real data can be plugged later.
 - PostGIS is installed in the Timescale HA image, but still must be enabled per DB via `CREATE EXTENSION postgis`.
+- To limit seeding to specific cities, set `CITY_IDS` (comma-separated) before running seed scripts.
+- For external data ingestion (CSV/JSON/NDJSON), see `docs/runbooks/ingest_adapters.md`.
+- For rain gauge HTTP ingestion, see `docs/runbooks/ingest_adapters.md#rain-gauge-http-adapter-real-data-source`.
+- For river level HTTP ingestion, see `docs/runbooks/ingest_adapters.md#river-level-http-adapter-real-data-source`.
+- For synthetic JSON generators (rain + river), see `docs/runbooks/ingest_adapters.md#synthetic-generators-json-output`.
+- Background jobs (exports + analytics) are queued; run the worker with `poetry run python -m floodmvp.jobs.queue_worker`.
+- Queue admin endpoints: `GET /v1/jobs/queue`, `POST /v1/jobs/queue/{job_id}/retry`, `POST /v1/jobs/queue/{job_id}/cancel` (guarded by `X-API-Key` when set).
+- Periodic analytics scheduler: `poetry run python -m floodmvp.jobs.scheduler --interval-minutes 60`.

@@ -18,13 +18,17 @@ Indexes:
 
 ## analytics_event
 - event windows derived from telemetry (rain episode, overflow)
+- scoped to an `analytics_run` via `run_id` (versioned outputs)
+- `confidence` captures reliability of detection (0..1)
 Indexes:
-- `(city_id, start_ts)` and `(city_id, event_type, start_ts)` for event listing
+- `(run_id)` and `(city_id, run_id, start_ts)` for event listing
 
 ## analytics_hotspot_daily
 - daily snapshot for UI: "top N pipes/nodes by overflow risk"
+- scoped to an `analytics_run` via `run_id` (versioned outputs)
+- `confidence` captures reliability of score (0..1)
 Indexes:
-- `(city_id, metric, score DESC)` for top-N queries
+- `(run_id, metric, score)` for top-N queries
 
 ## asset_status_latest
 - latest risk score per asset (cheap for dashboards)
@@ -34,5 +38,12 @@ Indexes:
 ## analytics_run
 - audit trail for analytics runs (params + metrics + versioning)
 
+## analytics_threshold_override
+- calibration overrides per city/season
+- fields: `city_id`, `season`, `thresholds`, `notes`, `created_at`
+
 ## telemetry_qa_daily
 - daily telemetry QA summary (gaps + suspect counts)
+
+## export_job_log
+- job-level audit log entries (status transitions + errors)

@@ -45,6 +45,7 @@ async def events(
     type: str | None = Query(default=None, description="event_type filter"),
     from_ts: str = Query(..., alias="from"),
     to_ts: str = Query(..., alias="to"),
+    run_id: str | None = Query(default=None, description="analytics run_id"),
     limit: int = Query(200, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     session: AsyncSession = Depends(get_session),
@@ -55,12 +56,13 @@ async def events(
         from floodmvp.common.errors import AppError
 
         raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
-    rows = await list_events(session, city_id, type, start, end, limit, offset)
+    rows = await list_events(session, city_id, type, start, end, limit, offset, run_id=run_id)
     return [
         EventOut(
             event_id=r.event_id,
             event_type=r.event_type,
             severity=r.severity,
+            confidence=float(r.confidence),
             start_ts=r.start_ts,
             end_ts=r.end_ts,
             asset_ids=list(r.asset_ids),

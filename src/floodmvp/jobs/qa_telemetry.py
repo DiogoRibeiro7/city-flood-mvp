@@ -6,6 +6,7 @@ import datetime as dt
 from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.config.cities import get_city_configs
 from floodmvp.config.settings import settings
 from floodmvp.models.db import TelemetryQaDaily
 from floodmvp.storage.db import SessionLocal
@@ -167,18 +168,19 @@ async def _qa_gaps(
 
 
 async def main() -> None:
-    city_id = "city_porto_mvp"
+    cities = get_city_configs()
     now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
     start = now - dt.timedelta(days=settings.telemetry_gap_window_days)
     async with SessionLocal() as session:
         updated = await mark_suspect(session)
-        await _qa_gaps(
-            session,
-            city_id=city_id,
-            start=start,
-            end=now,
-            granularity_minutes=settings.telemetry_gap_granularity_minutes,
-        )
+        for city in cities:
+            await _qa_gaps(
+                session,
+                city_id=city.city_id,
+                start=start,
+                end=now,
+                granularity_minutes=settings.telemetry_gap_granularity_minutes,
+            )
         await session.commit()
     print(f"QA telemetry: marked {updated} rows as suspect")
 

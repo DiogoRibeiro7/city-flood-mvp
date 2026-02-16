@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: up down seed test lint
+.PHONY: up down seed test lint loadtest
 
 up:
 	docker compose up -d --build
@@ -19,3 +19,6 @@ lint:
 	poetry run ruff check .
 	poetry run mypy src
 	cd web && npx prettier --check .
+
+loadtest:
+	k6 run scripts/loadtest/k6-smoke.js

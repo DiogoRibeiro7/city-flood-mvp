@@ -28,9 +28,15 @@ Base: `/v1`
 
 ## Analytics
 - `GET /cities/{city_id}/status`
-- `GET /hotspots?city_id=...&metric=overflow_risk&top=20`
-- `GET /events?city_id=...&type=overflow&from=...&to=...`
+- `GET /hotspots?city_id=...&metric=overflow_risk&top=20&run_id=...` (includes `confidence`)
+- `GET /events?city_id=...&type=overflow&from=...&to=...&run_id=...` (includes `confidence`)
+- `GET /analytics/runs?city_id=...`
+- `GET /analytics/runs/diff?city_id=...&base_run_id=...&compare_run_id=...`
+- `GET /analytics/calibration/recommendations?city_id=...&from=...&to=...&seasonality=all|monthly`
+- `GET /analytics/calibration/overrides?city_id=...`
+- `POST /analytics/calibration/overrides`
 - `POST /analytics/jobs` (export CSV)
+- `GET /analytics/jobs/{job_id}` (job status + logs)
 - `GET /analytics/jobs/{job_id}/download`
 
 ## Protected ingestion (kept for future)
