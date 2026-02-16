@@ -371,7 +371,7 @@ async def diff_analytics_runs(
         for k in keys:
             av = a.get(k)
             bv = b.get(k)
-            if isinstance(av, (int, float)) and isinstance(bv, (int, float)):
+            if isinstance(av, int | float) and isinstance(bv, int | float):
                 out[k] = {"base": float(av), "compare": float(bv), "delta": float(bv - av)}
             else:
                 out[k] = {"base": av, "compare": bv, "delta": None}
