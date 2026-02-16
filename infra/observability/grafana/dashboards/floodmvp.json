@@ -120,6 +120,54 @@
       ],
       "title": "DB Query Rate",
       "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "sum(rate(job_queue_enqueued_total[5m])) by (job_type)",
+          "legendFormat": "enqueued {{job_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(job_queue_completed_total[5m])) by (job_type)",
+          "legendFormat": "completed {{job_type}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Job Queue Throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "sum(rate(job_queue_failed_total[5m])) by (job_type)",
+          "legendFormat": "failed {{job_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(job_queue_retried_total[5m])) by (job_type)",
+          "legendFormat": "retried {{job_type}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Job Failures + Retries",
+      "type": "timeseries"
     }
   ],
   "refresh": "10s",

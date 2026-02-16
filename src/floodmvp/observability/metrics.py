@@ -35,6 +35,37 @@ DB_QUERY_ERRORS = Counter(
     ["operation"],
 )
 
+JOB_ENQUEUED = Counter(
+    "job_queue_enqueued_total",
+    "Total jobs enqueued",
+    ["job_type"],
+)
+JOB_COMPLETED = Counter(
+    "job_queue_completed_total",
+    "Total jobs completed",
+    ["job_type"],
+)
+JOB_FAILED = Counter(
+    "job_queue_failed_total",
+    "Total jobs failed",
+    ["job_type"],
+)
+JOB_RETRIED = Counter(
+    "job_queue_retried_total",
+    "Total job retries",
+    ["job_type"],
+)
+JOB_QUEUE_AGE = Histogram(
+    "job_queue_age_seconds",
+    "Seconds a job spent waiting in queue before processing",
+    ["job_type"],
+)
+JOB_PROCESSING_DURATION = Histogram(
+    "job_processing_duration_seconds",
+    "Seconds to process a job",
+    ["job_type"],
+)
+
 
 def classify_operation(statement: str | None) -> str:
     if not statement:

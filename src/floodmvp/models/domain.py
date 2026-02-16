@@ -122,6 +122,7 @@ class CityStatusOut(BaseModel):
 class HotspotOut(BaseModel):
     asset_id: str
     score: float
+    confidence: float
     details: dict = Field(default_factory=dict)
 
 
@@ -137,6 +138,7 @@ class EventOut(BaseModel):
     event_id: str
     event_type: str
     severity: int
+    confidence: float
     start_ts: dt.datetime
     end_ts: dt.datetime
     asset_ids: list[str]
@@ -154,6 +156,74 @@ class AnalyticsRunOut(BaseModel):
     metrics: dict
     created_at: dt.datetime
     updated_at: dt.datetime
+
+
+class AnalyticsEventDiffSummary(BaseModel):
+    base_count: int
+    compare_count: int
+    added: list[EventOut] = Field(default_factory=list)
+    removed: list[EventOut] = Field(default_factory=list)
+
+
+class HotspotDiffItem(BaseModel):
+    asset_id: str
+    metric: str
+    day: dt.date
+    score_before: float | None = None
+    score_after: float | None = None
+    delta: float | None = None
+
+
+class AnalyticsHotspotDiffSummary(BaseModel):
+    base_count: int
+    compare_count: int
+    changed: list[HotspotDiffItem] = Field(default_factory=list)
+    added: list[HotspotDiffItem] = Field(default_factory=list)
+    removed: list[HotspotDiffItem] = Field(default_factory=list)
+
+
+class AnalyticsRunDiffOut(BaseModel):
+    city_id: str
+    base_run_id: str
+    compare_run_id: str
+    base_version: str
+    compare_version: str
+    metrics_delta: dict
+    events: AnalyticsEventDiffSummary
+    hotspots: AnalyticsHotspotDiffSummary
+
+
+class CalibrationThresholds(BaseModel):
+    rain_event_threshold_mmph: float | None = None
+    rain_event_min_duration_minutes: int | None = None
+    overflow_fill_threshold: float | None = None
+    overflow_min_duration_minutes: int | None = None
+    risk_fill_watch: float | None = None
+    risk_fill_warning: float | None = None
+
+
+class CalibrationRecommendationOut(BaseModel):
+    city_id: str
+    from_ts: dt.datetime
+    to_ts: dt.datetime
+    seasonality: str
+    thresholds: dict[str, CalibrationThresholds]
+
+
+class CalibrationOverrideIn(BaseModel):
+    city_id: str
+    season: str = "all"
+    thresholds: CalibrationThresholds
+    notes: str | None = None
+
+
+class CalibrationOverrideOut(BaseModel):
+    override_id: str
+    city_id: str
+    season: str
+    thresholds: CalibrationThresholds
+    notes: str | None = None
+    created_at: dt.datetime
 
 
 class IngestEventIn(BaseModel):
@@ -182,3 +252,18 @@ class IngestResponse(BaseModel):
     accepted: int
     rejected: int
     results: list[IngestEventResult]
+
+
+class JobQueueOut(BaseModel):
+    job_id: str
+    job_type: str
+    status: str
+    payload: dict
+    attempts: int
+    max_attempts: int
+    scheduled_at: dt.datetime
+    locked_at: dt.datetime | None = None
+    locked_by: str | None = None
+    last_error: str | None = None
+    created_at: dt.datetime
+    updated_at: dt.datetime

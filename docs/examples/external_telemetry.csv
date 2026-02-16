@@ -1,0 +1,3 @@
+device_id,metric,ts,value,quality_flag
+rain_gauge_0,rain_mmph,2026-02-01T00:00:00Z,3.4,ok
+river_gauge_0,water_level_m,2026-02-01T00:00:00Z,1.8,ok
