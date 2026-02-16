@@ -8,10 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from floodmvp.api.openapi_examples import RESP_INVALID_ARGUMENT, error_response
 from floodmvp.common.errors import AppError
 from floodmvp.common.time import parse_iso8601
-from floodmvp.models.domain import ObservationsOut, ScenarioRunOut, TelemetryQaOut
+from floodmvp.models.domain import ObservationsOut, ScenarioCompareOut, ScenarioRunOut, TelemetryQaOut
 from floodmvp.storage.db import get_session
 from floodmvp.storage.repos.telemetry import (
     get_observations,
+    get_observations_map,
     list_metrics,
     list_qa_daily,
     list_scenarios,
@@ -163,5 +164,100 @@ async def observations(
     return ObservationsOut(
         metric=metric,
         series=[{"ts": t, "value": v} for t, v in rows],
+        request_id=getattr(request.state, "request_id", "req_unknown"),
+    )
+
+
+@router.get(
+    "/assets/{asset_id}/observations:compare",
+    response_model=ScenarioCompareOut,
+    responses={
+        200: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "metric": "fill_ratio",
+                        "base_scenario_id": "scenario_base",
+                        "compare_scenario_id": "scenario_test",
+                        "series": [
+                            {
+                                "ts": "2026-02-01T10:00:00Z",
+                                "base": 0.42,
+                                "compare": 0.55,
+                                "delta": 0.13,
+                            }
+                        ],
+                        "request_id": "req_example",
+                    }
+                }
+            }
+        }
+        ,
+        400: error_response(
+            code="INVALID_ARGUMENT", message="'to' must be after 'from'"
+        ),
+        404: error_response(code="SCENARIO_NOT_FOUND", message="Scenario not found"),
+    },
+)
+async def observations_compare(
+    request: Request,
+    asset_id: str,
+    metric: str = Query(...),
+    from_ts: str = Query(..., alias="from"),
+    to_ts: str = Query(..., alias="to"),
+    granularity: str = Query("5m", description="Timescale time_bucket interval, e.g. 1m,5m,1h"),
+    agg: str = Query("avg", description="avg|min|max"),
+    base_scenario_id: str = Query(..., description="scenario id or 'latest'"),
+    compare_scenario_id: str = Query(..., description="scenario id or 'latest'"),
+    session: AsyncSession = Depends(get_session),
+) -> ScenarioCompareOut:
+    start = parse_iso8601(from_ts)
+    end = parse_iso8601(to_ts)
+    if end <= start:
+        raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
+
+    base_id = await resolve_scenario_id(session, base_scenario_id)
+    compare_id = await resolve_scenario_id(session, compare_scenario_id)
+    if base_id is None:
+        raise AppError(code="SCENARIO_NOT_FOUND", message="Scenario not found", status_code=404)
+    if compare_id is None:
+        raise AppError(code="SCENARIO_NOT_FOUND", message="Scenario not found", status_code=404)
+
+    base_map = await get_observations_map(
+        session,
+        asset_id,
+        metric,
+        start,
+        end,
+        granularity,
+        agg,
+        scenario_id=base_id,
+    )
+    compare_map = await get_observations_map(
+        session,
+        asset_id,
+        metric,
+        start,
+        end,
+        granularity,
+        agg,
+        scenario_id=compare_id,
+    )
+
+    timestamps = sorted(set(base_map.keys()) | set(compare_map.keys()))
+    series = []
+    for ts in timestamps:
+        base_val = base_map.get(ts)
+        compare_val = compare_map.get(ts)
+        delta = None
+        if base_val is not None and compare_val is not None:
+            delta = float(compare_val - base_val)
+        series.append({"ts": ts, "base": base_val, "compare": compare_val, "delta": delta})
+
+    return ScenarioCompareOut(
+        metric=metric,
+        base_scenario_id=base_id,
+        compare_scenario_id=compare_id,
+        series=series,
         request_id=getattr(request.state, "request_id", "req_unknown"),
     )

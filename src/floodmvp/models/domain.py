@@ -193,6 +193,21 @@ class AnalyticsRunDiffOut(BaseModel):
     hotspots: AnalyticsHotspotDiffSummary
 
 
+class ObservationDeltaOut(BaseModel):
+    ts: dt.datetime
+    base: float | None
+    compare: float | None
+    delta: float | None
+
+
+class ScenarioCompareOut(BaseModel):
+    metric: str
+    base_scenario_id: str
+    compare_scenario_id: str
+    series: list[ObservationDeltaOut]
+    request_id: str
+
+
 class CalibrationThresholds(BaseModel):
     rain_event_threshold_mmph: float | None = None
     rain_event_min_duration_minutes: int | None = None

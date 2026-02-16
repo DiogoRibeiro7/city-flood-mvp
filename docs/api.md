@@ -25,6 +25,7 @@ Base: `/v1`
 ## Telemetry
 - `GET /assets/{asset_id}/metrics`
 - `GET /assets/{asset_id}/observations?metric=...&from=...&to=...&granularity=5m&agg=avg`
+- `GET /assets/{asset_id}/observations:compare?metric=...&from=...&to=...&granularity=5m&agg=avg&base_scenario_id=...&compare_scenario_id=...`
 
 ## Analytics
 - `GET /cities/{city_id}/status`

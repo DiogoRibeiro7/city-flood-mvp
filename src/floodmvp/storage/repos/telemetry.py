@@ -140,3 +140,27 @@ async def get_observations(
     )
     res = await session.execute(q)
     return [(r[0], float(r[1])) for r in res.all()]
+
+
+async def get_observations_map(
+    session: AsyncSession,
+    asset_id: str,
+    metric: str,
+    start: dt.datetime,
+    end: dt.datetime,
+    granularity: str,
+    agg: str,
+    scenario_id: str | None = None,
+) -> dict[dt.datetime, float | None]:
+    rows = await get_observations(
+        session,
+        asset_id,
+        metric,
+        start,
+        end,
+        granularity,
+        agg,
+        include_gaps=True,
+        scenario_id=scenario_id,
+    )
+    return {t: v for t, v in rows}
