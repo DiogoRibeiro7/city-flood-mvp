@@ -116,10 +116,7 @@ def _replace_response_ref(responses: dict, status: str, ref_name: str) -> None:
 
 
 def _is_bearer_auth(op: dict) -> bool:
-    for param in op.get("parameters", []) or []:
-        if param.get("name") == "Authorization":
-            return True
-    return False
+    return any(param.get("name") == "Authorization" for param in op.get("parameters", []) or [])
 
 
 def _add_security_schemes(spec: dict) -> None:
@@ -150,10 +147,8 @@ def _add_security_schemes(spec: dict) -> None:
 
 
 def _is_api_key_auth(op: dict) -> bool:
-    for param in op.get("parameters", []) or []:
-        if param.get("name") == "X-API-Key":
-            return True
-    return False
+    return any(param.get("name") == "X-API-Key" for param in op.get("parameters", []) or [])
+
 
 if __name__ == "__main__":
     main()

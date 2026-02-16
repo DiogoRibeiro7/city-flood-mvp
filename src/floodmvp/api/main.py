@@ -1,24 +1,22 @@
 from __future__ import annotations
 
-import uuid
 import asyncio
 import logging
 import time
+import uuid
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from floodmvp.api.routers import analytics, assets, cities, events, health, ingest, jobs, telemetry
 from floodmvp.common.errors import AppError, as_error_payload, as_error_payload_raw
 from floodmvp.common.logging import configure_logging, log_json
 from floodmvp.config.settings import settings
 from floodmvp.observability.metrics import HTTP_ERRORS, REQUEST_COUNT, REQUEST_LATENCY
-
-from floodmvp.api.routers import health, cities, assets, telemetry, analytics, events, ingest, jobs
-
 
 configure_logging()
 
@@ -111,7 +109,7 @@ async def add_request_id(request: Request, call_next):
     start = time.perf_counter()
     try:
         response = await asyncio.wait_for(call_next(request), timeout=settings.request_timeout_s)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return JSONResponse(
             status_code=504,
             content=as_error_payload_raw(

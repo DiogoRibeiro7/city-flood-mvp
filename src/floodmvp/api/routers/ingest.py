@@ -19,7 +19,6 @@ from floodmvp.models.db import Asset, IngestIdempotency, TelemetryObservation
 from floodmvp.models.domain import IngestEventResult, IngestRequest, IngestResponse
 from floodmvp.storage.db import get_session
 
-
 router = APIRouter(tags=["ingest"])
 
 

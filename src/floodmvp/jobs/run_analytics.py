@@ -219,7 +219,7 @@ async def run_city_analytics(
 
 async def main() -> None:
     cities = get_city_configs()
-    now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
+    now = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
     start = now - dt.timedelta(days=settings.analytics_window_days)
 
     async with SessionLocal() as session:

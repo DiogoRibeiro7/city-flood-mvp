@@ -13,10 +13,10 @@ from floodmvp.observability.metrics import JOB_PROCESSING_DURATION, JOB_QUEUE_AG
 from floodmvp.storage.db import SessionLocal
 from floodmvp.storage.repos.analytics import (
     add_export_job_log,
+    apply_threshold_overrides,
     get_export_job,
     run_export_csv,
     update_export_job,
-    apply_threshold_overrides,
 )
 from floodmvp.storage.repos.jobs import (
     build_worker_id,
@@ -44,7 +44,7 @@ async def _handle_export(session, payload: dict) -> None:
         job_id,
         status="running",
         progress=0.0,
-        started_at=dt.datetime.now(dt.timezone.utc),
+        started_at=dt.datetime.now(dt.UTC),
     )
     await add_export_job_log(session, job_id=job_id, level="info", message="Export job started")
     file_path, row_count = await run_export_csv(session, job_id, ExportJobQuery(**job.query))
@@ -54,7 +54,7 @@ async def _handle_export(session, payload: dict) -> None:
         status="completed",
         progress=1.0,
         file_path=file_path,
-        completed_at=dt.datetime.now(dt.timezone.utc),
+        completed_at=dt.datetime.now(dt.UTC),
         row_count=row_count,
     )
     await add_export_job_log(
@@ -74,7 +74,7 @@ async def _handle_analytics(session, payload: dict) -> None:
     if city is None:
         raise ValueError(f"Unknown city_id {city_id}")
 
-    now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
+    now = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
     start = now - dt.timedelta(days=settings.analytics_window_days)
     thresholds = {
         "rain_event_threshold_mmph": city.analytics.rain_event_threshold_mmph
@@ -103,7 +103,7 @@ async def run_worker(poll_seconds: float, once: bool) -> None:
                     return
                 await asyncio.sleep(poll_seconds)
                 continue
-            now = dt.datetime.now(dt.timezone.utc)
+            now = dt.datetime.now(dt.UTC)
             queue_age = (now - job.scheduled_at).total_seconds()
             JOB_QUEUE_AGE.labels(job_type=job.job_type).observe(max(0.0, queue_age))
             started = time.perf_counter()
@@ -127,7 +127,7 @@ async def run_worker(poll_seconds: float, once: bool) -> None:
                             status="failed",
                             progress=1.0,
                             error_message=str(exc),
-                            completed_at=dt.datetime.now(dt.timezone.utc),
+                            completed_at=dt.datetime.now(dt.UTC),
                         )
                         await add_export_job_log(
                             session,

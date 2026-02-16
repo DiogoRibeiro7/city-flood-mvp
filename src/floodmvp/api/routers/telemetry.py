@@ -8,7 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from floodmvp.api.openapi_examples import RESP_INVALID_ARGUMENT, error_response
 from floodmvp.common.errors import AppError
 from floodmvp.common.time import parse_iso8601
-from floodmvp.models.domain import ObservationsOut, ScenarioCompareOut, ScenarioRunOut, TelemetryQaOut
+from floodmvp.models.domain import (
+    ObservationsOut,
+    ScenarioCompareOut,
+    ScenarioRunOut,
+    TelemetryQaOut,
+)
 from floodmvp.storage.db import get_session
 from floodmvp.storage.repos.telemetry import (
     get_observations,
@@ -64,7 +69,7 @@ async def telemetry_qa(
         try:
             parsed_day = dt.date.fromisoformat(day)
         except ValueError as e:
-            raise AppError(code="INVALID_ARGUMENT", message=str(e))
+            raise AppError(code="INVALID_ARGUMENT", message=str(e)) from e
     rows = await list_qa_daily(session, city_id, parsed_day)
     return [
         TelemetryQaOut(
@@ -159,7 +164,7 @@ async def observations(
             scenario_id=resolved,
         )
     except ValueError as e:
-        raise AppError(code="INVALID_ARGUMENT", message=str(e))
+        raise AppError(code="INVALID_ARGUMENT", message=str(e)) from e
 
     return ObservationsOut(
         metric=metric,

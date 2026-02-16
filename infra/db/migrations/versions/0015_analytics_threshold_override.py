@@ -7,8 +7,8 @@ Create Date: 2026-02-16
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0015_analytics_threshold_override"
 down_revision = "0014_analytics_confidence"

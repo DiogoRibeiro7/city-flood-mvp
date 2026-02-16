@@ -28,7 +28,7 @@ async def enqueue_job(
     run_at: dt.datetime | None = None,
 ) -> EnqueuedJob:
     if run_at is None:
-        run_at = dt.datetime.now(dt.timezone.utc)
+        run_at = dt.datetime.now(dt.UTC)
     job_id = new_id("job")
     session.add(
         JobQueue(
@@ -47,7 +47,7 @@ async def enqueue_job(
 
 
 async def fetch_next_job(session: AsyncSession, worker_id: str) -> JobQueue | None:
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     q = (
         select(JobQueue)
         .where(JobQueue.status == "queued")
@@ -82,7 +82,7 @@ async def mark_job_failed(session: AsyncSession, job: JobQueue, error: str, back
         JOB_FAILED.labels(job_type=job.job_type).inc()
     else:
         job.status = "queued"
-        job.scheduled_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=backoff_seconds)
+        job.scheduled_at = dt.datetime.now(dt.UTC) + dt.timedelta(seconds=backoff_seconds)
         JOB_RETRIED.labels(job_type=job.job_type).inc()
     await session.flush()
 
@@ -108,7 +108,7 @@ async def get_job(session: AsyncSession, job_id: str) -> JobQueue | None:
 
 
 async def retry_job(session: AsyncSession, job_id: str) -> bool:
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     res = await session.execute(
         update(JobQueue)
         .where(JobQueue.job_id == job_id)

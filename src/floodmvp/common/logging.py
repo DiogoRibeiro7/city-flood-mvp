@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def configure_logging() -> None:
@@ -16,7 +16,7 @@ def configure_logging() -> None:
 
 def log_json(level: int, message: str, **fields: object) -> None:
     payload = {
-        "ts": datetime.now(timezone.utc).isoformat(),
+        "ts": datetime.now(UTC).isoformat(),
         "level": logging.getLevelName(level).lower(),
         "msg": message,
         **fields,

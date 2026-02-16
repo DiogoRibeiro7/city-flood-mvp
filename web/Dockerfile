@@ -2,7 +2,7 @@ FROM node:20-slim
 
 WORKDIR /app
 COPY package.json yarn.lock /app/
-RUN corepack enable && yarn install --frozen-lockfile
+RUN corepack enable && corepack prepare yarn@4.1.1 --activate && yarn install --immutable
 
 COPY . /app
 EXPOSE 5173

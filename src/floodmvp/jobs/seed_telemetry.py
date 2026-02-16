@@ -61,7 +61,7 @@ async def main(scenario_id: str | None = None) -> None:
             if realism == "tier2_porto":
                 if city.telemetry.realism_profile != "porto":
                     print(
-                        f\"City {city.city_id} does not support tier2_porto realism; falling back to synthetic.\"
+                        f"City {city.city_id} does not support tier2_porto realism; falling back to synthetic."
                     )
                     realism = "synthetic"
                 else:
@@ -104,7 +104,7 @@ async def main(scenario_id: str | None = None) -> None:
                     await _upsert_series(session, series, scenario_id=scenario_id)
 
             await session.commit()
-            print(f\"Seeded telemetry for city_id={city.city_id} ({start.isoformat()} -> {end.isoformat()})\")
+            print(f"Seeded telemetry for city_id={city.city_id} ({start.isoformat()} -> {end.isoformat()})")
 
 
 async def _upsert_series(session: AsyncSession, series, scenario_id: str | None = None) -> None:

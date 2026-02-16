@@ -17,7 +17,7 @@ from floodmvp.generators.external import (
 def _parse_dt(value: str) -> dt.datetime:
     ts = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
     if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=dt.timezone.utc)
+        ts = ts.replace(tzinfo=dt.UTC)
     return ts
 
 

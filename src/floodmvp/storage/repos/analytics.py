@@ -6,12 +6,13 @@ import pathlib
 from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.common.ids import new_id
 from floodmvp.config.settings import settings
 from floodmvp.models.db import (
-    AnalyticsThresholdOverride,
     AnalyticsEvent,
     AnalyticsHotspotDaily,
     AnalyticsRun,
+    AnalyticsThresholdOverride,
     Asset,
     AssetStatusLatest,
     ExportJob,
@@ -19,7 +20,6 @@ from floodmvp.models.db import (
     TelemetryObservation,
 )
 from floodmvp.models.domain import ExportJobQuery
-from floodmvp.common.ids import new_id
 
 
 async def get_latest_run_id(session: AsyncSession, city_id: str) -> str | None:
@@ -40,7 +40,7 @@ async def get_run(session: AsyncSession, run_id: str) -> AnalyticsRun | None:
 
 async def get_city_status(session: AsyncSession, city_id: str) -> dict:
     # cheap summary for dashboards
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     run_id = await get_latest_run_id(session, city_id)
     if run_id is None:
         return {
@@ -506,11 +506,11 @@ async def run_export_csv(
         return str(file_path), 0
 
     q = text(
-        """
+        f"""
         SELECT asset_id,
                metric,
                time_bucket(:granularity, ts) AS bucket,
-               {agg}(value) AS value
+               {query.agg}(value) AS value
         FROM telemetry_observation
         WHERE asset_id = ANY(:asset_ids)
           AND metric = :metric
@@ -519,7 +519,7 @@ async def run_export_csv(
           AND scenario_id IS NULL
         GROUP BY asset_id, metric, bucket
         ORDER BY asset_id, bucket
-        """.format(agg=query.agg)
+        """
     )
     res = await session.execute(
         q,
@@ -544,7 +544,7 @@ async def run_export_csv(
 
 
 async def get_city_summary(session: AsyncSession, city_id: str, minutes: int) -> dict:
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     start = now - dt.timedelta(minutes=minutes)
 
     rain_avg = await session.scalar(

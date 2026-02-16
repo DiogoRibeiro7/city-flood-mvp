@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import numpy as np
-
 from geoalchemy2.elements import WKTElement
 from shapely.geometry import LineString, Point, Polygon
 
@@ -16,7 +15,7 @@ class GeneratedCity:
     city_polygon: Polygon
     river: LineString
     nodes: list[Point]
-    pipes: list["PipeSegment"]
+    pipes: list[PipeSegment]
     rain_gauges: list[Point]
     river_gauges: list[Point]
     outfalls: list[Point]
@@ -58,7 +57,7 @@ def _haversine_m(lon1: float, lat1: float, lon2: float, lat2: float) -> float:
 def _line_length_m(line: LineString) -> float:
     coords = list(line.coords)
     total = 0.0
-    for (lon1, lat1), (lon2, lat2) in zip(coords, coords[1:]):
+    for (lon1, lat1), (lon2, lat2) in zip(coords, coords[1:], strict=False):
         total += _haversine_m(lon1, lat1, lon2, lat2)
     return total
 

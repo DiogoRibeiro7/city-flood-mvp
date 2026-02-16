@@ -3,7 +3,11 @@ from __future__ import annotations
 import datetime as dt
 
 from floodmvp.generators.city_network import generate_city_network
-from floodmvp.generators.telemetry import generate_pipe_hydraulics_series, generate_rain_series, generate_river_level_series
+from floodmvp.generators.telemetry import (
+    generate_pipe_hydraulics_series,
+    generate_rain_series,
+    generate_river_level_series,
+)
 
 
 def test_generate_city_network_counts() -> None:
@@ -25,7 +29,7 @@ def test_generate_city_network_deterministic_seed() -> None:
 
 
 def test_generate_rain_series_has_monotonic_ts() -> None:
-    start = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
+    start = dt.datetime(2026, 1, 1, tzinfo=dt.UTC)
     end = start + dt.timedelta(hours=1)
     s = generate_rain_series("a", start, end, freq="1min", scenario="normal", seed=5)
     ts = s.df["ts"].tolist()
@@ -34,7 +38,7 @@ def test_generate_rain_series_has_monotonic_ts() -> None:
 
 
 def test_generate_pipe_hydraulics_deterministic_seed() -> None:
-    start = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
+    start = dt.datetime(2026, 1, 1, tzinfo=dt.UTC)
     end = start + dt.timedelta(hours=1)
     rain_a = generate_rain_series("rg", start, end, freq="1min", scenario="normal", seed=1)
     river_a = generate_river_level_series("rv", rain_a, scenario="normal", seed=2)

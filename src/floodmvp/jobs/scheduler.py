@@ -31,7 +31,7 @@ async def _should_enqueue(session, city_id: str, interval_minutes: int) -> bool:
     row = res.scalar_one_or_none()
     if row is None:
         return True
-    return row < dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=interval_minutes)
+    return row < dt.datetime.now(dt.UTC) - dt.timedelta(minutes=interval_minutes)
 
 
 async def run(interval_minutes: int, poll_seconds: int) -> None:

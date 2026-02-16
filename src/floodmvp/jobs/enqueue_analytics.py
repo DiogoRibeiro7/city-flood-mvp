@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+
 from floodmvp.config.cities import get_city_configs
 from floodmvp.storage.db import SessionLocal
 from floodmvp.storage.repos.jobs import enqueue_job

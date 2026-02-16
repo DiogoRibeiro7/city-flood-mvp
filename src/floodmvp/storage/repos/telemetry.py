@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.models.db import TelemetryObservation, TelemetryQaDaily
 
-
 ALLOWED_AGG = {"avg", "min", "max"}
 _CAGG_GRANULARITY = {"5m", "5min", "5minutes", "5 minutes"}
 
@@ -87,7 +86,7 @@ async def get_observations(
             "max": "max_value",
         }[agg]
         q = text(
-            """
+            f"""
             SELECT bucket, {agg_col}
             FROM telemetry_observation_5m
             WHERE asset_id = :asset_id
@@ -95,7 +94,7 @@ async def get_observations(
               AND bucket >= :start
               AND bucket < :end
             ORDER BY bucket
-            """.format(agg_col=agg_col)
+            """
         )
         res = await session.execute(
             q, {"asset_id": asset_id, "metric": metric, "start": start, "end": end}

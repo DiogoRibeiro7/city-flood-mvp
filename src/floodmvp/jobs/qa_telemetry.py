@@ -3,14 +3,13 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.config.cities import get_city_configs
 from floodmvp.config.settings import settings
 from floodmvp.models.db import TelemetryQaDaily
 from floodmvp.storage.db import SessionLocal
-
 
 METRIC_RULES = {
     "rain_mmph": {"delta": 80.0, "min": 0.0, "max": 250.0},
@@ -59,7 +58,7 @@ async def mark_suspect(session: AsyncSession, lookback_days: int = 30) -> int:
                 "delta": rules["delta"],
                 "min_value": rules["min"],
                 "max_value": rules["max"],
-                "start": dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=lookback_days),
+                "start": dt.datetime.now(dt.UTC) - dt.timedelta(days=lookback_days),
             },
         )
         total += res.rowcount or 0
@@ -169,7 +168,7 @@ async def _qa_gaps(
 
 async def main() -> None:
     cities = get_city_configs()
-    now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
+    now = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
     start = now - dt.timedelta(days=settings.telemetry_gap_window_days)
     async with SessionLocal() as session:
         updated = await mark_suspect(session)

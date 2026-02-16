@@ -52,7 +52,7 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncClient:
         ]
 
     async def _get_observations(*_args, **_kwargs):
-        return [(dt.datetime(2026, 2, 1, 12, 0, tzinfo=dt.timezone.utc), 0.42)]
+        return [(dt.datetime(2026, 2, 1, 12, 0, tzinfo=dt.UTC), 0.42)]
 
     async def _list_events(*_args, **_kwargs):
         return [
@@ -60,8 +60,8 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncClient:
                 event_id="evt_1",
                 event_type="overflow",
                 severity=2,
-                start_ts=dt.datetime(2026, 2, 1, 10, 0, tzinfo=dt.timezone.utc),
-                end_ts=dt.datetime(2026, 2, 1, 12, 0, tzinfo=dt.timezone.utc),
+                start_ts=dt.datetime(2026, 2, 1, 10, 0, tzinfo=dt.UTC),
+                end_ts=dt.datetime(2026, 2, 1, 12, 0, tzinfo=dt.UTC),
                 asset_ids=["pipe_1"],
                 summary="Overflow risk detected",
             )
@@ -93,20 +93,20 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncClient:
             SimpleNamespace(
                 run_id="run_1",
                 city_id="city_test",
-                start_ts=dt.datetime(2026, 2, 1, tzinfo=dt.timezone.utc),
-                end_ts=dt.datetime(2026, 2, 2, tzinfo=dt.timezone.utc),
+                start_ts=dt.datetime(2026, 2, 1, tzinfo=dt.UTC),
+                end_ts=dt.datetime(2026, 2, 2, tzinfo=dt.UTC),
                 status="completed",
                 version="v1",
                 params={},
                 metrics={},
-                created_at=dt.datetime(2026, 2, 2, tzinfo=dt.timezone.utc),
-                updated_at=dt.datetime(2026, 2, 2, tzinfo=dt.timezone.utc),
+                created_at=dt.datetime(2026, 2, 2, tzinfo=dt.UTC),
+                updated_at=dt.datetime(2026, 2, 2, tzinfo=dt.UTC),
             )
         ]
 
+    import floodmvp.storage.repos.analytics as analytics_repo
     import floodmvp.storage.repos.assets as assets_repo
     import floodmvp.storage.repos.telemetry as telemetry_repo
-    import floodmvp.storage.repos.analytics as analytics_repo
 
     monkeypatch.setattr(assets_repo, "list_cities", _list_cities)
     monkeypatch.setattr(assets_repo, "get_city", _get_city)

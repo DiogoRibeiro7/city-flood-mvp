@@ -8,7 +8,7 @@ from floodmvp.generators.realism import _disaggregate_hourly_to_5min
 
 
 def test_disaggregate_hourly_to_5min_preserves_totals() -> None:
-    base = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
+    base = dt.datetime(2026, 1, 1, tzinfo=dt.UTC)
     hourly = pd.DataFrame(
         {
             "ts": [base, base + dt.timedelta(hours=1)],

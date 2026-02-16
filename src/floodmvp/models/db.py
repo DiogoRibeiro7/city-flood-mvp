@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import datetime as dt
 
-from sqlalchemy import ARRAY, Date, DateTime, Float, ForeignKey, Integer, JSON, String, Text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from geoalchemy2 import Geometry
+from sqlalchemy import ARRAY, JSON, Date, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):

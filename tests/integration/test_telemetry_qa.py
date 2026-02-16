@@ -26,7 +26,7 @@ async def test_qa_marks_suspect_spikes(db_session: AsyncSession) -> None:
             props={},
         )
     )
-    start = dt.datetime(2026, 1, 1, 0, 0, tzinfo=dt.timezone.utc)
+    start = dt.datetime(2026, 1, 1, 0, 0, tzinfo=dt.UTC)
     db_session.add_all(
         [
             TelemetryObservation(

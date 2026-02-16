@@ -44,7 +44,7 @@ async def test_observations_include_gaps(app_client: AsyncClient, db_session: As
             props={},
         )
     )
-    start = dt.datetime(2026, 1, 1, 0, 0, tzinfo=dt.timezone.utc)
+    start = dt.datetime(2026, 1, 1, 0, 0, tzinfo=dt.UTC)
     db_session.add_all(
         [
             TelemetryObservation(

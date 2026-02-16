@@ -76,7 +76,7 @@ async def test_city_summary_latest_aggregates(app_client: AsyncClient, db_sessio
             AssetStatusLatest(asset_id="pipe_1", city_id=city_id, status="warning", risk_score=0.8),
         ]
     )
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     recent = now - dt.timedelta(minutes=5)
     older = now - dt.timedelta(minutes=30)
     db_session.add_all(

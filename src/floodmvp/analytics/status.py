@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 def risk_from_fill(
     peak_fill: float,
     watch_threshold: float,

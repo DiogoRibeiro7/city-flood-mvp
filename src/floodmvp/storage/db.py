@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
-
 import time
+from collections.abc import AsyncGenerator
 
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from floodmvp.config.settings import settings
-from floodmvp.observability.metrics import DB_QUERY_COUNT, DB_QUERY_ERRORS, DB_QUERY_LATENCY, classify_operation
-
+from floodmvp.observability.metrics import (
+    DB_QUERY_COUNT,
+    DB_QUERY_ERRORS,
+    DB_QUERY_LATENCY,
+    classify_operation,
+)
 
 engine = create_async_engine(settings.database_url, pool_pre_ping=True)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
