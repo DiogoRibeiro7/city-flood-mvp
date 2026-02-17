@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import jwt
 from fastapi import Header
@@ -31,7 +31,7 @@ def _decode_token(token: str) -> dict[str, Any]:
         algorithms=["HS256"],
         audience=settings.jwt_audience,
         issuer=settings.jwt_issuer,
-        options=options,
+        options=cast(Any, options),
     )
 
 
