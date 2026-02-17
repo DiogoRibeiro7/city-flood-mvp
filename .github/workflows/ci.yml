@@ -84,7 +84,7 @@ jobs:
         run: docker compose up -d --build db backend web prometheus grafana
 
       - name: Seed demo data
-        run: ./scripts/seed_all.sh
+        run: bash ./scripts/seed_all.sh
 
       - uses: actions/setup-node@v4
         with:
