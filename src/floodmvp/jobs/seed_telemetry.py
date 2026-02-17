@@ -65,6 +65,14 @@ async def main(scenario_id: str | None = None) -> None:
                     )
                     realism = "synthetic"
                 else:
+                    cdsapirc = os.path.expanduser("~/.cdsapirc")
+                    if not (os.environ.get("CDSAPI_URL") and os.environ.get("CDSAPI_KEY")) and not os.path.exists(cdsapirc):
+                        print(
+                            "CDS API credentials not found (.cdsapirc or CDSAPI_URL/CDSAPI_KEY). "
+                            "Falling back to synthetic telemetry."
+                        )
+                        realism = "synthetic"
+                if realism == "tier2_porto":
                     rain = generate_rain_series_tier2(rain_gauge.asset_id, start, end, config=PORTO)
                     river = generate_river_level_tier2(river_gauge.asset_id, rain)
                     write_realism_stats(rain, river, config=PORTO)
