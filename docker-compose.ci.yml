@@ -1,0 +1,5 @@
+services:
+  backend:
+    image: city-flood-mvp-backend:ci
+  web:
+    image: city-flood-mvp-web:ci
