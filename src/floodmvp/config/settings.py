@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     app_port: int = 8000
     app_log_level: str = "INFO"
 
-    database_url: str
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/floodmvp"
     ingest_token: str = "dev-ingest-token"
     export_dir: str = "data/exports"
     analytics_api_key: str | None = None

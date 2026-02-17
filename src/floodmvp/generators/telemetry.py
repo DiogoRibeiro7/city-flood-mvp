@@ -45,7 +45,7 @@ def generate_rain_series(
     k = 2 if heavy_rain else 1
     for _ in range(k):
         center = rng.integers(low=int(0.2 * n), high=int(0.9 * n))
-        width = rng.integers(low=int(0.02 * n), high=int(0.08 * n))
+        width = int(rng.integers(low=int(0.02 * n), high=int(0.08 * n)))
         amp = float(rng.uniform(20, 80) if heavy_rain else rng.uniform(4, 18))
         x = np.arange(n)
         storms += amp * np.exp(-0.5 * ((x - center) / max(width, 1)) ** 2)
@@ -81,6 +81,9 @@ def generate_river_level_series(
     delay = 60 if heavy_rain else 30  # minutes
     kernel = np.exp(-np.linspace(0, 6, 180))
     resp = np.convolve(rain_vals, kernel, mode="same") / (kernel.sum() + 1e-9)
+    if len(resp) != n:
+        start = max((len(resp) - n) // 2, 0)
+        resp = resp[start : start + n]
     resp = np.roll(resp, delay)
 
     scale = 0.015 if high_river else 0.008
@@ -110,7 +113,7 @@ def generate_pipe_fill_ratio_series(
 
     # A simple dynamic: fill responds to rain + backwater from river
     backwater = np.clip((h - np.percentile(h, 70)), 0, None)
-    fill = 0.2 + sensitivity * (r / 80.0) + 0.6 * (backwater / (backwater.max() + 1e-9))
+    fill = 0.2 + sensitivity * (r / 80.0) + 0.6 * (backwater / (float(backwater.max()) + 1e-9))
     fill += rng.normal(0, 0.03, size=n)
     fill = np.clip(fill, 0, None)
 
@@ -141,7 +144,7 @@ def generate_pipe_hydraulics_series(
     h = river_level.df["value"].to_numpy()
 
     backwater = np.clip((h - np.percentile(h, 70)), 0, None)
-    backwater_norm = backwater / (backwater.max() + 1e-9)
+    backwater_norm = backwater / (float(backwater.max()) + 1e-9)
 
     rain_scale = 1.0 if heavy_rain else 0.6
     river_scale = 1.0 if high_river else 0.6

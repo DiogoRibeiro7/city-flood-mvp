@@ -7,8 +7,8 @@ Create Date: 2026-01-30
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0004_asset_tag"
 down_revision = "0003_timescale_policies"

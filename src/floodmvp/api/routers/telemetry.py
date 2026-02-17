@@ -8,7 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from floodmvp.api.openapi_examples import RESP_INVALID_ARGUMENT, error_response
 from floodmvp.common.errors import AppError
 from floodmvp.common.time import parse_iso8601
-from floodmvp.models.domain import ObservationsOut, ScenarioCompareOut, ScenarioRunOut, TelemetryQaOut
+from floodmvp.models.domain import (
+    ObservationDeltaOut,
+    ObservationOut,
+    ObservationsOut,
+    ScenarioCompareOut,
+    ScenarioRunOut,
+    TelemetryQaOut,
+)
 from floodmvp.storage.db import get_session
 from floodmvp.storage.repos.telemetry import (
     get_observations,
@@ -64,7 +71,7 @@ async def telemetry_qa(
         try:
             parsed_day = dt.date.fromisoformat(day)
         except ValueError as e:
-            raise AppError(code="INVALID_ARGUMENT", message=str(e))
+            raise AppError(code="INVALID_ARGUMENT", message=str(e)) from e
     rows = await list_qa_daily(session, city_id, parsed_day)
     return [
         TelemetryQaOut(
@@ -159,11 +166,11 @@ async def observations(
             scenario_id=resolved,
         )
     except ValueError as e:
-        raise AppError(code="INVALID_ARGUMENT", message=str(e))
+        raise AppError(code="INVALID_ARGUMENT", message=str(e)) from e
 
     return ObservationsOut(
         metric=metric,
-        series=[{"ts": t, "value": v} for t, v in rows],
+        series=[ObservationOut(ts=t, value=v) for t, v in rows],
         request_id=getattr(request.state, "request_id", "req_unknown"),
     )
 
@@ -245,14 +252,14 @@ async def observations_compare(
     )
 
     timestamps = sorted(set(base_map.keys()) | set(compare_map.keys()))
-    series = []
+    series: list[ObservationDeltaOut] = []
     for ts in timestamps:
         base_val = base_map.get(ts)
         compare_val = compare_map.get(ts)
         delta = None
         if base_val is not None and compare_val is not None:
             delta = float(compare_val - base_val)
-        series.append({"ts": ts, "base": base_val, "compare": compare_val, "delta": delta})
+        series.append(ObservationDeltaOut(ts=ts, base=base_val, compare=compare_val, delta=delta))
 
     return ScenarioCompareOut(
         metric=metric,

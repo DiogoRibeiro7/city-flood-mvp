@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import datetime as dt
+from typing import Any
 
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.models.db import TelemetryObservation, TelemetryQaDaily
-
 
 ALLOWED_AGG = {"avg", "min", "max"}
 _CAGG_GRANULARITY = {"5m", "5min", "5minutes", "5 minutes"}
@@ -40,7 +40,7 @@ async def resolve_scenario_id(session: AsyncSession, scenario_id: str) -> str | 
     return scenario_id
 
 
-async def list_scenarios(session: AsyncSession) -> list[dict]:
+async def list_scenarios(session: AsyncSession) -> list[dict[str, Any]]:
     res = await session.execute(
         text(
             "SELECT scenario_id, name, start_ts, end_ts "
@@ -86,8 +86,8 @@ async def get_observations(
             "min": "min_value",
             "max": "max_value",
         }[agg]
-        q = text(
-            """
+        q_text = text(
+            f"""
             SELECT bucket, {agg_col}
             FROM telemetry_observation_5m
             WHERE asset_id = :asset_id
@@ -95,10 +95,10 @@ async def get_observations(
               AND bucket >= :start
               AND bucket < :end
             ORDER BY bucket
-            """.format(agg_col=agg_col)
+            """
         )
         res = await session.execute(
-            q, {"asset_id": asset_id, "metric": metric, "start": start, "end": end}
+            q_text, {"asset_id": asset_id, "metric": metric, "start": start, "end": end}
         )
         return [(r[0], float(r[1])) for r in res.all()]
 
@@ -112,7 +112,7 @@ async def get_observations(
         # Use Timescale gapfill to surface missing buckets as nulls.
         bucket = func.time_bucket_gapfill(granularity, TelemetryObservation.ts).label("bucket")
         agg_fn = getattr(func, agg)(TelemetryObservation.value).label("value")
-        q = (
+        q_gap = (
             select(bucket, agg_fn)
             .where(TelemetryObservation.asset_id == asset_id)
             .where(TelemetryObservation.metric == metric)
@@ -122,13 +122,13 @@ async def get_observations(
             .group_by(bucket)
             .order_by(bucket)
         )
-        res = await session.execute(q)
+        res = await session.execute(q_gap)
         return [(r[0], float(r[1]) if r[1] is not None else None) for r in res.all()]
 
     # fallback to raw telemetry with time_bucket
     bucket = func.time_bucket(granularity, TelemetryObservation.ts).label("bucket")
     agg_fn = getattr(func, agg)(TelemetryObservation.value).label("value")
-    q = (
+    q_raw = (
         select(bucket, agg_fn)
         .where(TelemetryObservation.asset_id == asset_id)
         .where(TelemetryObservation.metric == metric)
@@ -138,7 +138,7 @@ async def get_observations(
         .group_by(bucket)
         .order_by(bucket)
     )
-    res = await session.execute(q)
+    res = await session.execute(q_raw)
     return [(r[0], float(r[1])) for r in res.all()]
 
 

@@ -4,6 +4,7 @@ import datetime as dt
 import os
 import socket
 from dataclasses import dataclass
+from typing import Any
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,18 +18,18 @@ from floodmvp.observability.metrics import JOB_COMPLETED, JOB_ENQUEUED, JOB_FAIL
 class EnqueuedJob:
     job_id: str
     job_type: str
-    payload: dict
+    payload: dict[str, Any]
 
 
 async def enqueue_job(
     session: AsyncSession,
     job_type: str,
-    payload: dict,
+    payload: dict[str, Any],
     max_attempts: int = 5,
     run_at: dt.datetime | None = None,
 ) -> EnqueuedJob:
     if run_at is None:
-        run_at = dt.datetime.now(dt.timezone.utc)
+        run_at = dt.datetime.now(dt.UTC)
     job_id = new_id("job")
     session.add(
         JobQueue(
@@ -47,7 +48,7 @@ async def enqueue_job(
 
 
 async def fetch_next_job(session: AsyncSession, worker_id: str) -> JobQueue | None:
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     q = (
         select(JobQueue)
         .where(JobQueue.status == "queued")
@@ -82,7 +83,7 @@ async def mark_job_failed(session: AsyncSession, job: JobQueue, error: str, back
         JOB_FAILED.labels(job_type=job.job_type).inc()
     else:
         job.status = "queued"
-        job.scheduled_at = dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=backoff_seconds)
+        job.scheduled_at = dt.datetime.now(dt.UTC) + dt.timedelta(seconds=backoff_seconds)
         JOB_RETRIED.labels(job_type=job.job_type).inc()
     await session.flush()
 
@@ -107,15 +108,19 @@ async def get_job(session: AsyncSession, job_id: str) -> JobQueue | None:
     return res.scalar_one_or_none()
 
 
+def _rowcount(res: Any) -> int:
+    return int(getattr(res, "rowcount", 0) or 0)
+
+
 async def retry_job(session: AsyncSession, job_id: str) -> bool:
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(dt.UTC)
     res = await session.execute(
         update(JobQueue)
         .where(JobQueue.job_id == job_id)
         .where(JobQueue.status.in_(["failed", "cancelled"]))
         .values(status="queued", attempts=0, last_error=None, scheduled_at=now, locked_at=None, locked_by=None)
     )
-    return (res.rowcount or 0) > 0
+    return _rowcount(res) > 0
 
 
 async def cancel_job(session: AsyncSession, job_id: str) -> bool:
@@ -125,7 +130,7 @@ async def cancel_job(session: AsyncSession, job_id: str) -> bool:
         .where(JobQueue.status == "queued")
         .values(status="cancelled", locked_at=None, locked_by=None)
     )
-    return (res.rowcount or 0) > 0
+    return _rowcount(res) > 0
 
 
 def build_worker_id() -> str:

@@ -38,14 +38,25 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
-          cache: "yarn"
-          cache-dependency-path: web/yarn.lock
+
+      - name: Cache yarn
+        uses: actions/cache@v4
+        with:
+          path: |
+            web/.yarn/cache
+            web/.yarn/unplugged
+            web/.yarn/build-state.yml
+            web/.yarn/install-state.gz
+          key: yarn-${{ runner.os }}-${{ hashFiles('web/yarn.lock') }}
 
       - name: Install deps
-        run: yarn install --frozen-lockfile
+        run: |
+          corepack enable
+          corepack prepare yarn@4.1.1 --activate
+          yarn install --immutable
 
       - name: Build
         run: yarn build
@@ -72,17 +83,46 @@ jobs:
       - name: Start stack
         run: docker compose up -d --build db backend web prometheus grafana
 
-      - name: Seed demo data
-        run: ./scripts/seed_all.sh
+      - name: Wait for web
+        run: |
+          for i in {1..40}; do
+            if curl -fsS http://localhost:5173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Web did not become ready in time."
+          docker compose ps
+          docker compose logs web --tail=200
+          exit 1
 
-      - uses: actions/setup-node@v4
+      - name: Seed demo data
+        run: bash ./scripts/seed_all.sh
+        env:
+          TELEMETRY_REALISM: synthetic
+          TELEMETRY_DAYS: "1"
+          PIPE_TELEMETRY_LIMIT: "10"
+          ANALYTICS_PIPE_LIMIT: "25"
+
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
-          cache: "yarn"
-          cache-dependency-path: web/yarn.lock
+
+      - name: Cache yarn
+        uses: actions/cache@v4
+        with:
+          path: |
+            web/.yarn/cache
+            web/.yarn/unplugged
+            web/.yarn/build-state.yml
+            web/.yarn/install-state.gz
+          key: yarn-${{ runner.os }}-${{ hashFiles('web/yarn.lock') }}
 
       - name: Install web deps
-        run: yarn install --frozen-lockfile
+        run: |
+          corepack enable
+          corepack prepare yarn@4.1.1 --activate
+          yarn install --immutable
         working-directory: web
 
       - name: Install Playwright browser
@@ -92,6 +132,8 @@ jobs:
       - name: Capture screenshots
         run: yarn capture:screenshots
         working-directory: web
+        env:
+          SCREENSHOT_MODE: light
 
       - name: Upload screenshots
         uses: actions/upload-artifact@v4

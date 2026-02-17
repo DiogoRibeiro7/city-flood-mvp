@@ -7,7 +7,6 @@ from typing import Literal
 
 import numpy as np
 
-
 PatternType = Literal["steady", "storm_bursts", "seasonal", "random_walk"]
 
 
@@ -47,9 +46,9 @@ class RiverLevelGenConfig:
 
 def _ts_range(start: dt.datetime, end: dt.datetime, cadence_seconds: int) -> list[dt.datetime]:
     if start.tzinfo is None:
-        start = start.replace(tzinfo=dt.timezone.utc)
+        start = start.replace(tzinfo=dt.UTC)
     if end.tzinfo is None:
-        end = end.replace(tzinfo=dt.timezone.utc)
+        end = end.replace(tzinfo=dt.UTC)
     if end <= start:
         return []
     delta = dt.timedelta(seconds=cadence_seconds)
@@ -101,7 +100,7 @@ def _apply_outages(
         start_idx = int(rng.integers(0, max(1, n - length_steps)))
         end_idx = min(n, start_idx + length_steps)
         mask[start_idx:end_idx] = False
-    ts_out = [ts for ts, keep in zip(ts_list, mask) if keep]
+    ts_out = [ts for ts, keep in zip(ts_list, mask, strict=False) if keep]
     values_out = values[mask]
     return ts_out, values_out
 
@@ -170,7 +169,7 @@ def generate_rain_gauge(config: RainGaugeGenConfig) -> list[dict[str, object]]:
             "value": float(val),
             "quality_flag": "ok",
         }
-        for ts, val in zip(ts_list, values)
+        for ts, val in zip(ts_list, values, strict=False)
     ]
 
 
@@ -222,7 +221,7 @@ def generate_river_level(config: RiverLevelGenConfig) -> list[dict[str, object]]
             "value": float(val),
             "quality_flag": "ok",
         }
-        for ts, val in zip(ts_list, values)
+        for ts, val in zip(ts_list, values, strict=False)
     ]
 
 

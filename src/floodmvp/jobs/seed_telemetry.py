@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
-
 import os
 
 import numpy as np
@@ -10,17 +9,18 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.config.cities import get_city_configs
-from floodmvp.generators.scenarios import SCENARIOS
-from floodmvp.generators.telemetry import (
-    generate_pipe_hydraulics_series,
-    generate_rain_series,
-    generate_river_level_series,
-)
 from floodmvp.generators.realism import (
     PORTO,
     generate_rain_series_tier2,
     generate_river_level_tier2,
     write_realism_stats,
+)
+from floodmvp.generators.scenarios import SCENARIOS
+from floodmvp.generators.telemetry import (
+    TelemetrySeries,
+    generate_pipe_hydraulics_series,
+    generate_rain_series,
+    generate_river_level_series,
 )
 from floodmvp.models.db import Asset, TelemetryObservation
 from floodmvp.storage.db import SessionLocal
@@ -28,7 +28,7 @@ from floodmvp.storage.db import SessionLocal
 
 async def main(scenario_id: str | None = None) -> None:
     cities = get_city_configs()
-    end = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
+    end = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
     env_realism = os.environ.get("TELEMETRY_REALISM")
     env_years = os.environ.get("TELEMETRY_YEARS")
     env_days = os.environ.get("TELEMETRY_DAYS")
@@ -61,10 +61,18 @@ async def main(scenario_id: str | None = None) -> None:
             if realism == "tier2_porto":
                 if city.telemetry.realism_profile != "porto":
                     print(
-                        f\"City {city.city_id} does not support tier2_porto realism; falling back to synthetic.\"
+                        f"City {city.city_id} does not support tier2_porto realism; falling back to synthetic."
                     )
                     realism = "synthetic"
                 else:
+                    cdsapirc = os.path.expanduser("~/.cdsapirc")
+                    if not (os.environ.get("CDSAPI_URL") and os.environ.get("CDSAPI_KEY")) and not os.path.exists(cdsapirc):
+                        print(
+                            "CDS API credentials not found (.cdsapirc or CDSAPI_URL/CDSAPI_KEY). "
+                            "Falling back to synthetic telemetry."
+                        )
+                        realism = "synthetic"
+                if realism == "tier2_porto":
                     rain = generate_rain_series_tier2(rain_gauge.asset_id, start, end, config=PORTO)
                     river = generate_river_level_tier2(river_gauge.asset_id, rain)
                     write_realism_stats(rain, river, config=PORTO)
@@ -104,10 +112,12 @@ async def main(scenario_id: str | None = None) -> None:
                     await _upsert_series(session, series, scenario_id=scenario_id)
 
             await session.commit()
-            print(f\"Seeded telemetry for city_id={city.city_id} ({start.isoformat()} -> {end.isoformat()})\")
+            print(f"Seeded telemetry for city_id={city.city_id} ({start.isoformat()} -> {end.isoformat()})")
 
 
-async def _upsert_series(session: AsyncSession, series, scenario_id: str | None = None) -> None:
+async def _upsert_series(
+    session: AsyncSession, series: TelemetrySeries, scenario_id: str | None = None
+) -> None:
     # naive upsert: insert with ON CONFLICT DO NOTHING
     # (fast enough for MVP)
     rows = [
@@ -120,7 +130,7 @@ async def _upsert_series(session: AsyncSession, series, scenario_id: str | None 
             "source": "synthetic",
             "scenario_id": scenario_id,
         }
-        for ts, val in zip(series.df["ts"].tolist(), series.df["value"].tolist())
+        for ts, val in zip(series.df["ts"].tolist(), series.df["value"].tolist(), strict=False)
     ]
     if not rows:
         return

@@ -101,7 +101,7 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
     geojson_line = asset_to_out(assets[1])["geom_geojson"]
     assert geojson_point is not None
     assert geojson_point["type"] == "Point"
-    assert isinstance(geojson_point["coordinates"], (list, tuple))
+    assert isinstance(geojson_point["coordinates"], list | tuple)
     assert geojson_line is not None
     assert geojson_line["type"] == "LineString"
-    assert isinstance(geojson_line["coordinates"], (list, tuple))
+    assert isinstance(geojson_line["coordinates"], list | tuple)

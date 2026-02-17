@@ -7,8 +7,8 @@ Create Date: 2026-02-06
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0011_export_job_logs"
 down_revision = "0010_analytics_run_telemetry_qa"

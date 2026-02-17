@@ -7,8 +7,8 @@ Create Date: 2026-02-16
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "0015_analytics_threshold_override"
 down_revision = "0014_analytics_confidence"
@@ -17,6 +17,7 @@ depends_on = None
 
 
 def upgrade() -> None:
+    op.alter_column("alembic_version", "version_num", type_=sa.String(length=64))
     op.create_table(
         "analytics_threshold_override",
         sa.Column("override_id", sa.String(length=64), primary_key=True),
@@ -37,3 +38,4 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_index("ix_threshold_override_city_season_created", table_name="analytics_threshold_override")
     op.drop_table("analytics_threshold_override")
+    op.alter_column("alembic_version", "version_num", type_=sa.String(length=32))

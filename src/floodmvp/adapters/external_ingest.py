@@ -3,11 +3,11 @@ from __future__ import annotations
 import csv
 import datetime as dt
 import json
+import math
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Any
-
-import math
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -42,7 +42,7 @@ def _is_finite_number(value: Any) -> bool:
 def _parse_ts(value: str) -> dt.datetime:
     ts = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
     if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=dt.timezone.utc)
+        ts = ts.replace(tzinfo=dt.UTC)
     return ts
 
 
@@ -114,10 +114,7 @@ def validate_records(
         if not device_id:
             stats.add_rejection("device_id is required")
             continue
-        if asset_map and device_id in asset_map:
-            asset_id = asset_map[device_id]
-        else:
-            asset_id = device_id
+        asset_id = asset_map[device_id] if asset_map and device_id in asset_map else device_id
 
         if allowed_asset_ids is not None and asset_id not in allowed_asset_ids:
             stats.add_rejection("asset_id not found")
@@ -145,7 +142,7 @@ def validate_records(
             continue
 
         value_raw = row.get("value")
-        if not _is_finite_number(value_raw):
+        if value_raw is None or not _is_finite_number(value_raw):
             stats.add_rejection("value must be a finite number")
             continue
 

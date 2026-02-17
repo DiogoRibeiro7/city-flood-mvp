@@ -97,7 +97,7 @@ def _disaggregate_hourly_to_5min(
     seed: int = 42,
 ) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
-    rows: list[dict] = []
+    rows: list[dict[str, float | dt.datetime]] = []
     for _, row in hourly_mm.iterrows():
         ts = row["ts"]
         total = float(row["value_mm"])

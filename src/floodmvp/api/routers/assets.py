@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from floodmvp.api.openapi_examples import RESP_INVALID_ARGUMENT, error_response
+from floodmvp.api.openapi_examples import error_response
 from floodmvp.common.errors import AppError
 from floodmvp.models.domain import AssetOut
 from floodmvp.storage.db import get_session
@@ -91,7 +91,7 @@ async def city_assets(
         near_pt = _parse_near(near)
         tags = _parse_tags(tag)
     except ValueError as e:
-        raise AppError(code="INVALID_ARGUMENT", message=str(e))
+        raise AppError(code="INVALID_ARGUMENT", message=str(e)) from e
 
     rows = await list_assets(
         session,

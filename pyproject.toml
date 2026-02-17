@@ -35,12 +35,16 @@ mypy = "^1.11.2"
 types-python-dateutil = "^2.9.0.20241003"
 pre-commit = "^3.8.0"
 pyyaml = "^6.0.2"
+pandas-stubs = "^2.2.3.250308"
+types-shapely = "^2.0.0.20240223"
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
-ignore = ["E501"]
+ignore = ["E501", "B008"]
 
 [tool.mypy]
 python_version = "3.12"

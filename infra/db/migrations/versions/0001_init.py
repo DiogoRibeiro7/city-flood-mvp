@@ -7,8 +7,8 @@ Create Date: 2026-01-30
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from geoalchemy2 import Geometry
 
 revision = "0001_init"

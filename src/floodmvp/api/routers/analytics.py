@@ -18,22 +18,22 @@ from floodmvp.common.time import parse_iso8601
 from floodmvp.config.settings import settings
 from floodmvp.models.db import ExportJob
 from floodmvp.models.domain import (
-    AnalyticsRunOut,
-    AnalyticsRunDiffOut,
     AnalyticsEventDiffSummary,
     AnalyticsHotspotDiffSummary,
-    CalibrationRecommendationOut,
+    AnalyticsRunDiffOut,
+    AnalyticsRunOut,
     CalibrationOverrideIn,
     CalibrationOverrideOut,
+    CalibrationRecommendationOut,
     CalibrationThresholds,
     CityStatusOut,
     CitySummaryOut,
-    ExportJobOut,
-    ExportJobLogOut,
-    ExportJobRequest,
     EventOut,
-    HotspotOut,
+    ExportJobLogOut,
+    ExportJobOut,
+    ExportJobRequest,
     HotspotDiffItem,
+    HotspotOut,
 )
 from floodmvp.storage.db import get_session
 from floodmvp.storage.repos.analytics import (
@@ -41,13 +41,13 @@ from floodmvp.storage.repos.analytics import (
     calibration_recommendations,
     create_export_job,
     create_threshold_override,
+    diff_analytics_runs,
     get_city_status,
     get_city_summary,
     get_export_job,
-    diff_analytics_runs,
+    list_analytics_runs,
     list_export_job_logs,
     list_hotspots,
-    list_analytics_runs,
     list_threshold_overrides,
 )
 from floodmvp.storage.repos.jobs import enqueue_job
@@ -232,15 +232,9 @@ async def analytics_calibration_recommendations(
 ) -> CalibrationRecommendationOut:
     if seasonality not in {"all", "monthly"}:
         raise AppError(code="INVALID_ARGUMENT", message="seasonality must be 'all' or 'monthly'")
-    now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
-    if to_ts:
-        end = parse_iso8601(to_ts)
-    else:
-        end = now
-    if from_ts:
-        start = parse_iso8601(from_ts)
-    else:
-        start = end - dt.timedelta(days=30)
+    now = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
+    end = parse_iso8601(to_ts) if to_ts else now
+    start = parse_iso8601(from_ts) if from_ts else end - dt.timedelta(days=30)
     if end <= start:
         raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
 
@@ -332,7 +326,7 @@ async def analytics_runs_diff(
     try:
         diff = await diff_analytics_runs(session, base_run_id, compare_run_id, limit=limit)
     except ValueError as exc:
-        raise AppError(code="INVALID_ARGUMENT", message=str(exc))
+        raise AppError(code="INVALID_ARGUMENT", message=str(exc)) from exc
     if diff["city_id"] != city_id:
         raise AppError(code="INVALID_ARGUMENT", message="run_id does not match city_id")
 

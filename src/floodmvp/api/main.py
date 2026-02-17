@@ -1,24 +1,23 @@
 from __future__ import annotations
 
-import uuid
 import asyncio
 import logging
 import time
+import uuid
+from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from floodmvp.api.routers import analytics, assets, cities, events, health, ingest, jobs, telemetry
 from floodmvp.common.errors import AppError, as_error_payload, as_error_payload_raw
 from floodmvp.common.logging import configure_logging, log_json
 from floodmvp.config.settings import settings
 from floodmvp.observability.metrics import HTTP_ERRORS, REQUEST_COUNT, REQUEST_LATENCY
-
-from floodmvp.api.routers import health, cities, assets, telemetry, analytics, events, ingest, jobs
-
 
 configure_logging()
 
@@ -56,7 +55,9 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def add_request_id(request: Request, call_next):
+async def add_request_id(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     request_id = request.headers.get("x-request-id") or f"req_{uuid.uuid4().hex}"
     request.state.request_id = request_id
     # rate limiting (in-memory MVP)
@@ -111,7 +112,7 @@ async def add_request_id(request: Request, call_next):
     start = time.perf_counter()
     try:
         response = await asyncio.wait_for(call_next(request), timeout=settings.request_timeout_s)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return JSONResponse(
             status_code=504,
             content=as_error_payload_raw(
@@ -145,13 +146,13 @@ async def add_request_id(request: Request, call_next):
 
 
 @app.exception_handler(AppError)
-async def app_error_handler(request: Request, exc: AppError):
+async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "req_unknown")
     return JSONResponse(status_code=exc.status_code, content=as_error_payload(exc, request_id))
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_error_handler(request: Request, exc: RequestValidationError):
+async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "req_unknown")
     return JSONResponse(
         status_code=400,
@@ -165,7 +166,7 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 
 
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "req_unknown")
     code_map = {
         400: "INVALID_ARGUMENT",
@@ -182,7 +183,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 
 @app.get("/metrics")
-async def metrics():
+async def metrics() -> Response:
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 

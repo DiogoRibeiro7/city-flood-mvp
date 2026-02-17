@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
+import os
 
 import pandas as pd
 from sqlalchemy import delete, select
@@ -12,7 +13,7 @@ from floodmvp.analytics.overflow_events import detect_overflow_events
 from floodmvp.analytics.rain_events import detect_rain_events
 from floodmvp.analytics.status import risk_from_fill
 from floodmvp.common.ids import new_id
-from floodmvp.config.cities import get_city_configs
+from floodmvp.config.cities import CityConfig, get_city_configs
 from floodmvp.config.settings import settings
 from floodmvp.models.db import (
     AnalyticsEvent,
@@ -53,10 +54,10 @@ def _confidence(coverage: float, signal: float) -> float:
 
 async def run_city_analytics(
     session: AsyncSession,
-    city,
+    city: CityConfig,
     now: dt.datetime,
     start: dt.datetime,
-    thresholds: dict[str, float],
+    thresholds: dict[str, float | int],
 ) -> str:
     run_id = new_id("run")
     session.add(
@@ -91,8 +92,8 @@ async def run_city_analytics(
     rain_df = await _load_metric_df(session, rain_gauge.asset_id, "rain_mmph", start, now)
     rain_events = detect_rain_events(
         rain_df,
-        threshold_mmph=thresholds["rain_event_threshold_mmph"],
-        min_duration_minutes=thresholds["rain_event_min_duration_minutes"],
+        threshold_mmph=float(thresholds["rain_event_threshold_mmph"]),
+        min_duration_minutes=int(thresholds["rain_event_min_duration_minutes"]),
     )
     for s, e, peak in rain_events:
         event_df = rain_df[(rain_df["ts"] >= s) & (rain_df["ts"] <= e)]
@@ -119,8 +120,12 @@ async def run_city_analytics(
         )
 
     # Overflows from subset of pipes
+    pipe_limit = int(os.environ.get("ANALYTICS_PIPE_LIMIT", "250"))
     pipes = (await session.execute(
-        select(Asset).where(Asset.city_id == city.city_id).where(Asset.asset_type == "pipe").limit(250)
+        select(Asset)
+        .where(Asset.city_id == city.city_id)
+        .where(Asset.asset_type == "pipe")
+        .limit(pipe_limit)
     )).scalars().all()
 
     day = now.date()
@@ -130,8 +135,8 @@ async def run_city_analytics(
         fill_df = await _load_metric_df(session, p.asset_id, "fill_ratio", start, now)
         events = detect_overflow_events(
             fill_df,
-            threshold=thresholds["overflow_fill_threshold"],
-            min_duration_minutes=thresholds["overflow_min_duration_minutes"],
+            threshold=float(thresholds["overflow_fill_threshold"]),
+            min_duration_minutes=int(thresholds["overflow_min_duration_minutes"]),
         )
         score = overflow_minutes_score(events)
 
@@ -219,7 +224,7 @@ async def run_city_analytics(
 
 async def main() -> None:
     cities = get_city_configs()
-    now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
+    now = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
     start = now - dt.timedelta(days=settings.analytics_window_days)
 
     async with SessionLocal() as session:

@@ -4,6 +4,7 @@ import argparse
 import datetime as dt
 import json
 from pathlib import Path
+from typing import Any, cast
 
 from floodmvp.generators.external import (
     RainGaugeGenConfig,
@@ -17,7 +18,7 @@ from floodmvp.generators.external import (
 def _parse_dt(value: str) -> dt.datetime:
     ts = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
     if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=dt.timezone.utc)
+        ts = ts.replace(tzinfo=dt.UTC)
     return ts
 
 
@@ -56,8 +57,8 @@ def main() -> int:
             return {}
         if value.startswith("@"):
             path = Path(value[1:])
-            return json.loads(path.read_text(encoding="utf-8"))
-        return json.loads(value)
+            return cast(dict[str, dict[str, float]], json.loads(path.read_text(encoding="utf-8")))
+        return cast(dict[str, dict[str, float]], json.loads(value))
 
     rain_overrides = _load_overrides(args.rain_pattern_overrides)
     river_overrides = _load_overrides(args.river_pattern_overrides)
@@ -67,41 +68,55 @@ def main() -> int:
     records: list[dict[str, object]] = []
     for i in range(args.rain_count):
         device_id = f"{args.rain_prefix}{i}"
-        device_cfg = rain_device_overrides.get(device_id, {})
+        device_cfg_rain: dict[str, Any] = rain_device_overrides.get(device_id, {})
         rain_cfg = RainGaugeGenConfig(
             device_id=device_id,
             start=start,
             end=end,
             cadence_seconds=60,
             pattern=args.pattern,
-            base_mmph=float(device_cfg.get("base", args.rain_base)),
-            peak_mmph=float(device_cfg.get("peak", args.rain_peak)),
-            noise_sigma=float(device_cfg.get("noise_sigma", args.rain_noise)),
-            pattern_overrides=device_cfg.get("pattern_overrides", rain_overrides),
-            outage_count=int(device_cfg.get("outage_count", args.outage_count)),
-            outage_min_minutes=int(device_cfg.get("outage_min_minutes", args.outage_min_minutes)),
-            outage_max_minutes=int(device_cfg.get("outage_max_minutes", args.outage_max_minutes)),
-            seed=int(device_cfg.get("seed", args.seed + i * 7)),
+            base_mmph=float(device_cfg_rain.get("base", args.rain_base)),
+            peak_mmph=float(device_cfg_rain.get("peak", args.rain_peak)),
+            noise_sigma=float(device_cfg_rain.get("noise_sigma", args.rain_noise)),
+            pattern_overrides=cast(
+                dict[str, dict[str, float]],
+                device_cfg_rain.get("pattern_overrides", rain_overrides),
+            ),
+            outage_count=int(device_cfg_rain.get("outage_count", args.outage_count)),
+            outage_min_minutes=int(
+                device_cfg_rain.get("outage_min_minutes", args.outage_min_minutes)
+            ),
+            outage_max_minutes=int(
+                device_cfg_rain.get("outage_max_minutes", args.outage_max_minutes)
+            ),
+            seed=int(device_cfg_rain.get("seed", args.seed + i * 7)),
         )
         records.extend(generate_rain_gauge(rain_cfg))
 
     for i in range(args.river_count):
         device_id = f"{args.river_prefix}{i}"
-        device_cfg = river_device_overrides.get(device_id, {})
+        device_cfg_river: dict[str, Any] = river_device_overrides.get(device_id, {})
         river_cfg = RiverLevelGenConfig(
             device_id=device_id,
             start=start,
             end=end,
             cadence_seconds=60,
             pattern=args.pattern,
-            base_m=float(device_cfg.get("base", args.river_base)),
-            peak_m=float(device_cfg.get("peak", args.river_peak)),
-            noise_sigma=float(device_cfg.get("noise_sigma", args.river_noise)),
-            pattern_overrides=device_cfg.get("pattern_overrides", river_overrides),
-            outage_count=int(device_cfg.get("outage_count", args.outage_count)),
-            outage_min_minutes=int(device_cfg.get("outage_min_minutes", args.outage_min_minutes)),
-            outage_max_minutes=int(device_cfg.get("outage_max_minutes", args.outage_max_minutes)),
-            seed=int(device_cfg.get("seed", args.seed + 100 + i * 7)),
+            base_m=float(device_cfg_river.get("base", args.river_base)),
+            peak_m=float(device_cfg_river.get("peak", args.river_peak)),
+            noise_sigma=float(device_cfg_river.get("noise_sigma", args.river_noise)),
+            pattern_overrides=cast(
+                dict[str, dict[str, float]],
+                device_cfg_river.get("pattern_overrides", river_overrides),
+            ),
+            outage_count=int(device_cfg_river.get("outage_count", args.outage_count)),
+            outage_min_minutes=int(
+                device_cfg_river.get("outage_min_minutes", args.outage_min_minutes)
+            ),
+            outage_max_minutes=int(
+                device_cfg_river.get("outage_max_minutes", args.outage_max_minutes)
+            ),
+            seed=int(device_cfg_river.get("seed", args.seed + 100 + i * 7)),
         )
         records.extend(generate_river_level(river_cfg))
 

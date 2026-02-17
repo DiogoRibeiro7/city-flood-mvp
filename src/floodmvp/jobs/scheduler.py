@@ -5,6 +5,7 @@ import asyncio
 import datetime as dt
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.config.cities import get_city_configs
 from floodmvp.models.db import AnalyticsRun, JobQueue
@@ -12,7 +13,7 @@ from floodmvp.storage.db import SessionLocal
 from floodmvp.storage.repos.jobs import enqueue_job
 
 
-async def _should_enqueue(session, city_id: str, interval_minutes: int) -> bool:
+async def _should_enqueue(session: AsyncSession, city_id: str, interval_minutes: int) -> bool:
     queued = await session.execute(
         select(JobQueue.job_id)
         .where(JobQueue.job_type == "analytics_run")
@@ -31,7 +32,9 @@ async def _should_enqueue(session, city_id: str, interval_minutes: int) -> bool:
     row = res.scalar_one_or_none()
     if row is None:
         return True
-    return row < dt.datetime.now(dt.timezone.utc) - dt.timedelta(minutes=interval_minutes)
+    if not isinstance(row, dt.datetime):
+        return True
+    return row < dt.datetime.now(dt.UTC) - dt.timedelta(minutes=interval_minutes)
 
 
 async def run(interval_minutes: int, poll_seconds: int) -> None:

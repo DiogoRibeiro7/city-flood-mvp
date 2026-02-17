@@ -16,7 +16,7 @@ async def run(name: str, days: int) -> None:
         raise ValueError(f"scenario name must be one of {sorted(SCENARIOS)}")
 
     scenario_id = new_id("scenario")
-    now = dt.datetime.now(dt.timezone.utc).replace(second=0, microsecond=0)
+    now = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
     start = now - dt.timedelta(days=days)
 
     async with SessionLocal() as session:

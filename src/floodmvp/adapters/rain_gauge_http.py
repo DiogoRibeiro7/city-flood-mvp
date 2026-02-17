@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import csv
 import datetime as dt
-import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -24,16 +23,15 @@ class RainGaugeFetchConfig:
 def _parse_ts(value: str) -> dt.datetime:
     ts = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
     if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=dt.timezone.utc)
+        ts = ts.replace(tzinfo=dt.UTC)
     return ts
 
 
 def _as_rows_json(payload: Any) -> list[dict[str, Any]]:
     if isinstance(payload, list):
         return [r for r in payload if isinstance(r, dict)]
-    if isinstance(payload, dict):
-        if "records" in payload and isinstance(payload["records"], list):
-            return [r for r in payload["records"] if isinstance(r, dict)]
+    if isinstance(payload, dict) and "records" in payload and isinstance(payload["records"], list):
+        return [r for r in payload["records"] if isinstance(r, dict)]
     raise ValueError("Unsupported JSON payload. Use a list or {records:[...]}")
 
 
