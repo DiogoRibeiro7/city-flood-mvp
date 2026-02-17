@@ -87,8 +87,9 @@ jobs:
         run: bash ./scripts/seed_all.sh
         env:
           TELEMETRY_REALISM: synthetic
-          TELEMETRY_DAYS: "7"
-          PIPE_TELEMETRY_LIMIT: "50"
+          TELEMETRY_DAYS: "1"
+          PIPE_TELEMETRY_LIMIT: "10"
+          ANALYTICS_PIPE_LIMIT: "25"
 
       - uses: actions/setup-node@v4
         with:
