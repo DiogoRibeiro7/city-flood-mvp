@@ -4,7 +4,6 @@ import argparse
 import asyncio
 import json
 import sys
-from typing import Any
 from pathlib import Path
 
 from sqlalchemy import select

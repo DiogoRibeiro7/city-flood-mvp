@@ -5,9 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.common.errors import AppError
 from floodmvp.config.settings import settings
+from floodmvp.models.db import JobQueue
 from floodmvp.models.domain import JobQueueOut
 from floodmvp.storage.db import get_session
-from floodmvp.models.db import JobQueue
 from floodmvp.storage.repos.jobs import cancel_job, get_job, list_jobs, retry_job
 
 router = APIRouter(tags=["jobs"])
