@@ -83,6 +83,19 @@ jobs:
       - name: Start stack
         run: docker compose up -d --build db backend web prometheus grafana
 
+      - name: Wait for web
+        run: |
+          for i in {1..40}; do
+            if curl -fsS http://localhost:5173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Web did not become ready in time."
+          docker compose ps
+          docker compose logs web --tail=200
+          exit 1
+
       - name: Seed demo data
         run: bash ./scripts/seed_all.sh
         env:
