@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import jwt
 from fastapi import Header
@@ -20,7 +20,7 @@ class AuthUser:
 def _decode_token(token: str) -> dict[str, Any]:
     if not settings.jwt_secret:
         raise AppError(code="AUTH_NOT_CONFIGURED", message="JWT auth not configured", status_code=500)
-    options = {
+    options: dict[str, object] = {
         "verify_signature": True,
         "verify_aud": bool(settings.jwt_audience),
         "verify_iss": bool(settings.jwt_issuer),
@@ -31,7 +31,7 @@ def _decode_token(token: str) -> dict[str, Any]:
         algorithms=["HS256"],
         audience=settings.jwt_audience,
         issuer=settings.jwt_issuer,
-        options=options,
+        options=cast(Any, options),
     )
 
 
