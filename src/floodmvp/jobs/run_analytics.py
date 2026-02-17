@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
+import os
 
 import pandas as pd
 from sqlalchemy import delete, select
@@ -119,8 +120,12 @@ async def run_city_analytics(
         )
 
     # Overflows from subset of pipes
+    pipe_limit = int(os.environ.get("ANALYTICS_PIPE_LIMIT", "250"))
     pipes = (await session.execute(
-        select(Asset).where(Asset.city_id == city.city_id).where(Asset.asset_type == "pipe").limit(250)
+        select(Asset)
+        .where(Asset.city_id == city.city_id)
+        .where(Asset.asset_type == "pipe")
+        .limit(pipe_limit)
     )).scalars().all()
 
     day = now.date()

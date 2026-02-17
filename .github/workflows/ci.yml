@@ -8,7 +8,7 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v5
         with:
@@ -36,9 +36,9 @@ jobs:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
 
@@ -67,7 +67,7 @@ jobs:
   docker-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build backend image
         run: docker build -f infra/backend/Dockerfile .
@@ -78,19 +78,33 @@ jobs:
   screenshots:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Start stack
         run: docker compose up -d --build db backend web prometheus grafana
+
+      - name: Wait for web
+        run: |
+          for i in {1..40}; do
+            if curl -fsS http://localhost:5173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Web did not become ready in time."
+          docker compose ps
+          docker compose logs web --tail=200
+          exit 1
 
       - name: Seed demo data
         run: bash ./scripts/seed_all.sh
         env:
           TELEMETRY_REALISM: synthetic
-          TELEMETRY_DAYS: "7"
-          PIPE_TELEMETRY_LIMIT: "50"
+          TELEMETRY_DAYS: "1"
+          PIPE_TELEMETRY_LIMIT: "10"
+          ANALYTICS_PIPE_LIMIT: "25"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
 

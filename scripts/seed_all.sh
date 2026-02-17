@@ -10,9 +10,13 @@ for var in TELEMETRY_REALISM TELEMETRY_YEARS TELEMETRY_DAYS TELEMETRY_SCENARIO P
   fi
 done
 
+echo "Running migrations..."
 docker compose exec -T "${env_args[@]}" backend alembic upgrade head
+echo "Seeding assets..."
 docker compose exec -T "${env_args[@]}" backend python -m floodmvp.jobs.seed_assets
+echo "Seeding telemetry..."
 docker compose exec -T "${env_args[@]}" backend python -m floodmvp.jobs.seed_telemetry
+echo "Running analytics..."
 docker compose exec -T "${env_args[@]}" backend python -m floodmvp.jobs.run_analytics
 
 echo "Seed complete."
