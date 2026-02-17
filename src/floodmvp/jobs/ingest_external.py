@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import sys
+from typing import Any
 from pathlib import Path
 
 from sqlalchemy import select
@@ -11,6 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.adapters.external_ingest import (
+    IngestRecord,
     load_asset_map,
     parse_csv,
     parse_json,
@@ -31,7 +33,9 @@ async def _fetch_asset_lookup(session: AsyncSession) -> tuple[set[str], dict[str
     return asset_ids, city_by_asset
 
 
-async def _insert_records(session: AsyncSession, records, chunk_size: int = 2000) -> int:
+async def _insert_records(
+    session: AsyncSession, records: list[IngestRecord], chunk_size: int = 2000
+) -> int:
     inserted = 0
     rows = [
         {
@@ -49,8 +53,9 @@ async def _insert_records(session: AsyncSession, records, chunk_size: int = 2000
         stmt = insert(TelemetryObservation).values(batch)
         stmt = stmt.on_conflict_do_nothing(index_elements=["asset_id", "metric", "ts"])
         res = await session.execute(stmt)
-        if res.rowcount:
-            inserted += int(res.rowcount)
+        rowcount = int(getattr(res, "rowcount", 0) or 0)
+        if rowcount:
+            inserted += rowcount
     return inserted
 
 

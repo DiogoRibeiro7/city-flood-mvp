@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -28,8 +28,8 @@ class AssetOut(BaseModel):
     city_id: str
     asset_type: AssetType
     name: str
-    geom_geojson: dict | None = None
-    props: dict = Field(default_factory=dict)
+    geom_geojson: dict[str, Any] | None = None
+    props: dict[str, Any] = Field(default_factory=dict)
 
 
 class Paging(BaseModel):
@@ -38,7 +38,7 @@ class Paging(BaseModel):
 
 
 class ListResponse(BaseModel):
-    data: list
+    data: list[Any]
     paging: Paging = Field(default_factory=Paging)
 
 
@@ -91,7 +91,7 @@ class ExportJobLogOut(BaseModel):
     ts: dt.datetime
     level: str
     message: str
-    details: dict = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class ExportJobOut(BaseModel):
@@ -122,7 +122,7 @@ class HotspotOut(BaseModel):
     asset_id: str
     score: float
     confidence: float
-    details: dict = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=dict)
 
 
 class CitySummaryOut(BaseModel):
@@ -130,7 +130,7 @@ class CitySummaryOut(BaseModel):
     now: dt.datetime
     rain_mmph: float
     river_level_m: float
-    status_counts: dict
+    status_counts: dict[str, int]
 
 
 class EventOut(BaseModel):
@@ -151,8 +151,8 @@ class AnalyticsRunOut(BaseModel):
     end_ts: dt.datetime
     status: str
     version: str
-    params: dict
-    metrics: dict
+    params: dict[str, Any]
+    metrics: dict[str, Any]
     created_at: dt.datetime
     updated_at: dt.datetime
 
@@ -187,7 +187,7 @@ class AnalyticsRunDiffOut(BaseModel):
     compare_run_id: str
     base_version: str
     compare_version: str
-    metrics_delta: dict
+    metrics_delta: dict[str, Any]
     events: AnalyticsEventDiffSummary
     hotspots: AnalyticsHotspotDiffSummary
 
@@ -272,7 +272,7 @@ class JobQueueOut(BaseModel):
     job_id: str
     job_type: str
     status: str
-    payload: dict
+    payload: dict[str, Any]
     attempts: int
     max_attempts: int
     scheduled_at: dt.datetime

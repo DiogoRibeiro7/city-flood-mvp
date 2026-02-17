@@ -61,7 +61,7 @@ async def mark_suspect(session: AsyncSession, lookback_days: int = 30) -> int:
                 "start": dt.datetime.now(dt.UTC) - dt.timedelta(days=lookback_days),
             },
         )
-        total += res.rowcount or 0
+        total += int(getattr(res, "rowcount", 0) or 0)
     return total
 
 

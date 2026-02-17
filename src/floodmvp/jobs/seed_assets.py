@@ -6,7 +6,7 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.common.ids import new_id
-from floodmvp.config.cities import get_city_configs
+from floodmvp.config.cities import CityConfig, get_city_configs
 from floodmvp.generators.city_network import generate_city_network, to_wkt
 from floodmvp.models.db import Asset, AssetTag, City
 from floodmvp.storage.db import SessionLocal
@@ -18,7 +18,7 @@ async def _reset(session: AsyncSession) -> None:
     await session.execute(delete(City))
 
 
-async def _seed_city(session: AsyncSession, city) -> None:
+async def _seed_city(session: AsyncSession, city: CityConfig) -> None:
     net = generate_city_network(
         city_id=city.city_id,
         center_lon=city.network.center_lon,

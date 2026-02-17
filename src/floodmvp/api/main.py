@@ -4,6 +4,7 @@ import asyncio
 import logging
 import time
 import uuid
+from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -54,7 +55,9 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def add_request_id(request: Request, call_next):
+async def add_request_id(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     request_id = request.headers.get("x-request-id") or f"req_{uuid.uuid4().hex}"
     request.state.request_id = request_id
     # rate limiting (in-memory MVP)
@@ -143,13 +146,13 @@ async def add_request_id(request: Request, call_next):
 
 
 @app.exception_handler(AppError)
-async def app_error_handler(request: Request, exc: AppError):
+async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "req_unknown")
     return JSONResponse(status_code=exc.status_code, content=as_error_payload(exc, request_id))
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_error_handler(request: Request, exc: RequestValidationError):
+async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "req_unknown")
     return JSONResponse(
         status_code=400,
@@ -163,7 +166,7 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 
 
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     request_id = getattr(request.state, "request_id", "req_unknown")
     code_map = {
         400: "INVALID_ARGUMENT",
@@ -180,7 +183,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 
 @app.get("/metrics")
-async def metrics():
+async def metrics() -> Response:
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 

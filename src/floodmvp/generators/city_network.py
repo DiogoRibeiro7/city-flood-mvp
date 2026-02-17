@@ -59,7 +59,7 @@ def _line_length_m(line: LineString) -> float:
     total = 0.0
     for (lon1, lat1), (lon2, lat2) in zip(coords, coords[1:], strict=False):
         total += _haversine_m(lon1, lat1, lon2, lat2)
-    return total
+    return float(total)
 
 
 def _pipe_capacity_m3s(diameter_m: float, slope: float, manning_n: float = 0.013) -> float:
@@ -67,7 +67,7 @@ def _pipe_capacity_m3s(diameter_m: float, slope: float, manning_n: float = 0.013
     radius = diameter_m / 2.0
     area = math.pi * radius * radius
     hydraulic_radius = diameter_m / 4.0
-    return (1.0 / manning_n) * area * (hydraulic_radius ** (2.0 / 3.0)) * math.sqrt(slope)
+    return float((1.0 / manning_n) * area * (hydraulic_radius ** (2.0 / 3.0)) * math.sqrt(slope))
 
 
 def generate_city_network(
@@ -140,7 +140,7 @@ def generate_city_network(
             + float(rng.normal(0, 1.2))
         )
         river_cache[idx] = (near.x, near.y, elev)
-        return elev
+        return float(elev)
 
     # pipes connect to right and up (grid edges), with directed flow
     pipes: list[PipeSegment] = []

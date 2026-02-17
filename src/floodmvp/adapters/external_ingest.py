@@ -142,7 +142,7 @@ def validate_records(
             continue
 
         value_raw = row.get("value")
-        if not _is_finite_number(value_raw):
+        if value_raw is None or not _is_finite_number(value_raw):
             stats.add_rejection("value must be a finite number")
             continue
 

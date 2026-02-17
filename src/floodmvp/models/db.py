@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+from typing import Any
 
 from geoalchemy2 import Geometry
 from sqlalchemy import ARRAY, JSON, Date, DateTime, Float, ForeignKey, Integer, String, Text
@@ -29,7 +30,7 @@ class Asset(Base):
     asset_type: Mapped[str] = mapped_column(String(40), index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     geom = mapped_column(Geometry(geometry_type="GEOMETRY", srid=4326), nullable=True)
-    props: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    props: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
@@ -60,7 +61,7 @@ class IngestIdempotency(Base):
 
     idempotency_key: Mapped[str] = mapped_column(String(128), primary_key=True)
     device_id: Mapped[str] = mapped_column(String(64), ForeignKey("asset.asset_id"), index=True)
-    response: Mapped[dict] = mapped_column(JSON, nullable=False)
+    response: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
@@ -81,7 +82,7 @@ class ExportJob(Base):
     job_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     progress: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    query: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    query: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     file_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -100,7 +101,7 @@ class ExportJobLog(Base):
     job_id: Mapped[str] = mapped_column(String(64), ForeignKey("export_job.job_id"), index=True)
     level: Mapped[str] = mapped_column(String(16), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
@@ -110,7 +111,7 @@ class JobQueue(Base):
     job_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     job_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False, index=True, default="queued")
-    payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     scheduled_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -151,7 +152,7 @@ class AnalyticsHotspotDaily(Base):
     asset_id: Mapped[str] = mapped_column(String(64), ForeignKey("asset.asset_id"), primary_key=True)
     score: Mapped[float] = mapped_column(Float, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
-    details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
 
 
 class AssetStatusLatest(Base):
@@ -162,7 +163,7 @@ class AssetStatusLatest(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     risk_score: Mapped[float] = mapped_column(Float, nullable=False)
     updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
-    details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
 
 
 class AnalyticsRun(Base):
@@ -174,8 +175,8 @@ class AnalyticsRun(Base):
     end_ts: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     version: Mapped[str] = mapped_column(String(32), nullable=False)
-    params: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    metrics: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    params: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    metrics: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
     updated_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default="now()", server_onupdate="now()"
@@ -202,6 +203,6 @@ class AnalyticsThresholdOverride(Base):
     override_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), index=True)
     season: Mapped[str] = mapped_column(String(16), nullable=False, default="all")
-    thresholds: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    thresholds: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")

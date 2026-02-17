@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import pathlib
+from typing import Any
 
 from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,7 +39,7 @@ async def get_run(session: AsyncSession, run_id: str) -> AnalyticsRun | None:
     return res.scalar_one_or_none()
 
 
-async def get_city_status(session: AsyncSession, city_id: str) -> dict:
+async def get_city_status(session: AsyncSession, city_id: str) -> dict[str, Any]:
     # cheap summary for dashboards
     now = dt.datetime.now(dt.UTC)
     run_id = await get_latest_run_id(session, city_id)
@@ -192,7 +193,7 @@ async def add_export_job_log(
     job_id: str,
     level: str,
     message: str,
-    details: dict | None = None,
+    details: dict[str, Any] | None = None,
 ) -> None:
     session.add(
         ExportJobLog(
@@ -261,7 +262,11 @@ async def list_threshold_overrides(
 
 
 async def create_threshold_override(
-    session: AsyncSession, city_id: str, season: str, thresholds: dict, notes: str | None
+    session: AsyncSession,
+    city_id: str,
+    season: str,
+    thresholds: dict[str, Any],
+    notes: str | None,
 ) -> AnalyticsThresholdOverride:
     row = AnalyticsThresholdOverride(
         override_id=new_id("cal"),
@@ -276,8 +281,11 @@ async def create_threshold_override(
 
 
 async def apply_threshold_overrides(
-    session: AsyncSession, city_id: str, thresholds: dict, when: dt.datetime
-) -> dict:
+    session: AsyncSession,
+    city_id: str,
+    thresholds: dict[str, Any],
+    when: dt.datetime,
+) -> dict[str, Any]:
     season = _season_key(when)
     override = await get_threshold_override(session, city_id, season)
     if override is None:
@@ -329,9 +337,9 @@ async def calibration_recommendations(
     start: dt.datetime,
     end: dt.datetime,
     seasonality: str,
-    default_thresholds: dict,
-) -> dict[str, dict]:
-    out: dict[str, dict] = {}
+    default_thresholds: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
     months = range(1, 13) if seasonality == "monthly" else [None]
     for month in months:
         season = f"month-{month:02d}" if month else "all"
@@ -357,7 +365,7 @@ async def diff_analytics_runs(
     base_run_id: str,
     compare_run_id: str,
     limit: int = 100,
-) -> dict:
+) -> dict[str, Any]:
     base_run = await get_run(session, base_run_id)
     compare_run = await get_run(session, compare_run_id)
     if base_run is None or compare_run is None:
@@ -365,8 +373,8 @@ async def diff_analytics_runs(
     if base_run.city_id != compare_run.city_id:
         raise ValueError("run_id city mismatch")
 
-    def _metrics_delta(a: dict, b: dict) -> dict:
-        out: dict[str, dict] = {}
+    def _metrics_delta(a: dict[str, Any], b: dict[str, Any]) -> dict[str, dict[str, Any]]:
+        out: dict[str, dict[str, Any]] = {}
         keys = set(a.keys()) | set(b.keys())
         for k in keys:
             av = a.get(k)
@@ -389,7 +397,7 @@ async def diff_analytics_runs(
     base_events = list(base_events_res.scalars().all())
     compare_events = list(compare_events_res.scalars().all())
 
-    def _event_key(e: AnalyticsEvent) -> tuple:
+    def _event_key(e: AnalyticsEvent) -> tuple[str, tuple[str, ...], dt.datetime, dt.datetime]:
         return (
             e.event_type,
             tuple(sorted(e.asset_ids or [])),
@@ -417,7 +425,7 @@ async def diff_analytics_runs(
     base_hotspots = list(base_hotspots_res.scalars().all())
     compare_hotspots = list(compare_hotspots_res.scalars().all())
 
-    def _hotspot_key(h: AnalyticsHotspotDaily) -> tuple:
+    def _hotspot_key(h: AnalyticsHotspotDaily) -> tuple[str, str, dt.date]:
         return (h.metric, h.asset_id, h.day)
 
     base_hotspot_map = {_hotspot_key(h): h for h in base_hotspots}
@@ -437,7 +445,11 @@ async def diff_analytics_runs(
             changed.append((k, before, after))
     changed.sort(key=lambda x: abs(float(x[2]) - float(x[1])), reverse=True)
 
-    def _hotspot_entry(h, before=None, after=None) -> dict:
+    def _hotspot_entry(
+        h: AnalyticsHotspotDaily | None,
+        before: float | None = None,
+        after: float | None = None,
+    ) -> dict[str, Any]:
         if before is None:
             before = h.score if h is not None else None
         if after is None:
@@ -543,7 +555,7 @@ async def run_export_csv(
     return str(file_path), len(rows)
 
 
-async def get_city_summary(session: AsyncSession, city_id: str, minutes: int) -> dict:
+async def get_city_summary(session: AsyncSession, city_id: str, minutes: int) -> dict[str, Any]:
     now = dt.datetime.now(dt.UTC)
     start = now - dt.timedelta(minutes=minutes)
 

@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import datetime as dt
 import time
+from typing import Any
 
 from floodmvp.config.cities import get_city_config
 from floodmvp.config.settings import settings
@@ -11,6 +12,7 @@ from floodmvp.jobs.run_analytics import run_city_analytics
 from floodmvp.models.domain import ExportJobQuery
 from floodmvp.observability.metrics import JOB_PROCESSING_DURATION, JOB_QUEUE_AGE
 from floodmvp.storage.db import SessionLocal
+from sqlalchemy.ext.asyncio import AsyncSession
 from floodmvp.storage.repos.analytics import (
     add_export_job_log,
     apply_threshold_overrides,
@@ -27,12 +29,12 @@ from floodmvp.storage.repos.jobs import (
 
 
 def _backoff_seconds(attempt: int) -> int:
-    return min(300, 5 * (2 ** max(0, attempt - 1)))
+    return int(min(300, 5 * (2 ** max(0, attempt - 1))))
 
 
-async def _handle_export(session, payload: dict) -> None:
+async def _handle_export(session: AsyncSession, payload: dict[str, Any]) -> None:
     job_id = payload.get("export_job_id")
-    if not job_id:
+    if not isinstance(job_id, str) or not job_id:
         raise ValueError("export_job_id is required")
 
     job = await get_export_job(session, job_id)
@@ -66,9 +68,9 @@ async def _handle_export(session, payload: dict) -> None:
     )
 
 
-async def _handle_analytics(session, payload: dict) -> None:
+async def _handle_analytics(session: AsyncSession, payload: dict[str, Any]) -> None:
     city_id = payload.get("city_id")
-    if city_id is None:
+    if not isinstance(city_id, str):
         raise ValueError("city_id is required")
     city = get_city_config(city_id)
     if city is None:

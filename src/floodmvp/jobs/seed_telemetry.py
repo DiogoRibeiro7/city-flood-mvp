@@ -17,6 +17,7 @@ from floodmvp.generators.realism import (
 )
 from floodmvp.generators.scenarios import SCENARIOS
 from floodmvp.generators.telemetry import (
+    TelemetrySeries,
     generate_pipe_hydraulics_series,
     generate_rain_series,
     generate_river_level_series,
@@ -106,7 +107,9 @@ async def main(scenario_id: str | None = None) -> None:
             print(f"Seeded telemetry for city_id={city.city_id} ({start.isoformat()} -> {end.isoformat()})")
 
 
-async def _upsert_series(session: AsyncSession, series, scenario_id: str | None = None) -> None:
+async def _upsert_series(
+    session: AsyncSession, series: TelemetrySeries, scenario_id: str | None = None
+) -> None:
     # naive upsert: insert with ON CONFLICT DO NOTHING
     # (fast enough for MVP)
     rows = [

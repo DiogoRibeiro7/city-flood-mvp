@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, cast
 
 from geoalchemy2.shape import to_shape
 from sqlalchemy import func, select
@@ -11,12 +11,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from floodmvp.models.db import Asset, AssetTag, City
 
 
-def _geom_to_geojson(geom: Any) -> dict | None:
+def _geom_to_geojson(geom: Any) -> dict[str, Any] | None:
     if geom is None:
         return None
     shp = to_shape(geom)
     # shapely mapping compatible
-    return shp.__geo_interface__  # type: ignore[return-value]
+    return cast(dict[str, Any], shp.__geo_interface__)
 
 
 async def list_cities(session: AsyncSession) -> list[City]:
@@ -150,7 +150,7 @@ async def traverse_network(
     return results
 
 
-def asset_to_out(a: Asset) -> dict:
+def asset_to_out(a: Asset) -> dict[str, Any]:
     return {
         "asset_id": a.asset_id,
         "city_id": a.city_id,

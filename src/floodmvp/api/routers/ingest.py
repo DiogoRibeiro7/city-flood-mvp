@@ -130,7 +130,8 @@ async def ingest_events_batch(
                 .on_conflict_do_nothing(index_elements=["asset_id", "metric", "ts"])
             )
             res = await session.execute(insert_stmt)
-            inserted = res.rowcount is None or res.rowcount > 0
+            rowcount = getattr(res, "rowcount", None)
+            inserted = rowcount is None or rowcount > 0
             if inserted:
                 accepted += 1
                 results.append(
