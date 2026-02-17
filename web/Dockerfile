@@ -2,7 +2,10 @@ FROM node:20-slim
 
 WORKDIR /app
 COPY .yarnrc.yml package.json yarn.lock /app/
-RUN corepack enable && corepack prepare yarn@4.1.1 --activate && yarn install --immutable
+RUN if ! command -v corepack >/dev/null 2>&1; then npm install -g corepack; fi \
+    && corepack enable \
+    && corepack prepare yarn@4.1.1 --activate \
+    && yarn install --immutable
 
 COPY . /app
 EXPOSE 5173

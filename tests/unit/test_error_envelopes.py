@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 from floodmvp.api.main import app
 from floodmvp.storage.db import get_session
@@ -13,7 +13,7 @@ async def client() -> AsyncClient:
         yield None
 
     app.dependency_overrides[get_session] = _override_session
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
     app.dependency_overrides.clear()
 
