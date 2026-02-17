@@ -85,6 +85,10 @@ jobs:
 
       - name: Seed demo data
         run: bash ./scripts/seed_all.sh
+        env:
+          TELEMETRY_REALISM: synthetic
+          TELEMETRY_DAYS: "7"
+          PIPE_TELEMETRY_LIMIT: "50"
 
       - uses: actions/setup-node@v4
         with:
@@ -114,6 +118,8 @@ jobs:
       - name: Capture screenshots
         run: yarn capture:screenshots
         working-directory: web
+        env:
+          SCREENSHOT_MODE: light
 
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
