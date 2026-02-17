@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Header, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.common.auth import get_current_user, require_roles
 from floodmvp.common.errors import AppError
 from floodmvp.config.settings import settings
 from floodmvp.models.db import JobQueue
@@ -13,7 +14,11 @@ from floodmvp.storage.repos.jobs import cancel_job, get_job, list_jobs, retry_jo
 router = APIRouter(tags=["jobs"])
 
 
-def _require_admin_key(x_api_key: str | None) -> None:
+def _require_admin_auth(x_api_key: str | None, authorization: str | None) -> None:
+    if settings.jwt_secret:
+        user = get_current_user(authorization)
+        require_roles(user, {"admin"})
+        return
     if not settings.analytics_api_key:
         return
     if not x_api_key:
@@ -45,9 +50,10 @@ async def queue_list(
     job_type: str | None = Query(default=None),
     limit: int = Query(100, ge=1, le=500),
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> list[JobQueueOut]:
-    _require_admin_key(x_api_key)
+    _require_admin_auth(x_api_key, authorization)
     rows = await list_jobs(session, status=status, job_type=job_type, limit=limit)
     return [_to_out(j) for j in rows]
 
@@ -56,9 +62,10 @@ async def queue_list(
 async def queue_get(
     job_id: str,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> JobQueueOut:
-    _require_admin_key(x_api_key)
+    _require_admin_auth(x_api_key, authorization)
     job = await get_job(session, job_id)
     if job is None:
         raise AppError(code="JOB_NOT_FOUND", message="Job not found", status_code=404)
@@ -69,9 +76,10 @@ async def queue_get(
 async def queue_retry(
     job_id: str,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> JobQueueOut:
-    _require_admin_key(x_api_key)
+    _require_admin_auth(x_api_key, authorization)
     updated = await retry_job(session, job_id)
     if not updated:
         raise AppError(code="JOB_NOT_RETRYABLE", message="Job not retryable", status_code=400)
@@ -85,9 +93,10 @@ async def queue_retry(
 async def queue_cancel(
     job_id: str,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> JobQueueOut:
-    _require_admin_key(x_api_key)
+    _require_admin_auth(x_api_key, authorization)
     updated = await cancel_job(session, job_id)
     if not updated:
         raise AppError(code="JOB_NOT_CANCELLABLE", message="Job not cancellable", status_code=400)

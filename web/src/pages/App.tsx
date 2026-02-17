@@ -8,11 +8,15 @@ import {
   fetchCities,
   fetchCityStatus,
   fetchCitySummary,
+  createReportJob,
+  downloadJob,
   fetchEvents,
+  fetchJob,
   fetchHotspots,
   fetchMetrics,
   fetchObservations,
   fetchScenarios,
+  setAuthToken,
 } from "../api";
 import "./App.css";
 
@@ -34,6 +38,7 @@ export default function App() {
   const [hotspots, setHotspots] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [events, setEvents] = useState<any[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
   const [rangeHours, setRangeHours] = useState<number>(24);
   const [loadingAssets, setLoadingAssets] = useState<boolean>(false);
   const [loadingSeries, setLoadingSeries] = useState<boolean>(false);
@@ -46,6 +51,17 @@ export default function App() {
   const [scenarios, setScenarios] = useState<any[]>([]);
   const [scenarioId, setScenarioId] = useState<string>("latest");
   const [eventType, setEventType] = useState<string>("");
+  const [timelineView, setTimelineView] = useState<"timeline" | "compact">("timeline");
+  const [timelineLimit, setTimelineLimit] = useState<number>(8);
+  const [reportIncludeSummary, setReportIncludeSummary] = useState<boolean>(true);
+  const [reportIncludeHotspots, setReportIncludeHotspots] = useState<boolean>(true);
+  const [reportIncludeEvents, setReportIncludeEvents] = useState<boolean>(true);
+  const [reportBusy, setReportBusy] = useState<boolean>(false);
+  const [reportStatus, setReportStatus] = useState<string>("");
+  const [role, setRole] = useState<"viewer" | "analyst" | "admin">("viewer");
+  const [storyTitle, setStoryTitle] = useState<string>("");
+  const [savedViews, setSavedViews] = useState<any[]>([]);
+  const [jwtToken, setJwtToken] = useState<string>("");
   const [showPipes, setShowPipes] = useState<boolean>(true);
   const [showRiver, setShowRiver] = useState<boolean>(true);
   const [showGauges, setShowGauges] = useState<boolean>(true);
@@ -55,6 +71,21 @@ export default function App() {
   const eventCache = useRef<Map<string, any[]>>(new Map());
 
   useEffect(() => {
+    const savedRole = window.localStorage.getItem("floodmvp.role");
+    if (savedRole === "viewer" || savedRole === "analyst" || savedRole === "admin") {
+      setRole(savedRole);
+    }
+    const storedViews = window.localStorage.getItem("floodmvp.savedViews");
+    if (storedViews) {
+      try {
+        const parsed = JSON.parse(storedViews);
+        if (Array.isArray(parsed)) setSavedViews(parsed);
+      } catch {
+        // ignore
+      }
+    }
+    const storedToken = window.localStorage.getItem("floodmvp.jwt");
+    if (storedToken) setJwtToken(storedToken);
     fetchCities()
       .then((c) => {
         setCities(c);
@@ -71,6 +102,49 @@ export default function App() {
         console.error(err);
       });
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const city = params.get("city");
+    const scenario = params.get("scenario");
+    const range = params.get("range");
+    const event = params.get("event");
+    const tags = params.get("tags");
+    const showRiverParam = params.get("river");
+    const showPipesParam = params.get("pipes");
+    const showGaugesParam = params.get("gauges");
+    const showHotspotsParam = params.get("hotspots");
+    const denseParam = params.get("dense");
+    const selectedAssetParam = params.get("asset");
+    const selectedEventParam = params.get("event_id");
+    if (city) setCityId(city);
+    if (scenario) setScenarioId(scenario);
+    if (range && !Number.isNaN(Number(range))) setRangeHours(Number(range));
+    if (event !== null) setEventType(event);
+    if (tags) {
+      setTagInput(tags);
+      setTagFilter(tags);
+    }
+    if (showRiverParam) setShowRiver(showRiverParam === "1");
+    if (showPipesParam) setShowPipes(showPipesParam === "1");
+    if (showGaugesParam) setShowGauges(showGaugesParam === "1");
+    if (showHotspotsParam) setShowHotspots(showHotspotsParam === "1");
+    if (denseParam) setDenseView(denseParam === "1");
+    if (selectedAssetParam) {
+      setSelected((prev) => prev ?? { asset_id: selectedAssetParam } as any);
+    }
+    if (selectedEventParam) {
+      setSelectedEvent((prev) => prev ?? { event_id: selectedEventParam } as any);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("floodmvp.role", role);
+  }, [role]);
+
+  useEffect(() => {
+    window.localStorage.setItem("floodmvp.savedViews", JSON.stringify(savedViews));
+  }, [savedViews]);
 
   useEffect(() => {
     const handle = setTimeout(() => setTagFilter(tagInput), 400);
@@ -187,6 +261,13 @@ export default function App() {
     }
   }, [assets, selected]);
 
+  useEffect(() => {
+    if (!selectedEvent) return;
+    if (!events.find((e) => e.event_id === selectedEvent.event_id)) {
+      setSelectedEvent(null);
+    }
+  }, [events, selectedEvent]);
+
   const hotspotSet = useMemo(() => new Set(hotspots.map((h) => h.asset_id)), [hotspots]);
 
   const featuresByType = useMemo(() => {
@@ -234,6 +315,25 @@ export default function App() {
     };
   }, [events]);
 
+  const timelineEvents = useMemo(() => {
+    return [...events].sort(
+      (a, b) => new Date(b.start_ts).getTime() - new Date(a.start_ts).getTime()
+    );
+  }, [events]);
+
+  const formatTime = (iso: string) => {
+    const dt = new Date(iso);
+    if (Number.isNaN(dt.getTime())) return iso;
+    return dt.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", month: "short", day: "2-digit" });
+  };
+
+  const focusEventAsset = (evt: any) => {
+    const assetId = evt?.asset_ids?.[0];
+    if (!assetId) return;
+    const asset = assets.find((a) => a.asset_id === assetId) ?? null;
+    if (asset) setSelected(asset);
+  };
+
   const onFeatureClick = (_: any, layer: any) => {
     layer.on("click", () => {
       const props: any = layer.feature?.properties;
@@ -275,6 +375,18 @@ export default function App() {
                     {s.name}
                   </option>
                 ))}
+              </select>
+            </div>
+            <div className="control-group">
+              <label htmlFor="role-select">Role</label>
+              <select
+                id="role-select"
+                value={role}
+                onChange={(e) => setRole(e.target.value as "viewer" | "analyst" | "admin")}
+              >
+                <option value="viewer">Viewer</option>
+                <option value="analyst">Analyst</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
           </div>
@@ -472,8 +584,8 @@ export default function App() {
           </div>
         )}
 
-        <div className="card">
-          <div className="card-title">Events</div>
+        <div className="card timeline-card">
+          <div className="card-title">Incident timeline</div>
           <div className="asset-meta">
             <div className="control-group">
               <label htmlFor="event-range">Range</label>
@@ -495,6 +607,17 @@ export default function App() {
                 <option value="overflow">Overflow</option>
               </select>
             </div>
+            <div className="control-group">
+              <label htmlFor="timeline-view">View</label>
+              <select
+                id="timeline-view"
+                value={timelineView}
+                onChange={(e) => setTimelineView(e.target.value as "timeline" | "compact")}
+              >
+                <option value="timeline">Timeline</option>
+                <option value="compact">Compact list</option>
+              </select>
+            </div>
           </div>
           <div className="metrics-grid">
             <div className="metric-tile">
@@ -510,18 +633,424 @@ export default function App() {
               <div className="metric-value">{eventSummary.moderate}</div>
             </div>
           </div>
-          {loadingEvents && <div className="empty-state">Loading events...</div>}
-          {!loadingEvents && events.length === 0 && <div className="empty-state">No events in range.</div>}
-          <ul className="event-list">
-            {events.slice(0, 6).map((evt) => (
-              <li key={evt.event_id} className="event-item">
-                <div>
-                  <div className="event-title">{evt.event_type}</div>
-                  <div className="app-subtitle">
-                    {evt.start_ts} → {evt.end_ts}
+          {loadingEvents && <div className="empty-state">Loading timeline...</div>}
+          {!loadingEvents && events.length === 0 && <div className="empty-state">No incidents in range.</div>}
+          {timelineView === "timeline" ? (
+            <div className="timeline">
+              {timelineEvents.slice(0, timelineLimit).map((evt) => (
+                <button
+                  key={evt.event_id}
+                  className={`timeline-item ${selectedEvent?.event_id === evt.event_id ? "active" : ""}`}
+                  onClick={() => setSelectedEvent(evt)}
+                >
+                  <span className={`timeline-dot timeline-dot-${evt.event_type}`} />
+                  <div className="timeline-content">
+                    <div className="timeline-title">{evt.event_type}</div>
+                    <div className="app-subtitle">
+                      {formatTime(evt.start_ts)} → {formatTime(evt.end_ts)}
+                    </div>
+                    <div className="timeline-summary">{evt.summary}</div>
                   </div>
+                  <span className={`event-sev event-sev-${Number(evt.severity)}`}>S{evt.severity}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <ul className="compact-list">
+              {timelineEvents.slice(0, timelineLimit).map((evt) => (
+                <li key={evt.event_id} className="compact-item">
+                  <button
+                    className={`compact-button ${selectedEvent?.event_id === evt.event_id ? "active" : ""}`}
+                    onClick={() => setSelectedEvent(evt)}
+                  >
+                    <span className={`timeline-dot timeline-dot-${evt.event_type}`} />
+                    <div>
+                      <div className="timeline-title">{evt.event_type}</div>
+                      <div className="app-subtitle">
+                        {formatTime(evt.start_ts)} → {formatTime(evt.end_ts)}
+                      </div>
+                    </div>
+                    <span className={`event-sev event-sev-${Number(evt.severity)}`}>S{evt.severity}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {timelineEvents.length > timelineLimit && (
+            <div className="timeline-actions">
+              <button onClick={() => setTimelineLimit((v) => v + 8)}>Show more</button>
+            </div>
+          )}
+          {selectedEvent && (
+            <div className="timeline-detail">
+              <div className="detail-row">
+                <div>
+                  <div className="app-subtitle">Selected incident</div>
+                  <div className="detail-title">{selectedEvent.event_type}</div>
                 </div>
-                <span className={`event-sev event-sev-${Number(evt.severity)}`}>S{evt.severity}</span>
+                <span className={`event-sev event-sev-${Number(selectedEvent.severity)}`}>
+                  S{selectedEvent.severity}
+                </span>
+              </div>
+              <div className="detail-meta">
+                <div>
+                  <span>Window</span>
+                  <strong>{formatTime(selectedEvent.start_ts)} → {formatTime(selectedEvent.end_ts)}</strong>
+                </div>
+                <div>
+                  <span>Confidence</span>
+                  <strong>{Number(selectedEvent.confidence ?? 0).toFixed(2)}</strong>
+                </div>
+                <div>
+                  <span>Assets</span>
+                  <strong>{(selectedEvent.asset_ids ?? []).length}</strong>
+                </div>
+              </div>
+              <div className="detail-summary">{selectedEvent.summary}</div>
+              <div className="detail-actions">
+                <button onClick={() => setSelectedEvent(null)}>Clear</button>
+                <button onClick={() => focusEventAsset(selectedEvent)}>Focus asset</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="card report-card">
+          <div className="card-title">Report builder</div>
+          {role === "viewer" && (
+            <div className="empty-state">Report builder available for analyst/admin roles.</div>
+          )}
+          <div className="control-group">
+            <label htmlFor="jwt-token">JWT token</label>
+            <input
+              id="jwt-token"
+              type="text"
+              value={jwtToken}
+              onChange={(e) => {
+                const next = e.target.value;
+                setJwtToken(next);
+                setAuthToken(next);
+              }}
+              placeholder="Paste bearer token"
+            />
+          </div>
+          <div className="asset-meta">
+            <div className="control-group">
+              <label htmlFor="report-range">Range</label>
+              <select
+                id="report-range"
+                value={rangeHours}
+                onChange={(e) => setRangeHours(Number(e.target.value))}
+                disabled={role === "viewer"}
+              >
+                <option value={6}>Last 6h</option>
+                <option value={24}>Last 24h</option>
+                <option value={168}>Last 7d</option>
+              </select>
+            </div>
+            <div className="control-group">
+              <label htmlFor="report-type">Type</label>
+              <select
+                id="report-type"
+                value={eventType}
+                onChange={(e) => setEventType(e.target.value)}
+                disabled={role === "viewer"}
+              >
+                <option value="">All</option>
+                <option value="rain">Rain</option>
+                <option value="overflow">Overflow</option>
+              </select>
+            </div>
+          </div>
+          <div className="report-options">
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={reportIncludeSummary}
+                onChange={(e) => setReportIncludeSummary(e.target.checked)}
+                disabled={role === "viewer"}
+              />
+              Include summary
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={reportIncludeHotspots}
+                onChange={(e) => setReportIncludeHotspots(e.target.checked)}
+                disabled={role === "viewer"}
+              />
+              Include hotspots
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={reportIncludeEvents}
+                onChange={(e) => setReportIncludeEvents(e.target.checked)}
+                disabled={role === "viewer"}
+              />
+              Include events
+            </label>
+          </div>
+          <div className="report-actions">
+            <button
+              disabled={reportBusy || !cityId || role === "viewer"}
+              onClick={async () => {
+                if (!cityId) return;
+                setReportBusy(true);
+                setReportStatus("Queuing report...");
+                try {
+                  const { from, to } = isoNowMinus(rangeHours);
+                  const job = await createReportJob({
+                    city_id: cityId,
+                    from,
+                    to,
+                    event_type: eventType || undefined,
+                    top_hotspots: 10,
+                    include_summary: reportIncludeSummary,
+                    include_hotspots: reportIncludeHotspots,
+                    include_events: reportIncludeEvents,
+                  });
+
+                  const jobId = job.job_id;
+                  const started = Date.now();
+                  let status = "queued";
+                  while (status === "queued" || status === "running") {
+                    if (Date.now() - started > 120000) {
+                      throw new Error("Report job timed out");
+                    }
+                    await new Promise((r) => setTimeout(r, 2000));
+                    const current = await fetchJob(jobId);
+                    status = current.status;
+                    setReportStatus(`Report status: ${status}`);
+                  }
+                  if (status !== "completed") {
+                    throw new Error(`Report failed (${status})`);
+                  }
+                  const blob = await downloadJob(jobId);
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `report_${cityId}_${new Date().toISOString().slice(0, 10)}.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
+                  setReportStatus("Report downloaded");
+                } finally {
+                  setReportBusy(false);
+                  setTimeout(() => setReportStatus(""), 3000);
+                }
+              }}
+            >
+              Download CSV
+            </button>
+            <button
+              disabled={reportBusy || !cityId || role === "viewer"}
+              onClick={async () => {
+                if (!cityId) return;
+                setReportBusy(true);
+                try {
+                  const { from, to } = isoNowMinus(rangeHours);
+                  const [freshSummary, freshStatus, freshHotspots, freshEvents] = await Promise.all([
+                    fetchCitySummary(cityId, 15),
+                    fetchCityStatus(cityId),
+                    fetchHotspots(cityId, 10),
+                    fetchEvents(cityId, from, to, eventType || undefined, 200),
+                  ]);
+                  const win = window.open("", "_blank");
+                  if (!win) return;
+                  const sections: string[] = [];
+                  if (reportIncludeSummary) {
+                    sections.push(`
+                      <section>
+                        <h2>Summary</h2>
+                        <div class="summary-grid">
+                          <div><span>Risk</span><strong>${freshStatus?.risk ?? "-"}</strong></div>
+                          <div><span>Active events</span><strong>${freshStatus?.active_events ?? "-"}</strong></div>
+                          <div><span>Rain 15m avg</span><strong>${Number(freshSummary?.rain_mmph ?? 0).toFixed(1)} mm/h</strong></div>
+                          <div><span>River 15m avg</span><strong>${Number(freshSummary?.river_level_m ?? 0).toFixed(2)} m</strong></div>
+                        </div>
+                      </section>
+                    `);
+                  }
+                  if (reportIncludeHotspots) {
+                    sections.push(`
+                      <section>
+                        <h2>Hotspots</h2>
+                        <table>
+                          <thead><tr><th>Asset</th><th>Score</th><th>Confidence</th></tr></thead>
+                          <tbody>
+                            ${(freshHotspots ?? [])
+                              .map(
+                                (h: any) =>
+                                  `<tr><td>${h.asset_id}</td><td>${Number(h.score).toFixed(1)}</td><td>${Number(h.confidence ?? 0).toFixed(2)}</td></tr>`
+                              )
+                              .join("")}
+                          </tbody>
+                        </table>
+                      </section>
+                    `);
+                  }
+                  if (reportIncludeEvents) {
+                    sections.push(`
+                      <section>
+                        <h2>Events</h2>
+                        <table>
+                          <thead><tr><th>Type</th><th>Severity</th><th>Window</th><th>Assets</th></tr></thead>
+                          <tbody>
+                            ${(freshEvents ?? [])
+                              .map(
+                                (e: any) =>
+                                  `<tr><td>${e.event_type}</td><td>S${e.severity}</td><td>${formatTime(e.start_ts)} → ${formatTime(e.end_ts)}</td><td>${(e.asset_ids ?? []).length}</td></tr>`
+                              )
+                              .join("")}
+                          </tbody>
+                        </table>
+                      </section>
+                    `);
+                  }
+
+                  win.document.write(`
+                    <html>
+                      <head>
+                        <title>City Flood MVP Report</title>
+                        <style>
+                          body { font-family: "Space Grotesk", Arial, sans-serif; color: #0f172a; padding: 24px; }
+                          h1 { font-size: 22px; margin-bottom: 4px; }
+                          h2 { font-size: 16px; margin: 18px 0 8px; }
+                          .meta { font-size: 12px; color: #64748b; margin-bottom: 16px; }
+                          .summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+                          .summary-grid div { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; background: #f8fafc; }
+                          .summary-grid span { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; }
+                          table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                          th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+                          th { background: #f1f5f9; }
+                          section { margin-bottom: 18px; }
+                        </style>
+                      </head>
+                      <body>
+                        <h1>City Flood MVP Report</h1>
+                        <div class="meta">
+                          City: ${cityName || cityId}<br/>
+                          Window: ${from} → ${to}<br/>
+                          Generated: ${new Date().toISOString()}
+                        </div>
+                        ${sections.join("")}
+                      </body>
+                    </html>
+                  `);
+                  win.document.close();
+                  win.focus();
+                  win.print();
+                } finally {
+                  setReportBusy(false);
+                }
+              }}
+            >
+              Print PDF
+            </button>
+          </div>
+          {reportStatus && <div className="report-status">{reportStatus}</div>}
+        </div>
+
+        <div className="card story-card">
+          <div className="card-title">Storytelling</div>
+          <div className="asset-meta">
+            <div className="control-group grow">
+              <label htmlFor="story-title">Save view</label>
+              <input
+                id="story-title"
+                type="text"
+                placeholder="e.g. Downtown overflow sweep"
+                value={storyTitle}
+                onChange={(e) => setStoryTitle(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={() => {
+                if (!cityId) return;
+                const view = {
+                  id: `view_${Date.now()}`,
+                  title: storyTitle || `View ${savedViews.length + 1}`,
+                  cityId,
+                  scenarioId,
+                  rangeHours,
+                  eventType,
+                  tagFilter,
+                  showRiver,
+                  showPipes,
+                  showGauges,
+                  showHotspots,
+                  denseView,
+                  selectedAssetId: selected?.asset_id ?? null,
+                  selectedEventId: selectedEvent?.event_id ?? null,
+                };
+                setSavedViews((prev) => [view, ...prev]);
+                setStoryTitle("");
+              }}
+            >
+              Save
+            </button>
+          </div>
+          {savedViews.length === 0 && <div className="empty-state">No saved views yet.</div>}
+          <ul className="story-list">
+            {savedViews.map((view) => (
+              <li key={view.id} className="story-item">
+                <div>
+                  <div className="story-title">{view.title}</div>
+                  <div className="app-subtitle">{view.cityId} · {view.rangeHours}h</div>
+                </div>
+                <div className="story-actions">
+                  <button
+                    onClick={() => {
+                      setCityId(view.cityId);
+                      setScenarioId(view.scenarioId);
+                      setRangeHours(view.rangeHours);
+                      setEventType(view.eventType);
+                      setTagInput(view.tagFilter || "");
+                      setTagFilter(view.tagFilter || "");
+                      setShowRiver(view.showRiver);
+                      setShowPipes(view.showPipes);
+                      setShowGauges(view.showGauges);
+                      setShowHotspots(view.showHotspots);
+                      setDenseView(view.denseView);
+                      setSelected(view.selectedAssetId ? ({ asset_id: view.selectedAssetId } as any) : null);
+                      setSelectedEvent(view.selectedEventId ? ({ event_id: view.selectedEventId } as any) : null);
+                    }}
+                  >
+                    Apply
+                  </button>
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      params.set("city", view.cityId);
+                      params.set("scenario", view.scenarioId);
+                      params.set("range", String(view.rangeHours));
+                      params.set("event", view.eventType ?? "");
+                      if (view.tagFilter) params.set("tags", view.tagFilter);
+                      params.set("river", view.showRiver ? "1" : "0");
+                      params.set("pipes", view.showPipes ? "1" : "0");
+                      params.set("gauges", view.showGauges ? "1" : "0");
+                      params.set("hotspots", view.showHotspots ? "1" : "0");
+                      params.set("dense", view.denseView ? "1" : "0");
+                      if (view.selectedAssetId) params.set("asset", view.selectedAssetId);
+                      if (view.selectedEventId) params.set("event_id", view.selectedEventId);
+                      const url = `${window.location.origin}?${params.toString()}`;
+                      navigator.clipboard?.writeText(url);
+                      setErrorMsg("Shareable link copied to clipboard.");
+                      setTimeout(() => setErrorMsg(null), 3000);
+                    }}
+                  >
+                    Share
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSavedViews((prev) => prev.filter((v) => v.id !== view.id));
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

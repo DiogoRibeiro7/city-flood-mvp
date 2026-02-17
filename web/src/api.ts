@@ -10,6 +10,13 @@ export type Asset = {
 export type City = { city_id: string; name: string; country: string };
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+const TOKEN_KEY = "floodmvp.jwt";
+
+function authHeaders(): Record<string, string> {
+  const token = window.localStorage.getItem(TOKEN_KEY);
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
 
 export async function fetchCities(): Promise<City[]> {
   const r = await fetch(`${API_BASE}/v1/cities`);
@@ -111,4 +118,46 @@ export async function fetchEvents(
   const r = await fetch(`${API_BASE}/v1/events?${q.toString()}`);
   if (!r.ok) throw new Error(`events: ${r.status}`);
   return r.json();
+}
+
+export async function createReportJob(payload: {
+  city_id: string;
+  from: string;
+  to: string;
+  event_type?: string;
+  top_hotspots?: number;
+  include_summary?: boolean;
+  include_hotspots?: boolean;
+  include_events?: boolean;
+}) {
+  const r = await fetch(`${API_BASE}/v1/analytics/jobs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({
+      type: "report_csv",
+      query: payload,
+    }),
+  });
+  if (!r.ok) throw new Error(`report job: ${r.status}`);
+  return r.json();
+}
+
+export async function fetchJob(jobId: string) {
+  const r = await fetch(`${API_BASE}/v1/analytics/jobs/${jobId}`, { headers: authHeaders() });
+  if (!r.ok) throw new Error(`job: ${r.status}`);
+  return r.json();
+}
+
+export async function downloadJob(jobId: string) {
+  const r = await fetch(`${API_BASE}/v1/analytics/jobs/${jobId}/download`, { headers: authHeaders() });
+  if (!r.ok) throw new Error(`download: ${r.status}`);
+  return r.blob();
+}
+
+export function setAuthToken(token: string) {
+  if (!token) {
+    window.localStorage.removeItem(TOKEN_KEY);
+    return;
+  }
+  window.localStorage.setItem(TOKEN_KEY, token);
 }

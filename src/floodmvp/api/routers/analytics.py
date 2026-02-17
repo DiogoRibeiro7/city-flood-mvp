@@ -12,6 +12,7 @@ from floodmvp.api.openapi_examples import (
     RESP_INVALID_ARGUMENT,
     RESP_UNAUTHORIZED_API_KEY,
 )
+from floodmvp.common.auth import get_current_user, require_roles
 from floodmvp.common.errors import AppError
 from floodmvp.common.ids import new_id
 from floodmvp.common.time import parse_iso8601
@@ -55,7 +56,13 @@ from floodmvp.storage.repos.jobs import enqueue_job
 router = APIRouter(tags=["analytics"])
 
 
-def _require_analytics_key(x_api_key: str | None) -> None:
+def _require_analytics_auth(
+    x_api_key: str | None, authorization: str | None, roles: set[str]
+) -> None:
+    if settings.jwt_secret:
+        user = get_current_user(authorization)
+        require_roles(user, roles)
+        return
     if not settings.analytics_api_key:
         return
     if not x_api_key:
@@ -290,8 +297,10 @@ async def analytics_calibration_overrides(
 )
 async def analytics_calibration_override_create(
     payload: CalibrationOverrideIn,
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> CalibrationOverrideOut:
+    _require_analytics_auth(None, authorization, {"admin"})
     _validate_season(payload.season)
     row = await create_threshold_override(
         session,
@@ -412,15 +421,24 @@ async def analytics_runs_diff(
 async def create_job(
     payload: ExportJobRequest,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> ExportJobOut:
-    _require_analytics_key(x_api_key)
-    if payload.query.from_ts >= payload.query.to_ts:
-        raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
-    if payload.query.agg not in {"avg", "min", "max"}:
-        raise AppError(code="INVALID_ARGUMENT", message="agg must be one of ['avg','min','max']")
-    if not payload.query.asset_ids and not payload.query.city_id:
-        raise AppError(code="INVALID_ARGUMENT", message="asset_ids or city_id must be provided")
+    _require_analytics_auth(x_api_key, authorization, {"analyst", "admin"})
+    if payload.type == "export_csv":
+        if payload.query.from_ts >= payload.query.to_ts:
+            raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
+        if payload.query.agg not in {"avg", "min", "max"}:
+            raise AppError(code="INVALID_ARGUMENT", message="agg must be one of ['avg','min','max']")
+        if not payload.query.asset_ids and not payload.query.city_id:
+            raise AppError(code="INVALID_ARGUMENT", message="asset_ids or city_id must be provided")
+    elif payload.type == "report_csv":
+        if payload.query.from_ts >= payload.query.to_ts:
+            raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
+        if payload.query.top_hotspots < 0 or payload.query.top_hotspots > 200:
+            raise AppError(code="INVALID_ARGUMENT", message="top_hotspots must be between 0 and 200")
+    else:
+        raise AppError(code="INVALID_ARGUMENT", message="type must be one of ['export_csv','report_csv']")
 
     job_id = new_id("job")
     await create_export_job(
@@ -440,7 +458,7 @@ async def create_job(
         message="Export job queued",
         details={"type": payload.type},
     )
-    await enqueue_job(session, job_type="export_csv", payload={"export_job_id": job_id})
+    await enqueue_job(session, job_type=payload.type, payload={"export_job_id": job_id})
     await session.commit()
 
     saved = await get_export_job(session, job_id)
@@ -483,9 +501,10 @@ async def create_job(
 async def get_job(
     job_id: str,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> ExportJobOut:
-    _require_analytics_key(x_api_key)
+    _require_analytics_auth(x_api_key, authorization, {"analyst", "admin"})
     job = await get_export_job(session, job_id)
     if job is None:
         raise AppError(code="JOB_NOT_FOUND", message="Job not found", status_code=404)
@@ -540,9 +559,10 @@ async def get_job(
 async def download_job(
     job_id: str,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> FileResponse:
-    _require_analytics_key(x_api_key)
+    _require_analytics_auth(x_api_key, authorization, {"analyst", "admin"})
     job = await get_export_job(session, job_id)
     if job is None:
         raise AppError(code="JOB_NOT_FOUND", message="Job not found", status_code=404)

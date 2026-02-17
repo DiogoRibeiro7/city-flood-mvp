@@ -82,9 +82,28 @@ class ExportJobQuery(BaseModel):
     agg: str = "avg"
 
 
-class ExportJobRequest(BaseModel):
+class ReportJobQuery(BaseModel):
+    city_id: str
+    from_ts: dt.datetime = Field(..., alias="from")
+    to_ts: dt.datetime = Field(..., alias="to")
+    event_type: str | None = None
+    top_hotspots: int = 10
+    include_summary: bool = True
+    include_hotspots: bool = True
+    include_events: bool = True
+
+
+class ExportCsvRequest(BaseModel):
     type: Literal["export_csv"]
     query: ExportJobQuery
+
+
+class ReportCsvRequest(BaseModel):
+    type: Literal["report_csv"]
+    query: ReportJobQuery
+
+
+ExportJobRequest = ExportCsvRequest | ReportCsvRequest
 
 
 class ExportJobLogOut(BaseModel):

@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     ingest_token: str = "dev-ingest-token"
     export_dir: str = "data/exports"
     analytics_api_key: str | None = None
+    jwt_secret: str | None = None
+    jwt_issuer: str | None = None
+    jwt_audience: str | None = None
+    jwt_roles_claim: str = "roles"
     rate_limit_rps: float = 5.0
     rate_limit_burst: int = 20
     request_max_bytes: int = 1_000_000

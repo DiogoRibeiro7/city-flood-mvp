@@ -20,7 +20,7 @@ from floodmvp.models.db import (
     ExportJobLog,
     TelemetryObservation,
 )
-from floodmvp.models.domain import ExportJobQuery
+from floodmvp.models.domain import ExportJobQuery, ReportJobQuery
 
 
 async def get_latest_run_id(session: AsyncSession, city_id: str) -> str | None:
@@ -553,6 +553,89 @@ async def run_export_csv(
             f.write(f"{asset_id},{metric},{bucket.isoformat()},{val_str}\n")
 
     return str(file_path), len(rows)
+
+
+async def run_report_csv(
+    session: AsyncSession, job_id: str, query: ReportJobQuery
+) -> tuple[str, int]:
+    export_dir = pathlib.Path(settings.export_dir)
+    export_dir.mkdir(parents=True, exist_ok=True)
+    file_path = export_dir / f"{job_id}.csv"
+
+    city_id = query.city_id
+    now = dt.datetime.now(dt.UTC)
+
+    # Summary + status
+    status = await get_city_status(session, city_id) if query.include_summary else None
+    summary = await get_city_summary(session, city_id, 15) if query.include_summary else None
+
+    # Hotspots + events
+    hotspots: list[AnalyticsHotspotDaily] = []
+    if query.include_hotspots:
+        hotspots = await list_hotspots(
+            session, city_id, metric="overflow_risk", top=query.top_hotspots
+        )
+
+    events: list[AnalyticsEvent] = []
+    if query.include_events:
+        events = await list_events(
+            session,
+            city_id,
+            event_type=query.event_type,
+            start=query.from_ts,
+            end=query.to_ts,
+            limit=200,
+            offset=0,
+        )
+
+    def _csv_escape(val: object | None) -> str:
+        s = "" if val is None else str(val)
+        s = s.replace('"', '""')
+        return f"\"{s}\""
+
+    rows_written = 0
+    with file_path.open("w", encoding="utf-8") as f:
+        f.write("section,key,value\n")
+        rows_written += 1
+        f.write(f"meta,city_id,{_csv_escape(city_id)}\n")
+        f.write(f"meta,generated_at,{_csv_escape(now.isoformat())}\n")
+        f.write(f"meta,window,{_csv_escape(f'{query.from_ts.isoformat()} -> {query.to_ts.isoformat()}')}\n")
+        rows_written += 3
+
+        if summary and status:
+            f.write(f"summary,risk,{_csv_escape(status.get('risk'))}\n")
+            f.write(f"summary,active_events,{_csv_escape(status.get('active_events'))}\n")
+            f.write(f"summary,rain_mmph,{_csv_escape(summary.get('rain_mmph'))}\n")
+            f.write(f"summary,river_level_m,{_csv_escape(summary.get('river_level_m'))}\n")
+            rows_written += 4
+
+        if hotspots:
+            f.write("hotspots,asset_id,score,confidence\n")
+            rows_written += 1
+            for h in hotspots:
+                f.write(
+                    f"hotspots,{_csv_escape(h.asset_id)},{_csv_escape(float(h.score))},{_csv_escape(float(h.confidence))}\n"
+                )
+                rows_written += 1
+
+        if events:
+            f.write("events,event_id,type,severity,confidence,start,end,assets,summary\n")
+            rows_written += 1
+            for e in events:
+                f.write(
+                    "events,"
+                    f"{_csv_escape(e.event_id)},"
+                    f"{_csv_escape(e.event_type)},"
+                    f"{_csv_escape(e.severity)},"
+                    f"{_csv_escape(float(e.confidence))},"
+                    f"{_csv_escape(e.start_ts.isoformat())},"
+                    f"{_csv_escape(e.end_ts.isoformat())},"
+                    f"{_csv_escape('|'.join(e.asset_ids or []))},"
+                    f"{_csv_escape(e.summary)}\n"
+                )
+                rows_written += 1
+
+    return str(file_path), rows_written
 
 
 async def get_city_summary(session: AsyncSession, city_id: str, minutes: int) -> dict[str, Any]:

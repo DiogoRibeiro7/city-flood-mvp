@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from floodmvp.config.cities import get_city_config
 from floodmvp.config.settings import settings
 from floodmvp.jobs.run_analytics import run_city_analytics
-from floodmvp.models.domain import ExportJobQuery
+from floodmvp.models.domain import ExportJobQuery, ReportJobQuery
 from floodmvp.observability.metrics import JOB_PROCESSING_DURATION, JOB_QUEUE_AGE
 from floodmvp.storage.db import SessionLocal
 from floodmvp.storage.repos.analytics import (
@@ -19,6 +19,7 @@ from floodmvp.storage.repos.analytics import (
     apply_threshold_overrides,
     get_export_job,
     run_export_csv,
+    run_report_csv,
     update_export_job,
 )
 from floodmvp.storage.repos.jobs import (
@@ -69,6 +70,42 @@ async def _handle_export(session: AsyncSession, payload: dict[str, Any]) -> None
     )
 
 
+async def _handle_report(session: AsyncSession, payload: dict[str, Any]) -> None:
+    job_id = payload.get("export_job_id")
+    if not isinstance(job_id, str) or not job_id:
+        raise ValueError("export_job_id is required")
+
+    job = await get_export_job(session, job_id)
+    if job is None:
+        raise ValueError(f"Export job {job_id} not found")
+
+    await update_export_job(
+        session,
+        job_id,
+        status="running",
+        progress=0.0,
+        started_at=dt.datetime.now(dt.UTC),
+    )
+    await add_export_job_log(session, job_id=job_id, level="info", message="Report job started")
+    file_path, row_count = await run_report_csv(session, job_id, ReportJobQuery(**job.query))
+    await update_export_job(
+        session,
+        job_id,
+        status="completed",
+        progress=1.0,
+        file_path=file_path,
+        completed_at=dt.datetime.now(dt.UTC),
+        row_count=row_count,
+    )
+    await add_export_job_log(
+        session,
+        job_id=job_id,
+        level="info",
+        message="Report job completed",
+        details={"file_path": file_path, "row_count": row_count},
+    )
+
+
 async def _handle_analytics(session: AsyncSession, payload: dict[str, Any]) -> None:
     city_id = payload.get("city_id")
     if not isinstance(city_id, str):
@@ -113,6 +150,8 @@ async def run_worker(poll_seconds: float, once: bool) -> None:
             try:
                 if job.job_type == "export_csv":
                     await _handle_export(session, job.payload)
+                elif job.job_type == "report_csv":
+                    await _handle_report(session, job.payload)
                 elif job.job_type == "analytics_run":
                     await _handle_analytics(session, job.payload)
                 else:
@@ -121,7 +160,7 @@ async def run_worker(poll_seconds: float, once: bool) -> None:
                 await session.commit()
             except Exception as exc:  # noqa: BLE001
                 backoff = _backoff_seconds(job.attempts)
-                if job.job_type == "export_csv":
+                if job.job_type in {"export_csv", "report_csv"}:
                     export_job_id = (job.payload or {}).get("export_job_id")
                     if export_job_id and job.attempts >= job.max_attempts:
                         await update_export_job(
