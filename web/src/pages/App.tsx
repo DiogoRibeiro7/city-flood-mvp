@@ -131,10 +131,10 @@ export default function App() {
     if (showHotspotsParam) setShowHotspots(showHotspotsParam === "1");
     if (denseParam) setDenseView(denseParam === "1");
     if (selectedAssetParam) {
-      setSelected((prev) => prev ?? { asset_id: selectedAssetParam } as any);
+      setSelected((prev: Asset | null) => prev ?? ({ asset_id: selectedAssetParam } as Asset));
     }
     if (selectedEventParam) {
-      setSelectedEvent((prev) => prev ?? { event_id: selectedEventParam } as any);
+      setSelectedEvent((prev: any | null) => prev ?? ({ event_id: selectedEventParam } as any));
     }
   }, []);
 

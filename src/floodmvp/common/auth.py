@@ -20,7 +20,7 @@ class AuthUser:
 def _decode_token(token: str) -> dict[str, Any]:
     if not settings.jwt_secret:
         raise AppError(code="AUTH_NOT_CONFIGURED", message="JWT auth not configured", status_code=500)
-    options = {
+    options: dict[str, object] = {
         "verify_signature": True,
         "verify_aud": bool(settings.jwt_audience),
         "verify_iss": bool(settings.jwt_issuer),
