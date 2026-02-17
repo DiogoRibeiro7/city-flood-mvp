@@ -81,6 +81,9 @@ def generate_river_level_series(
     delay = 60 if heavy_rain else 30  # minutes
     kernel = np.exp(-np.linspace(0, 6, 180))
     resp = np.convolve(rain_vals, kernel, mode="same") / (kernel.sum() + 1e-9)
+    if len(resp) != n:
+        start = max((len(resp) - n) // 2, 0)
+        resp = resp[start : start + n]
     resp = np.roll(resp, delay)
 
     scale = 0.015 if high_river else 0.008

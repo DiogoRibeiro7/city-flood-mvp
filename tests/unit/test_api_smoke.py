@@ -60,6 +60,7 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncClient:
                 event_id="evt_1",
                 event_type="overflow",
                 severity=2,
+                confidence=0.74,
                 start_ts=dt.datetime(2026, 2, 1, 10, 0, tzinfo=dt.UTC),
                 end_ts=dt.datetime(2026, 2, 1, 12, 0, tzinfo=dt.UTC),
                 asset_ids=["pipe_1"],
@@ -86,7 +87,7 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncClient:
         }
 
     async def _list_hotspots(*_args, **_kwargs):
-        return [SimpleNamespace(asset_id="pipe_1", score=42.5, details={})]
+        return [SimpleNamespace(asset_id="pipe_1", score=42.5, confidence=0.82, details={})]
 
     async def _list_analytics_runs(*_args, **_kwargs):
         return [
@@ -104,24 +105,26 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncClient:
             )
         ]
 
-    import floodmvp.storage.repos.analytics as analytics_repo
-    import floodmvp.storage.repos.assets as assets_repo
-    import floodmvp.storage.repos.telemetry as telemetry_repo
+    import floodmvp.api.routers.analytics as analytics_router
+    import floodmvp.api.routers.assets as assets_router
+    import floodmvp.api.routers.cities as cities_router
+    import floodmvp.api.routers.events as events_router
+    import floodmvp.api.routers.telemetry as telemetry_router
 
-    monkeypatch.setattr(assets_repo, "list_cities", _list_cities)
-    monkeypatch.setattr(assets_repo, "get_city", _get_city)
-    monkeypatch.setattr(assets_repo, "list_assets", _list_assets)
+    monkeypatch.setattr(cities_router, "list_cities", _list_cities)
+    monkeypatch.setattr(cities_router, "get_city", _get_city)
+    monkeypatch.setattr(assets_router, "list_assets", _list_assets)
 
-    monkeypatch.setattr(telemetry_repo, "list_metrics", _list_metrics)
-    monkeypatch.setattr(telemetry_repo, "resolve_scenario_id", _resolve_scenario_id)
-    monkeypatch.setattr(telemetry_repo, "list_scenarios", _list_scenarios)
-    monkeypatch.setattr(telemetry_repo, "get_observations", _get_observations)
+    monkeypatch.setattr(telemetry_router, "list_metrics", _list_metrics)
+    monkeypatch.setattr(telemetry_router, "resolve_scenario_id", _resolve_scenario_id)
+    monkeypatch.setattr(telemetry_router, "list_scenarios", _list_scenarios)
+    monkeypatch.setattr(telemetry_router, "get_observations", _get_observations)
 
-    monkeypatch.setattr(analytics_repo, "list_events", _list_events)
-    monkeypatch.setattr(analytics_repo, "get_city_status", _get_city_status)
-    monkeypatch.setattr(analytics_repo, "get_city_summary", _get_city_summary)
-    monkeypatch.setattr(analytics_repo, "list_hotspots", _list_hotspots)
-    monkeypatch.setattr(analytics_repo, "list_analytics_runs", _list_analytics_runs)
+    monkeypatch.setattr(events_router, "list_events", _list_events)
+    monkeypatch.setattr(analytics_router, "get_city_status", _get_city_status)
+    monkeypatch.setattr(analytics_router, "get_city_summary", _get_city_summary)
+    monkeypatch.setattr(analytics_router, "list_hotspots", _list_hotspots)
+    monkeypatch.setattr(analytics_router, "list_analytics_runs", _list_analytics_runs)
 
     app.dependency_overrides[get_session] = _override_session
     async with AsyncClient(app=app, base_url="http://test") as client:
