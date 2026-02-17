@@ -1,7 +1,7 @@
 FROM node:20-slim
 
 WORKDIR /app
-COPY package.json yarn.lock /app/
+COPY .yarnrc.yml package.json yarn.lock /app/
 RUN corepack enable && corepack prepare yarn@4.1.1 --activate && yarn install --immutable
 
 COPY . /app
