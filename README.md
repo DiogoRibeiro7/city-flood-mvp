@@ -1,56 +1,75 @@
-# City Flood MVP (synthetic data) -- REST + Web App
+# City Flood MVP
 
 [![CI](https://github.com/DiogoRibeiro7/city-flood-mvp/actions/workflows/ci.yml/badge.svg)](https://github.com/DiogoRibeiro7/city-flood-mvp/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/DiogoRibeiro7/city-flood-mvp)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/DiogoRibeiro7/city-flood-mvp)](https://github.com/DiogoRibeiro7/city-flood-mvp/releases)
+[![Last Commit](https://img.shields.io/github/last-commit/DiogoRibeiro7/city-flood-mvp)](https://github.com/DiogoRibeiro7/city-flood-mvp/commits/develop)
+[![Issues](https://img.shields.io/github/issues/DiogoRibeiro7/city-flood-mvp)](https://github.com/DiogoRibeiro7/city-flood-mvp/issues)
+[![Stars](https://img.shields.io/github/stars/DiogoRibeiro7/city-flood-mvp)](https://github.com/DiogoRibeiro7/city-flood-mvp/stargazers)
+[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/downloads/release/python-3120/)
+[![Node](https://img.shields.io/badge/Node-20-green)](https://nodejs.org/en/blog/release/v20.0.0)
 
-End-to-end MVP for a **city-level flood monitoring** web app:
+City Flood MVP is an end-to-end, synthetic **city-scale flood monitoring** system that mirrors the workflow of a real municipal flood ops stack. It models multi-asset drainage networks (pipes, rivers, gauges), generates realistic telemetry, runs analytics to detect events and hotspots with confidence scores, and presents everything in a decision-ready web UI. The API is designed to remain source-agnostic so you can plug in real telemetry adapters later without changing the data model or analytics pipeline.
 
-- River + rain + stormwater pipes/collectors network
-- Synthetic assets + synthetic telemetry
-- Analytics (events + hotspots + status) with confidence scores + versioned runs
-- Public **read** REST API for the web app
-- Protected ingestion endpoint (kept for future real data)
+## What’s included
+
+- Multi-city synthetic assets + telemetry + analytics
+- Event and hotspot analytics with confidence scores
+- Versioned analytics runs + run diff API
+- Calibration recommendations + threshold overrides (per city/season)
+- Scenario comparison API (`observations:compare`)
 - Report builder (CSV export job) + async job queue
-- Saved views + shareable links in the UI
+- UI with map, incident timeline, drill-downs, saved views, shareable links
+- Optional JWT role enforcement for report/export jobs and queue admin APIs
 
 ## Stack
 
 - Backend: FastAPI + SQLAlchemy (async) + Alembic + Poetry
-- DB: TimescaleDB HA (Postgres) + PostGIS
+- DB: TimescaleDB (Postgres) + PostGIS
 - Web: Vite + React + Leaflet + Recharts (Yarn)
-- Local: Docker Compose
+- Infra: Docker Compose
 
 ## Quickstart (local)
 
-1. Copy env:
+1. Copy env file
 
-  ```bash
-  cp .env.example .env
-  ```
+```bash
+cp .env.example .env
+```
 
-2. Start services:
+2. Start services
 
-  ```bash
-  docker compose up -d --build
-  ```
+```bash
+docker compose up -d --build
+```
 
-3. Seed synthetic assets + telemetry + analytics (multi-city by default):
+3. Seed synthetic assets + telemetry + analytics
 
-  ```bash
-  ./scripts/seed_all.sh
-  ```
+```bash
+bash ./scripts/seed_all.sh
+```
 
-4. Reset the full demo environment (optional):
+4. Open
 
-  ```bash
-  ./scripts/reset_demo.sh
-  ```
+- API docs: http://localhost:8000/docs
+- Web UI: http://localhost:5173
 
-5. Open:
-   - API: <http://localhost:8000/docs>
-   - Web: <http://localhost:5173>
+## Auth (optional)
 
-## Useful endpoints
+JWT role enforcement is disabled by default. To enable, set:
+
+- `JWT_SECRET`
+- `JWT_ISSUER` (optional)
+- `JWT_AUDIENCE` (optional)
+- `JWT_ROLES_CLAIM` (optional, default `roles`)
+
+Roles used:
+
+- `viewer`: read-only UI
+- `analyst`: report/export jobs
+- `admin`: calibration overrides + job queue admin APIs
+
+## Key endpoints
 
 - `GET /v1/cities`
 - `GET /v1/cities/{city_id}/assets?bbox=minLon,minLat,maxLon,maxLat&type=pipe|node|river_segment`
@@ -58,6 +77,7 @@ End-to-end MVP for a **city-level flood monitoring** web app:
 - `GET /v1/assets/{asset_id}/observations?metric=fill_ratio&from=...&to=...&granularity=5m&agg=avg`
 - `GET /v1/assets/{asset_id}/observations:compare?metric=...&from=...&to=...&base_scenario_id=...&compare_scenario_id=...`
 - `GET /v1/cities/{city_id}/status`
+- `GET /v1/cities/{city_id}/summary?minutes=15`
 - `GET /v1/hotspots?city_id=...&metric=overflow_risk&top=20`
 - `GET /v1/events?city_id=...&type=overflow&from=...&to=...`
 - `GET /v1/analytics/runs`
@@ -67,17 +87,26 @@ End-to-end MVP for a **city-level flood monitoring** web app:
 - `POST /v1/analytics/jobs` (export CSV + report CSV)
 - `GET /v1/analytics/jobs/{job_id}`
 - `GET /v1/analytics/jobs/{job_id}/download`
+- `GET /v1/jobs/queue`
+- `POST /v1/jobs/queue/{job_id}/retry`
+- `POST /v1/jobs/queue/{job_id}/cancel`
 
-## Notes
+## Ops notes
 
-- Everything is **source-agnostic**: assets and telemetry have a unified schema so real data can be plugged later.
-- PostGIS is installed in the Timescale HA image, but still must be enabled per DB via `CREATE EXTENSION postgis`.
-- To limit seeding to specific cities, set `CITY_IDS` (comma-separated) before running seed scripts.
-- For external data ingestion (CSV/JSON/NDJSON), see `docs/runbooks/ingest_adapters.md`.
-- For rain gauge HTTP ingestion, see `docs/runbooks/ingest_adapters.md#rain-gauge-http-adapter-real-data-source`.
-- For river level HTTP ingestion, see `docs/runbooks/ingest_adapters.md#river-level-http-adapter-real-data-source`.
-- For synthetic JSON generators (rain + river), see `docs/runbooks/ingest_adapters.md#synthetic-generators-json-output`.
-- Background jobs (exports + analytics) are queued; run the worker with `poetry run python -m floodmvp.jobs.queue_worker`.
-- Queue admin endpoints: `GET /v1/jobs/queue`, `POST /v1/jobs/queue/{job_id}/retry`, `POST /v1/jobs/queue/{job_id}/cancel` (guarded by JWT admin role when configured, or `X-API-Key` when set).
-- Periodic analytics scheduler: `poetry run python -m floodmvp.jobs.scheduler --interval-minutes 60`.
-- JWT auth (optional): set `JWT_SECRET` (and optionally `JWT_ISSUER`, `JWT_AUDIENCE`, `JWT_ROLES_CLAIM`) to enforce roles on report/export jobs and queue admin APIs.
+- PostGIS is installed in the Timescale image but must be enabled per DB (`CREATE EXTENSION postgis`).
+- To limit seeding to specific cities, set `CITY_IDS` (comma-separated).
+- Background jobs are queued; run the worker with:
+
+```bash
+poetry run python -m floodmvp.jobs.queue_worker
+```
+
+- Periodic analytics scheduler:
+
+```bash
+poetry run python -m floodmvp.jobs.scheduler --interval-minutes 60
+```
+
+## Data adapters
+
+See `docs/runbooks/ingest_adapters.md` for external ingestion contracts and adapters.
