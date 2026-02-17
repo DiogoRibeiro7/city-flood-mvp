@@ -5,6 +5,8 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    reviewers:
+      - "diogoribeiro7"
     groups:
       python-deps:
         patterns:
@@ -15,6 +17,8 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    reviewers:
+      - "diogoribeiro7"
     groups:
       web-deps:
         patterns:
@@ -25,15 +29,21 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 3
+    reviewers:
+      - "diogoribeiro7"
 
   - package-ecosystem: "docker"
     directory: "/web"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 3
+    reviewers:
+      - "diogoribeiro7"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    reviewers:
+      - "diogoribeiro7"
