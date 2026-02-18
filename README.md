@@ -110,3 +110,19 @@ poetry run python -m floodmvp.jobs.scheduler --interval-minutes 60
 ## Data adapters
 
 See `docs/runbooks/ingest_adapters.md` for external ingestion contracts and adapters.
+
+## Deployment reference
+
+See `docs/deployment/reference.md` for single-tenant and multi-tenant deployment guidance.
+
+## IaC + secrets
+
+See `docs/deployment/iac_and_secrets.md` for IaC structure and secrets management guidance.
+
+## Backup/restore
+
+See `docs/deployment/backup_restore_drills.md` for RTO/RPO targets and drill checklists.
+
+## Security review
+
+See `docs/deployment/security_checklist.md` for the security checklist and compliance notes.

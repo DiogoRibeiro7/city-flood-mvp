@@ -1,57 +1,42 @@
-# City Flood MVP -- Roadmap
+# City Flood MVP — Roadmap (Next Phase)
 
-## Goals
+## Goals (2026 H1)
+- Move from pilot-ready to production-ready
+- Harden data quality and operational SLAs
+- Expand decision-support UX beyond dashboards
+- Enable onboarding of real-world telemetry at scale
 
-- Move from demo-ready to pilot-ready: multi-city support, real data adapters, and stronger reliability.
-- Make analytics configurable, auditable, and comparable across cities and scenarios.
-- Improve UX for investigations, reports, and stakeholder communication.
+## Milestone A — Pilot Ops Readiness (2–3 weeks)
+- [x] Define pilot cities, onboarding checklist, and acceptance criteria
+- [ ] Add runbook for daily ops (alerts triage + incident response)
+- [ ] Add API usage analytics and per-tenant quotas
+- [ ] Establish weekly QA report (coverage, gaps, anomalies)
 
-## New milestones (post-MVP)
+## Milestone B — Data Quality + Governance (3–4 weeks)
+- [ ] Implement automated QA rules engine (outliers, gaps, drift)
+- [ ] Add telemetry lineage and source tagging per record
+- [ ] Add dataset versioning + validation reports for imports
+- [ ] Add data retention policies per city + compliance tags
 
-### Milestone 7 -- Multi-city + tenancy (2–3 weeks)
+## Milestone C — UX 2.0 for Decision Support (3–4 weeks)
+- [ ] Add incident report templates (storm response, asset failure, maintenance)
+- [ ] Add collaborative notes + annotations with shareable links
+- [ ] Add “executive mode” summary view
+- [ ] Add interactive scenario comparison panel in UI
 
-- [ ] Seed and validate 2–3 distinct city datasets (different topology, scale, and climate).
-- [ ] Add city-aware configuration (thresholds, assets, event definitions) with overrides.
-- [ ] Ensure all endpoints and analytics are fully city-scoped and isolated.
-- [ ] Add data export by city and a simple city switcher in the UI.
+## Milestone D — Scaling + Reliability (3–4 weeks)
+- [ ] Implement horizontal job worker autoscaling
+- [ ] Add SLO dashboards (API, ingest, analytics latency)
+- [ ] Add failover drill automation + postmortem templates
+- [ ] Add blue/green deployment playbook
 
-### Milestone 8 -- Real data adapters (2–4 weeks)
+## Milestone E — Real Data Integrations (4–6 weeks)
+- [ ] Add ingestion connector for a public hydro API (real data)
+- [ ] Add adapter SDK for partner data feeds
+- [ ] Add backfill pipeline with audit logs
+- [ ] Add streaming ingestion via Kafka (optional)
 
-- [ ] Define ingestion contracts for external telemetry (CSV + JSON + streaming).
-- [ ] Build at least one real-world adapter (rain gauge or water level feeds).
-- [ ] Add validation + normalization pipeline with rejection reasons and stats.
-- [ ] Document onboarding steps for a new city data source.
-
-### Milestone 9 -- Reliability + scale (2–4 weeks)
-
-- [ ] Add background job queue with retries for analytics and exports.
-- [ ] Add DB retention + rollup policies with storage cost estimates.
-- [ ] Add load testing and establish performance budgets per endpoint.
-- [ ] Add alerting rules tied to SLA objectives (API, ingest, analytics delays).
-
-### Milestone 10 -- Analytics evolution (2–4 weeks)
-
-- [x] Add calibration tools for event thresholds (per city / seasonality).
-- [x] Support scenario comparison and "what-if" deltas in the API.
-- [x] Add confidence scores for events/hotspots.
-- [x] Version analytics outputs and surface diffs between versions.
-
-### Milestone 11 -- Decision-ready UX (2–3 weeks)
-
-- [ ] Add incident timeline view and event drill-downs.
-- [ ] Add report builder (PDF/CSV) for stakeholder summaries.
-- [ ] Improve map storytelling (annotations, bookmarks, shareable links).
-- [ ] Add role-based access and saved views.
-
-### Milestone 12 -- Deployment hardening (2–3 weeks)
-
-- [ ] Define cloud deployment reference (single-tenant + multi-tenant).
-- [ ] Add IaC templates and secrets management guidance.
-- [ ] Add backup/restore drills and disaster recovery RTO/RPO targets.
-- [ ] Finalize security review checklist and compliance notes.
-
-## Open questions
-
-- Which city should be the first real-data pilot?
-- What level of operational uptime is required (business hours vs 24/7)?
-- Which analytics outputs need formal sign-off (regulatory or contractual)?
+## Open Questions
+- What is the next target pilot city and stakeholder?
+- What are the minimum uptime and data freshness SLAs?
+- Which compliance frameworks (if any) should be targeted?
