@@ -69,6 +69,8 @@ class TelemetryQaOut(BaseModel):
     buckets_present: int
     gaps: int
     suspect_count: int
+    outlier_count: int = 0
+    drift_count: int = 0
 
 
 class ExportJobQuery(BaseModel):
@@ -257,6 +259,27 @@ class CalibrationOverrideOut(BaseModel):
     thresholds: CalibrationThresholds
     notes: str | None = None
     created_at: dt.datetime
+
+
+class NoteIn(BaseModel):
+    city_id: str
+    asset_id: str | None = None
+    event_id: str | None = None
+    title: str
+    body: str
+    author: str = "Ops"
+
+
+class NoteOut(BaseModel):
+    note_id: str
+    city_id: str
+    asset_id: str | None = None
+    event_id: str | None = None
+    title: str
+    body: str
+    author: str
+    created_at: dt.datetime
+    updated_at: dt.datetime
 
 
 class IngestEventIn(BaseModel):

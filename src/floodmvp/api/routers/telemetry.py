@@ -83,6 +83,8 @@ async def telemetry_qa(
             buckets_present=r.buckets_present,
             gaps=r.gaps,
             suspect_count=r.suspect_count,
+            outlier_count=r.outlier_count,
+            drift_count=r.drift_count,
         )
         for r in rows
     ]

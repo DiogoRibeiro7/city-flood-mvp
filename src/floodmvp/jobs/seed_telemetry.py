@@ -128,6 +128,9 @@ async def _upsert_series(
             "value": float(val),
             "quality_flag": "ok",
             "source": "synthetic",
+            "source_type": "synthetic",
+            "source_id": series.asset_id,
+            "lineage": {"generator": "seed_telemetry"},
             "scenario_id": scenario_id,
         }
         for ts, val in zip(series.df["ts"].tolist(), series.df["value"].tolist(), strict=False)

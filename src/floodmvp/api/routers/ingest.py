@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy import delete, func, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -74,6 +74,7 @@ def _is_finite_number(value: Any) -> bool:
 )
 async def ingest_events_batch(
     payload: IngestRequest,
+    request: Request,
     authorization: str | None = Header(default=None, alias="Authorization"),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     session: AsyncSession = Depends(get_session),
@@ -117,6 +118,10 @@ async def ingest_events_batch(
             reason = "value must be a finite number"
 
         if reason is None:
+            lineage = {"ingest": "api"}
+            request_id = getattr(request.state, "request_id", None) if request else None
+            if request_id:
+                lineage["request_id"] = request_id
             insert_stmt = (
                 insert(TelemetryObservation)
                 .values(
@@ -126,6 +131,9 @@ async def ingest_events_batch(
                     value=float(event.value),
                     quality_flag=event.quality_flag or "ok",
                     source="ingest",
+                    source_type="api",
+                    source_id=payload.device_id,
+                    lineage=lineage,
                 )
                 .on_conflict_do_nothing(index_elements=["asset_id", "metric", "ts"])
             )

@@ -19,6 +19,9 @@ class City(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     country: Mapped[str] = mapped_column(String(2), nullable=False)
     geom = mapped_column(Geometry(geometry_type="POLYGON", srid=4326), nullable=True)
+    telemetry_retention_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    compliance_tags: Mapped[list[str] | None] = mapped_column(ARRAY(String(64)), nullable=True)
+    retention_policy: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
@@ -52,6 +55,12 @@ class TelemetryObservation(Base):
     value: Mapped[float] = mapped_column(Float, nullable=False)
     quality_flag: Mapped[str] = mapped_column(String(20), nullable=False, default="ok")
     source: Mapped[str] = mapped_column(String(50), nullable=False, default="synthetic")
+    source_type: Mapped[str] = mapped_column(String(32), nullable=False, default="unknown")
+    source_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    import_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("dataset_import.import_id"), nullable=True, index=True
+    )
+    lineage: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     ingested_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
     scenario_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("scenario_run.scenario_id"), nullable=True, index=True)
 
@@ -103,6 +112,41 @@ class ExportJobLog(Base):
     message: Mapped[str] = mapped_column(Text, nullable=False)
     details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+
+
+class DatasetImport(Base):
+    __tablename__ = "dataset_import"
+
+    import_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    city_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("city.city_id"), index=True)
+    source: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_uri: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    format: Mapped[str] = mapped_column(String(16), nullable=False)
+    dataset_version: Mapped[str] = mapped_column(String(128), nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="validated")
+    records_received: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    records_accepted: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    records_rejected: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    inserted_rows: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    validation_report: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Note(Base):
+    __tablename__ = "note"
+
+    note_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), index=True)
+    asset_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("asset.asset_id"), nullable=True)
+    event_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    author: Mapped[str] = mapped_column(String(120), nullable=False, default="Ops")
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default="now()", server_onupdate="now()"
+    )
 
 
 class JobQueue(Base):
@@ -194,6 +238,8 @@ class TelemetryQaDaily(Base):
     buckets_present: Mapped[int] = mapped_column(Integer, nullable=False)
     gaps: Mapped[int] = mapped_column(Integer, nullable=False)
     suspect_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    outlier_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    drift_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 

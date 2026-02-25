@@ -12,45 +12,57 @@ from floodmvp.models.db import TelemetryQaDaily
 from floodmvp.storage.db import SessionLocal
 
 METRIC_RULES = {
-    "rain_mmph": {"delta": 80.0, "min": 0.0, "max": 250.0},
-    "water_level_m": {"delta": 2.0, "min": 0.0, "max": 15.0},
-    "fill_ratio": {"delta": 0.8, "min": 0.0, "max": 2.0},
-    "flow_m3s": {"delta": 5.0, "min": 0.0, "max": 50.0},
-    "water_depth_m": {"delta": 1.5, "min": 0.0, "max": 10.0},
+    "rain_mmph": {"delta": 80.0, "min": 0.0, "max": 250.0, "drift": 25.0},
+    "water_level_m": {"delta": 2.0, "min": 0.0, "max": 15.0, "drift": 0.4},
+    "fill_ratio": {"delta": 0.8, "min": 0.0, "max": 2.0, "drift": 0.25},
+    "flow_m3s": {"delta": 5.0, "min": 0.0, "max": 50.0, "drift": 1.5},
+    "water_depth_m": {"delta": 1.5, "min": 0.0, "max": 10.0, "drift": 0.3},
 }
 
+DRIFT_WINDOW_HOURS = 6
 
-async def mark_suspect(session: AsyncSession, lookback_days: int = 30) -> int:
-    total = 0
+
+async def mark_outliers(
+    session: AsyncSession, lookback_days: int
+) -> dict[tuple[str, str], int]:
+    counts: dict[tuple[str, str], int] = {}
     for metric, rules in METRIC_RULES.items():
         res = await session.execute(
             text(
                 """
                 WITH flagged AS (
-                    SELECT asset_id, metric, ts
+                    SELECT obs.asset_id, obs.metric, obs.ts
                     FROM (
                         SELECT
-                            asset_id,
-                            metric,
-                            ts,
-                            value,
-                            LAG(value) OVER (PARTITION BY asset_id, metric ORDER BY ts) AS prev
-                        FROM telemetry_observation
-                        WHERE metric = :metric
-                          AND ts >= :start
+                            obs.asset_id,
+                            obs.metric,
+                            obs.ts,
+                            obs.value,
+                            LAG(obs.value) OVER (PARTITION BY obs.asset_id, obs.metric ORDER BY obs.ts) AS prev
+                        FROM telemetry_observation obs
+                        WHERE obs.metric = :metric
+                          AND obs.ts >= :start
+                          AND obs.scenario_id IS NULL
                     ) t
                     WHERE
                         (prev IS NOT NULL AND abs(value - prev) > :delta)
                         OR value < :min_value
                         OR value > :max_value
+                ),
+                updated AS (
+                    UPDATE telemetry_observation AS obs
+                    SET quality_flag = 'suspect'
+                    FROM flagged f
+                    WHERE obs.asset_id = f.asset_id
+                      AND obs.metric = f.metric
+                      AND obs.ts = f.ts
+                      AND obs.quality_flag = 'ok'
+                    RETURNING obs.asset_id, obs.metric
                 )
-                UPDATE telemetry_observation AS obs
-                SET quality_flag = 'suspect'
-                FROM flagged f
-                WHERE obs.asset_id = f.asset_id
-                  AND obs.metric = f.metric
-                  AND obs.ts = f.ts
-                  AND obs.quality_flag = 'ok'
+                SELECT a.city_id, u.metric, count(*) AS updated
+                FROM updated u
+                JOIN asset a ON a.asset_id = u.asset_id
+                GROUP BY a.city_id, u.metric
                 """
             ),
             {
@@ -61,8 +73,81 @@ async def mark_suspect(session: AsyncSession, lookback_days: int = 30) -> int:
                 "start": dt.datetime.now(dt.UTC) - dt.timedelta(days=lookback_days),
             },
         )
-        total += int(getattr(res, "rowcount", 0) or 0)
-    return total
+        for city_id, metric_name, updated in res.all():
+            key = (city_id, metric_name)
+            counts[key] = counts.get(key, 0) + int(updated or 0)
+    return counts
+
+
+async def mark_drift(
+    session: AsyncSession, window_hours: int
+) -> dict[tuple[str, str], int]:
+    counts: dict[tuple[str, str], int] = {}
+    now = dt.datetime.now(dt.UTC)
+    mid = now - dt.timedelta(hours=window_hours)
+    start = now - dt.timedelta(hours=window_hours * 2)
+    for metric, rules in METRIC_RULES.items():
+        drift = rules.get("drift")
+        if drift is None:
+            continue
+        res = await session.execute(
+            text(
+                """
+                WITH windowed AS (
+                    SELECT
+                        asset_id,
+                        metric,
+                        avg(value) FILTER (WHERE ts >= :mid AND ts < :now) AS avg_curr,
+                        avg(value) FILTER (WHERE ts >= :start AND ts < :mid) AS avg_prev
+                    FROM telemetry_observation
+                    WHERE metric = :metric
+                      AND ts >= :start
+                      AND ts < :now
+                      AND scenario_id IS NULL
+                    GROUP BY asset_id, metric
+                ),
+                flagged AS (
+                    SELECT asset_id, metric
+                    FROM windowed
+                    WHERE avg_prev IS NOT NULL
+                      AND avg_curr IS NOT NULL
+                      AND abs(avg_curr - avg_prev) > :drift
+                ),
+                updated AS (
+                    UPDATE telemetry_observation AS obs
+                    SET quality_flag = 'suspect'
+                    FROM flagged f
+                    WHERE obs.asset_id = f.asset_id
+                      AND obs.metric = f.metric
+                      AND obs.ts >= :mid
+                      AND obs.ts < :now
+                      AND obs.quality_flag = 'ok'
+                    RETURNING obs.asset_id, obs.metric
+                )
+                SELECT a.city_id, u.metric, count(*) AS updated
+                FROM updated u
+                JOIN asset a ON a.asset_id = u.asset_id
+                GROUP BY a.city_id, u.metric
+                """
+            ),
+            {
+                "metric": metric,
+                "start": start,
+                "mid": mid,
+                "now": now,
+                "drift": drift,
+            },
+        )
+        for city_id, metric_name, updated in res.all():
+            key = (city_id, metric_name)
+            counts[key] = counts.get(key, 0) + int(updated or 0)
+    return counts
+
+
+async def mark_suspect(session: AsyncSession, lookback_days: int = 30) -> int:
+    outlier_counts = await mark_outliers(session, lookback_days=lookback_days)
+    drift_counts = await mark_drift(session, window_hours=DRIFT_WINDOW_HOURS)
+    return sum(outlier_counts.values()) + sum(drift_counts.values())
 
 
 async def _qa_gaps(
@@ -71,6 +156,8 @@ async def _qa_gaps(
     start: dt.datetime,
     end: dt.datetime,
     granularity_minutes: int,
+    outlier_counts: dict[tuple[str, str], int],
+    drift_counts: dict[tuple[str, str], int],
 ) -> None:
     granularity = f"{granularity_minutes} minutes"
     buckets_res = await session.execute(
@@ -162,6 +249,8 @@ async def _qa_gaps(
                 buckets_present=buckets_present,
                 gaps=gaps,
                 suspect_count=suspect_count,
+                outlier_count=outlier_counts.get((city_id, metric), 0),
+                drift_count=drift_counts.get((city_id, metric), 0),
             )
         )
 
@@ -171,7 +260,8 @@ async def main() -> None:
     now = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
     start = now - dt.timedelta(days=settings.telemetry_gap_window_days)
     async with SessionLocal() as session:
-        updated = await mark_suspect(session)
+        outlier_counts = await mark_outliers(session, lookback_days=settings.telemetry_gap_window_days)
+        drift_counts = await mark_drift(session, window_hours=DRIFT_WINDOW_HOURS)
         for city in cities:
             await _qa_gaps(
                 session,
@@ -179,9 +269,13 @@ async def main() -> None:
                 start=start,
                 end=now,
                 granularity_minutes=settings.telemetry_gap_granularity_minutes,
+                outlier_counts=outlier_counts,
+                drift_counts=drift_counts,
             )
         await session.commit()
-    print(f"QA telemetry: marked {updated} rows as suspect")
+    outlier_total = sum(outlier_counts.values())
+    drift_total = sum(drift_counts.values())
+    print(f"QA telemetry: marked {outlier_total + drift_total} rows as suspect")
 
 
 if __name__ == "__main__":

@@ -18,6 +18,22 @@ HTTP_ERRORS = Counter(
     ["method", "path", "status_class"],
 )
 
+TENANT_REQUEST_COUNT = Counter(
+    "http_requests_tenant_total",
+    "Total HTTP requests by tenant",
+    ["tenant", "method", "path", "status"],
+)
+TENANT_REQUEST_LATENCY = Histogram(
+    "http_request_tenant_latency_seconds",
+    "HTTP request latency in seconds by tenant",
+    ["tenant", "method", "path"],
+)
+TENANT_HTTP_ERRORS = Counter(
+    "http_requests_tenant_errors_total",
+    "Total HTTP error responses by tenant",
+    ["tenant", "method", "path", "status_class"],
+)
+
 DB_QUERY_COUNT = Counter(
     "db_queries_total",
     "Total database queries",

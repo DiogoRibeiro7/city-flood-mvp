@@ -15,6 +15,9 @@ Exported metrics:
 - `http_requests_total{method,path,status}`
 - `http_request_latency_seconds_bucket{method,path}`
 - `http_requests_errors_total{method,path,status_class}`
+- `http_requests_tenant_total{tenant,method,path,status}`
+- `http_request_tenant_latency_seconds_bucket{tenant,method,path}`
+- `http_requests_tenant_errors_total{tenant,method,path,status_class}`
 - `db_queries_total{operation}`
 - `db_query_latency_seconds_bucket{operation}`
 - `db_query_errors_total{operation}`

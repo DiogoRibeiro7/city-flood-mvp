@@ -3,7 +3,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, cast
 
-import jwt
+try:
+    import jwt as _jwt
+except ImportError:  # pragma: no cover - runtime guard
+    _jwt = None
+
+    class InvalidTokenError(Exception):
+        pass
+
+    class ExpiredSignatureError(InvalidTokenError):
+        pass
+else:
+    InvalidTokenError = _jwt.InvalidTokenError
+    ExpiredSignatureError = _jwt.ExpiredSignatureError
 from fastapi import Header
 
 from floodmvp.common.errors import AppError
@@ -18,6 +30,12 @@ class AuthUser:
 
 
 def _decode_token(token: str) -> dict[str, Any]:
+    if _jwt is None:
+        raise AppError(
+            code="JWT_LIBRARY_MISSING",
+            message="PyJWT is not installed. Install dependencies or run via Poetry.",
+            status_code=500,
+        )
     if not settings.jwt_secret:
         raise AppError(code="AUTH_NOT_CONFIGURED", message="JWT auth not configured", status_code=500)
     options: dict[str, object] = {
@@ -25,7 +43,7 @@ def _decode_token(token: str) -> dict[str, Any]:
         "verify_aud": bool(settings.jwt_audience),
         "verify_iss": bool(settings.jwt_issuer),
     }
-    return jwt.decode(
+    return _jwt.decode(  # type: ignore[union-attr]
         token,
         settings.jwt_secret,
         algorithms=["HS256"],
@@ -33,6 +51,15 @@ def _decode_token(token: str) -> dict[str, Any]:
         issuer=settings.jwt_issuer,
         options=cast(Any, options),
     )
+
+
+def try_decode_token(token: str) -> dict[str, Any] | None:
+    if not settings.jwt_secret:
+        return None
+    try:
+        return _decode_token(token)
+    except InvalidTokenError:
+        return None
 
 
 def _extract_roles(claims: dict[str, Any]) -> list[str]:
@@ -46,15 +73,22 @@ def _extract_roles(claims: dict[str, Any]) -> list[str]:
     return []
 
 
+def extract_tenant(claims: dict[str, Any]) -> str | None:
+    raw = claims.get(settings.jwt_tenant_claim)
+    if raw is None:
+        return None
+    return str(raw).strip() or None
+
+
 def get_current_user(authorization: str | None = Header(default=None, alias="Authorization")) -> AuthUser:
     if not authorization or not authorization.startswith("Bearer "):
         raise AppError(code="UNAUTHORIZED", message="Missing bearer token", status_code=401)
     token = authorization.removeprefix("Bearer ").strip()
     try:
         claims = _decode_token(token)
-    except jwt.ExpiredSignatureError as exc:
+    except ExpiredSignatureError as exc:
         raise AppError(code="UNAUTHORIZED", message="Token expired", status_code=401) from exc
-    except jwt.InvalidTokenError as exc:
+    except InvalidTokenError as exc:
         raise AppError(code="UNAUTHORIZED", message="Invalid token", status_code=401) from exc
     sub = str(claims.get("sub", ""))
     roles = _extract_roles(claims)

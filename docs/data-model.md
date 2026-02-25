@@ -10,7 +10,7 @@ Indexes:
 - `(city_id, asset_type)` for filtering
 
 ## telemetry_observation (Timescale hypertable)
-- `asset_id`, `metric`, `ts`, `value`, `quality_flag`, `source`, `ingested_at`
+- `asset_id`, `metric`, `ts`, `value`, `quality_flag`, `source`, `source_type`, `source_id`, `import_id`, `lineage`, `ingested_at`
 Indexes:
 - PK `(asset_id, metric, ts)`
 - `(asset_id, ts DESC)` and BRIN on `ts` for range scans
@@ -44,6 +44,18 @@ Indexes:
 
 ## telemetry_qa_daily
 - daily telemetry QA summary (gaps + suspect counts)
+  - includes `outlier_count` and `drift_count` per metric
+
+## dataset_import
+- audit trail for dataset ingestion (version + validation report)
+- fields: `import_id`, `city_id`, `source`, `source_uri`, `format`, `dataset_version`, `status`, `validation_report`
+
+## note
+- collaborative notes tied to city, assets, or events
+- fields: `note_id`, `city_id`, `asset_id`, `event_id`, `title`, `body`, `author`, `created_at`
+
+## city
+- `telemetry_retention_days`, `compliance_tags`, `retention_policy` for per-city governance
 
 ## export_job_log
 - job-level audit log entries (status transitions + errors)

@@ -13,11 +13,19 @@ from fastapi.responses import JSONResponse, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from floodmvp.api.routers import analytics, assets, cities, events, health, ingest, jobs, telemetry
+from floodmvp.api.routers import analytics, assets, cities, events, health, ingest, jobs, notes, telemetry
+from floodmvp.common.auth import extract_tenant, try_decode_token
 from floodmvp.common.errors import AppError, as_error_payload, as_error_payload_raw
 from floodmvp.common.logging import configure_logging, log_json
 from floodmvp.config.settings import settings
-from floodmvp.observability.metrics import HTTP_ERRORS, REQUEST_COUNT, REQUEST_LATENCY
+from floodmvp.observability.metrics import (
+    HTTP_ERRORS,
+    REQUEST_COUNT,
+    REQUEST_LATENCY,
+    TENANT_HTTP_ERRORS,
+    TENANT_REQUEST_COUNT,
+    TENANT_REQUEST_LATENCY,
+)
 
 configure_logging()
 
@@ -43,6 +51,7 @@ class _TokenBucket:
 
 
 _RATE_LIMITS: dict[str, _TokenBucket] = {}
+_TENANT_LIMITS: dict[str, _TokenBucket] = {}
 
 # MVP: permissive CORS for local web app
 app.add_middleware(
@@ -54,12 +63,32 @@ app.add_middleware(
 )
 
 
+def _resolve_tenant_id(request: Request) -> str:
+    header = request.headers.get(settings.tenant_header)
+    if header:
+        return header.strip()
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.removeprefix("Bearer ").strip()
+        claims = try_decode_token(token)
+        if claims:
+            tenant = extract_tenant(claims)
+            if tenant:
+                return tenant
+    api_key = request.headers.get("x-api-key")
+    if api_key and settings.analytics_api_key and api_key == settings.analytics_api_key:
+        return "analytics-key"
+    return "public"
+
+
 @app.middleware("http")
 async def add_request_id(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
     request_id = request.headers.get("x-request-id") or f"req_{uuid.uuid4().hex}"
     request.state.request_id = request_id
+    tenant_id = _resolve_tenant_id(request)
+    request.state.tenant_id = tenant_id
     # rate limiting (in-memory MVP)
     client_id = request.client.host if request.client else "unknown"
     bucket = _RATE_LIMITS.get(client_id)
@@ -77,6 +106,23 @@ async def add_request_id(
             ),
             headers={"x-request-id": request_id},
         )
+
+    if settings.tenant_quota_rps > 0 and settings.tenant_quota_burst > 0:
+        tenant_bucket = _TENANT_LIMITS.get(tenant_id)
+        if tenant_bucket is None:
+            tenant_bucket = _TokenBucket(settings.tenant_quota_rps, settings.tenant_quota_burst)
+            _TENANT_LIMITS[tenant_id] = tenant_bucket
+        if not tenant_bucket.allow():
+            return JSONResponse(
+                status_code=429,
+                content=as_error_payload_raw(
+                    code="TENANT_RATE_LIMITED",
+                    message="Tenant request quota exceeded",
+                    details={"tenant_id": tenant_id},
+                    request_id=request_id,
+                ),
+                headers={"x-request-id": request_id},
+            )
 
     # request size limit
     if request.headers.get("content-length"):
@@ -130,9 +176,16 @@ async def add_request_id(
     status_code = response.status_code
     REQUEST_COUNT.labels(method=method, path=path, status=str(status_code)).inc()
     REQUEST_LATENCY.labels(method=method, path=path).observe(duration)
+    TENANT_REQUEST_COUNT.labels(
+        tenant=tenant_id, method=method, path=path, status=str(status_code)
+    ).inc()
+    TENANT_REQUEST_LATENCY.labels(tenant=tenant_id, method=method, path=path).observe(duration)
     if status_code >= 400:
         status_class = "4xx" if status_code < 500 else "5xx"
         HTTP_ERRORS.labels(method=method, path=path, status_class=status_class).inc()
+        TENANT_HTTP_ERRORS.labels(
+            tenant=tenant_id, method=method, path=path, status_class=status_class
+        ).inc()
     log_json(
         logging.INFO,
         "request",
@@ -141,6 +194,7 @@ async def add_request_id(
         path=path,
         status=status_code,
         latency_ms=round(duration * 1000, 2),
+        tenant_id=tenant_id,
     )
     return response
 
@@ -195,3 +249,4 @@ app.include_router(ingest.router, prefix="/v1")
 app.include_router(jobs.router, prefix="/v1")
 app.include_router(analytics.router, prefix="/v1")
 app.include_router(events.router, prefix="/v1")
+app.include_router(notes.router, prefix="/v1")

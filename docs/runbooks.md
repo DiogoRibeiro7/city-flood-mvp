@@ -57,3 +57,25 @@
 
 ## Analytics calibration
 - See `docs/runbooks/calibration.md` for threshold recommendations and overrides.
+
+## Daily ops
+### Alerts triage
+1) Check Prometheus alerts and identify the impacted service (API, ingest, analytics).
+2) Confirm recent deploys or config changes for the affected service.
+3) Review `docker compose logs -f backend` (or production logs) for the request_id.
+4) Validate database health (`/metrics`, `pg_stat_activity`, and CPU/IO saturation).
+5) If telemetry ingestion is impacted, pause exports and notify stakeholders.
+
+### Incident response
+1) Open an incident record with time, scope, and primary responder.
+2) Mitigate impact (scale backend, pause heavy jobs, or apply rate limits).
+3) Validate recovery using `/v1/health` and `/metrics`.
+4) Communicate resolution with a short summary and next actions.
+5) Schedule a postmortem if impact lasted > 30 minutes.
+
+## Weekly QA report
+Generate a coverage + gaps + anomaly summary for the last 7 days:
+```
+python -m floodmvp.jobs.qa_weekly_report --days 7
+```
+The report is saved in `data/exports/` by default. Use `--out` to override.

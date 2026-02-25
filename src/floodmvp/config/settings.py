@@ -19,8 +19,12 @@ class Settings(BaseSettings):
     jwt_issuer: str | None = None
     jwt_audience: str | None = None
     jwt_roles_claim: str = "roles"
+    jwt_tenant_claim: str = "tenant"
+    tenant_header: str = "X-Tenant-Id"
     rate_limit_rps: float = 5.0
     rate_limit_burst: int = 20
+    tenant_quota_rps: float = 8.0
+    tenant_quota_burst: int = 40
     request_max_bytes: int = 1_000_000
     request_timeout_s: float = 10.0
 

@@ -4,17 +4,23 @@ import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import {
   Asset,
+  Note,
   fetchAssets,
   fetchCities,
   fetchCityStatus,
   fetchCitySummary,
+  createNote,
   createReportJob,
+  deleteNote,
   downloadJob,
   fetchEvents,
   fetchJob,
   fetchHotspots,
   fetchMetrics,
+  fetchNote,
   fetchObservations,
+  fetchObservationsCompare,
+  fetchNotes,
   fetchScenarios,
   setAuthToken,
 } from "../api";
@@ -67,6 +73,22 @@ export default function App() {
   const [showGauges, setShowGauges] = useState<boolean>(true);
   const [showHotspots, setShowHotspots] = useState<boolean>(true);
   const [denseView, setDenseView] = useState<boolean>(false);
+  const [executiveMode, setExecutiveMode] = useState<boolean>(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [noteTitle, setNoteTitle] = useState<string>("");
+  const [noteBody, setNoteBody] = useState<string>("");
+  const [noteAuthor, setNoteAuthor] = useState<string>("Ops");
+  const [attachAsset, setAttachAsset] = useState<boolean>(true);
+  const [attachEvent, setAttachEvent] = useState<boolean>(false);
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+  const [compareBaseScenario, setCompareBaseScenario] = useState<string>("latest");
+  const [compareScenario, setCompareScenario] = useState<string>("");
+  const [compareSeries, setCompareSeries] = useState<
+    { ts: string; base: number | null; compare: number | null; delta: number | null }[]
+  >([]);
+  const [loadingCompare, setLoadingCompare] = useState<boolean>(false);
+  const [templateType, setTemplateType] = useState<string>("storm_response");
+  const [templateDraft, setTemplateDraft] = useState<string>("");
   const assetCache = useRef<Map<string, Asset[]>>(new Map());
   const eventCache = useRef<Map<string, any[]>>(new Map());
 
@@ -110,6 +132,7 @@ export default function App() {
     const range = params.get("range");
     const event = params.get("event");
     const tags = params.get("tags");
+    const note = params.get("note");
     const showRiverParam = params.get("river");
     const showPipesParam = params.get("pipes");
     const showGaugesParam = params.get("gauges");
@@ -125,6 +148,7 @@ export default function App() {
       setTagInput(tags);
       setTagFilter(tags);
     }
+    if (note) setActiveNoteId(note);
     if (showRiverParam) setShowRiver(showRiverParam === "1");
     if (showPipesParam) setShowPipes(showPipesParam === "1");
     if (showGaugesParam) setShowGauges(showGaugesParam === "1");
@@ -226,6 +250,28 @@ export default function App() {
   }, [cityId, rangeHours, eventType]);
 
   useEffect(() => {
+    if (!cityId) return;
+    fetchNotes(cityId)
+      .then(setNotes)
+      .catch((err) => {
+        setErrorMsg(err?.message ?? "Failed to load notes");
+        console.error(err);
+      });
+  }, [cityId]);
+
+  useEffect(() => {
+    if (!activeNoteId) return;
+    const exists = notes.some((n) => n.note_id === activeNoteId);
+    if (exists) return;
+    fetchNote(activeNoteId)
+      .then((note) => setNotes((prev) => [note, ...prev]))
+      .catch((err) => {
+        setErrorMsg(err?.message ?? "Failed to load shared note");
+        console.error(err);
+      });
+  }, [activeNoteId, notes]);
+
+  useEffect(() => {
     if (!selected) return;
     fetchMetrics(selected.asset_id, scenarioId)
       .then((m) => {
@@ -251,6 +297,43 @@ export default function App() {
       })
       .finally(() => setLoadingSeries(false));
   }, [selected, metric, rangeHours, scenarioId]);
+
+  useEffect(() => {
+    if (!selected || !metric || !compareScenario) {
+      setCompareSeries([]);
+      return;
+    }
+    const { from, to } = isoNowMinus(rangeHours);
+    setLoadingCompare(true);
+    fetchObservationsCompare(
+      selected.asset_id,
+      metric,
+      from,
+      to,
+      compareBaseScenario,
+      compareScenario
+    )
+      .then((r) => {
+        const rows = (r.series ?? []).map((row: any) => ({
+          ts: row.ts,
+          base: row.base ?? null,
+          compare: row.compare ?? null,
+          delta: row.delta ?? null,
+        }));
+        setCompareSeries(rows);
+      })
+      .catch((err) => {
+        setErrorMsg(err?.message ?? "Failed to load scenario comparison");
+        console.error(err);
+      })
+      .finally(() => setLoadingCompare(false));
+  }, [selected, metric, rangeHours, compareScenario, compareBaseScenario]);
+
+  useEffect(() => {
+    if (!compareScenario && scenarios.length) {
+      setCompareScenario(scenarios[0].scenario_id);
+    }
+  }, [scenarios, compareScenario]);
 
   useEffect(() => {
     if (!selected) return;
@@ -327,6 +410,12 @@ export default function App() {
     return dt.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", month: "short", day: "2-digit" });
   };
 
+  const formatShort = (iso: string) => {
+    const dt = new Date(iso);
+    if (Number.isNaN(dt.getTime())) return iso;
+    return dt.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+
   const focusEventAsset = (evt: any) => {
     const assetId = evt?.asset_ids?.[0];
     if (!assetId) return;
@@ -347,8 +436,73 @@ export default function App() {
     return Object.entries(selected.props).slice(0, 6);
   }, [selected]);
 
+  const filteredNotes = useMemo(() => {
+    if (!cityId) return notes;
+    return notes.filter((n) => n.city_id === cityId);
+  }, [notes, cityId]);
+
+  const activeNote = useMemo(
+    () => filteredNotes.find((n) => n.note_id === activeNoteId) ?? null,
+    [filteredNotes, activeNoteId]
+  );
+
+  const compareStats = useMemo(() => {
+    if (!compareSeries.length) return null;
+    const deltas = compareSeries.map((r) => r.delta).filter((v) => v !== null) as number[];
+    if (!deltas.length) return null;
+    const avg = deltas.reduce((a, b) => a + b, 0) / deltas.length;
+    const max = Math.max(...deltas);
+    const min = Math.min(...deltas);
+    return { avg, max, min };
+  }, [compareSeries]);
+
+  const templateDraftTitle = useMemo(() => {
+    const base = cityName || cityId || "City";
+    const assetLabel = selected?.name ? ` · ${selected.name}` : "";
+    const eventLabel = selectedEvent?.event_type ? ` · ${selectedEvent.event_type}` : "";
+    return `${base}${assetLabel}${eventLabel}`;
+  }, [cityName, cityId, selected, selectedEvent]);
+
+  const buildTemplate = () => {
+    const now = new Date().toISOString();
+    const assetLine = selected ? `Asset: ${selected.name} (${selected.asset_id})` : "Asset: -";
+    const eventLine = selectedEvent
+      ? `Event: ${selectedEvent.event_type} (S${selectedEvent.severity}) ${formatTime(
+          selectedEvent.start_ts
+        )} → ${formatTime(selectedEvent.end_ts)}`
+      : "Event: -";
+    const baseHeader = `Incident Report\nCity: ${cityName || cityId}\nGenerated: ${now}\n${assetLine}\n${eventLine}\n\n`;
+    if (templateType === "asset_failure") {
+      return (
+        baseHeader +
+        "Summary:\n- What failed and where\n- Immediate impact\n\n" +
+        "Root Cause (initial):\n- Suspected cause\n- Evidence and signals\n\n" +
+        "Response Actions:\n- Mitigations executed\n- Owner + ETA\n\n" +
+        "Recovery Plan:\n- Repair steps\n- Risk to service\n\n" +
+        "Next Updates:\n- Next stakeholder update time\n"
+      );
+    }
+    if (templateType === "maintenance") {
+      return (
+        baseHeader +
+        "Summary:\n- Planned work scope\n- Affected assets\n\n" +
+        "Impact Assessment:\n- Service risk\n- Customer impact\n\n" +
+        "Execution Plan:\n- Schedule\n- Required crews\n\n" +
+        "Backout Plan:\n- Rollback steps\n- Escalation contacts\n\n" +
+        "Follow-up:\n- Verification checks\n- Metrics to monitor\n"
+      );
+    }
+    return (
+      baseHeader +
+      "Summary:\n- Situation overview\n- Impacted zones\n\n" +
+      "Storm Response:\n- Actions taken\n- Field status\n\n" +
+      "Operational Impact:\n- Service disruptions\n- Safety risks\n\n" +
+      "Next Steps:\n- Immediate priorities\n- Stakeholder updates\n"
+    );
+  };
+
   return (
-    <div className="app-root">
+    <div className={`app-root ${executiveMode ? "executive" : ""}`}>
       <section className="panel map-panel">
         <div className="map-header">
           <div>
@@ -388,6 +542,16 @@ export default function App() {
                 <option value="analyst">Analyst</option>
                 <option value="admin">Admin</option>
               </select>
+            </div>
+            <div className="control-group">
+              <label htmlFor="exec-toggle">View</label>
+              <button
+                id="exec-toggle"
+                className={executiveMode ? "toggle-on" : ""}
+                onClick={() => setExecutiveMode((v) => !v)}
+              >
+                {executiveMode ? "Executive" : "Standard"}
+              </button>
             </div>
           </div>
         </div>
@@ -482,6 +646,45 @@ export default function App() {
 
       <section className="side-panel">
         {errorMsg && <div className="error-banner">{errorMsg}</div>}
+
+        {executiveMode && (
+          <div className="card exec-card">
+            <div className="card-title">Executive brief</div>
+            <div className="exec-grid">
+              <div>
+                <div className="exec-label">Risk level</div>
+                <div className="exec-value">{status?.risk ?? "-"}</div>
+              </div>
+              <div>
+                <div className="exec-label">Active events</div>
+                <div className="exec-value">{status?.active_events ?? 0}</div>
+              </div>
+              <div>
+                <div className="exec-label">Hotspots</div>
+                <div className="exec-value">{hotspots.length}</div>
+              </div>
+              <div>
+                <div className="exec-label">Rain (15m)</div>
+                <div className="exec-value">
+                  {summary ? `${Number(summary.rain_mmph ?? 0).toFixed(1)} mm/h` : "-"}
+                </div>
+              </div>
+              <div>
+                <div className="exec-label">River (15m)</div>
+                <div className="exec-value">
+                  {summary ? `${Number(summary.river_level_m ?? 0).toFixed(2)} m` : "-"}
+                </div>
+              </div>
+              <div>
+                <div className="exec-label">Critical events</div>
+                <div className="exec-value">{eventSummary.critical}</div>
+              </div>
+            </div>
+            <div className="exec-foot">
+              Updated {new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+            </div>
+          </div>
+        )}
 
         <div className="card">
           <div className="card-title">Filters</div>
@@ -953,6 +1156,245 @@ export default function App() {
           {reportStatus && <div className="report-status">{reportStatus}</div>}
         </div>
 
+        <div className="card template-card">
+          <div className="card-title">Incident templates</div>
+          <div className="asset-meta">
+            <div className="control-group grow">
+              <label htmlFor="template-type">Template</label>
+              <select
+                id="template-type"
+                value={templateType}
+                onChange={(e) => setTemplateType(e.target.value)}
+              >
+                <option value="storm_response">Storm response</option>
+                <option value="asset_failure">Asset failure</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+            <button
+              onClick={() => {
+                setTemplateDraft(buildTemplate());
+              }}
+            >
+              Generate
+            </button>
+          </div>
+          <div className="control-group">
+            <label htmlFor="template-title">Title</label>
+            <input id="template-title" type="text" value={templateDraftTitle} readOnly />
+          </div>
+          <textarea
+            className="template-area"
+            value={templateDraft}
+            onChange={(e) => setTemplateDraft(e.target.value)}
+            placeholder="Generate a template to start drafting."
+          />
+          <div className="report-actions">
+            <button
+              onClick={() => {
+                if (!templateDraft) return;
+                navigator.clipboard?.writeText(templateDraft);
+                setErrorMsg("Template copied to clipboard.");
+                setTimeout(() => setErrorMsg(null), 2500);
+              }}
+            >
+              Copy
+            </button>
+            <button
+              onClick={() => {
+                if (!templateDraft) return;
+                const win = window.open("", "_blank");
+                if (!win) return;
+                win.document.write(`
+                  <html>
+                    <head>
+                      <title>Incident Report</title>
+                      <style>
+                        body { font-family: "Space Grotesk", Arial, sans-serif; color: #0f172a; padding: 24px; }
+                        h1 { font-size: 20px; margin-bottom: 6px; }
+                        pre { white-space: pre-wrap; font-size: 12px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; }
+                      </style>
+                    </head>
+                    <body>
+                      <h1>${templateDraftTitle}</h1>
+                      <pre>${templateDraft.replace(/</g, "&lt;")}</pre>
+                    </body>
+                  </html>
+                `);
+                win.document.close();
+                win.focus();
+                win.print();
+              }}
+            >
+              Print
+            </button>
+          </div>
+        </div>
+
+        <div className="card notes-card">
+          <div className="card-title">Collaborative notes</div>
+          <div className="asset-meta">
+            <div className="control-group grow">
+              <label htmlFor="note-title">Title</label>
+              <input
+                id="note-title"
+                type="text"
+                value={noteTitle}
+                onChange={(e) => setNoteTitle(e.target.value)}
+                placeholder="Short summary"
+              />
+            </div>
+            <div className="control-group">
+              <label htmlFor="note-author">Author</label>
+              <input
+                id="note-author"
+                type="text"
+                value={noteAuthor}
+                onChange={(e) => setNoteAuthor(e.target.value)}
+              />
+            </div>
+          </div>
+          <textarea
+            className="note-area"
+            value={noteBody}
+            onChange={(e) => setNoteBody(e.target.value)}
+            placeholder="Add context, decisions, or field updates."
+          />
+          <div className="note-attachments">
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={attachAsset}
+                onChange={(e) => setAttachAsset(e.target.checked)}
+              />
+              Attach to asset
+            </label>
+            <label className="checkbox">
+              <input
+                type="checkbox"
+                checked={attachEvent}
+                onChange={(e) => setAttachEvent(e.target.checked)}
+              />
+              Attach to event
+            </label>
+          </div>
+          <div className="report-actions">
+            <button
+              onClick={() => {
+                if (!noteBody.trim() || !cityId) return;
+                createNote({
+                  city_id: cityId,
+                  asset_id: attachAsset ? selected?.asset_id ?? null : null,
+                  event_id: attachEvent ? selectedEvent?.event_id ?? null : null,
+                  title: noteTitle || `Note ${filteredNotes.length + 1}`,
+                  body: noteBody,
+                  author: noteAuthor || "Ops",
+                })
+                  .then((newNote) => {
+                    setNotes((prev) => [newNote, ...prev]);
+                    setNoteTitle("");
+                    setNoteBody("");
+                    setActiveNoteId(newNote.note_id);
+                  })
+                  .catch((err) => {
+                    setErrorMsg(err?.message ?? "Failed to create note");
+                    console.error(err);
+                  });
+              }}
+            >
+              Add note
+            </button>
+            <button
+              onClick={() => {
+                setNoteTitle("");
+                setNoteBody("");
+              }}
+            >
+              Clear
+            </button>
+          </div>
+          {filteredNotes.length === 0 && <div className="empty-state">No notes for this city yet.</div>}
+          {filteredNotes.length > 0 && (
+            <ul className="note-list">
+              {filteredNotes.slice(0, 6).map((n) => (
+                <li
+                  key={n.note_id}
+                  className={`note-item ${n.note_id === activeNoteId ? "active" : ""}`}
+                >
+                  <div>
+                    <div className="note-title">{n.title}</div>
+                    <div className="note-meta">
+                      {n.author} · {formatShort(n.created_at)}
+                    </div>
+                  </div>
+                  <div className="note-actions">
+                    <button onClick={() => setActiveNoteId(n.note_id)}>Open</button>
+                    <button
+                      onClick={() => {
+                        const params = new URLSearchParams(window.location.search);
+                        params.set("note", n.note_id);
+                        const url = `${window.location.origin}?${params.toString()}`;
+                        navigator.clipboard?.writeText(url);
+                        setErrorMsg("Note link copied to clipboard.");
+                        setTimeout(() => setErrorMsg(null), 2500);
+                      }}
+                    >
+                      Share
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {activeNote && (
+            <div className="note-detail">
+              <div className="detail-row">
+                <div className="detail-title">{activeNote.title}</div>
+                <span className="badge">{activeNote.author}</span>
+              </div>
+              <div className="app-subtitle">{formatTime(activeNote.created_at)}</div>
+              <div className="note-body">{activeNote.body}</div>
+              <div className="detail-actions">
+                {activeNote.asset_id && (
+                  <button
+                    onClick={() => {
+                      const asset = assets.find((a) => a.asset_id === activeNote.asset_id);
+                      if (asset) setSelected(asset);
+                    }}
+                  >
+                    Focus asset
+                  </button>
+                )}
+                {activeNote.event_id && (
+                  <button
+                    onClick={() => {
+                      const evt = events.find((e) => e.event_id === activeNote.event_id);
+                      if (evt) setSelectedEvent(evt);
+                    }}
+                  >
+                    Focus event
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    deleteNote(activeNote.note_id)
+                      .then(() => {
+                        setNotes((prev) => prev.filter((n) => n.note_id !== activeNote.note_id));
+                        setActiveNoteId(null);
+                      })
+                      .catch((err) => {
+                        setErrorMsg(err?.message ?? "Failed to delete note");
+                        console.error(err);
+                      });
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="card story-card">
           <div className="card-title">Storytelling</div>
           <div className="asset-meta">
@@ -1107,6 +1549,89 @@ export default function App() {
           </div>
           {loadingSeries && <div className="empty-state">Loading chart...</div>}
           {!loadingSeries && selected && series.length === 0 && <div className="empty-state">No data in range.</div>}
+
+          <div className="compare-panel">
+            <div className="compare-header">
+              <div>
+                <div className="card-title">Scenario comparison</div>
+                <div className="app-subtitle">Compare the selected metric across two scenarios.</div>
+              </div>
+              <button
+                onClick={() => {
+                  const nextBase = compareScenario;
+                  const nextCompare = compareBaseScenario;
+                  setCompareBaseScenario(nextBase || "latest");
+                  setCompareScenario(nextCompare || "latest");
+                }}
+              >
+                Swap
+              </button>
+            </div>
+            <div className="asset-meta">
+              <div className="control-group">
+                <label htmlFor="base-scenario">Base</label>
+                <select
+                  id="base-scenario"
+                  value={compareBaseScenario}
+                  onChange={(e) => setCompareBaseScenario(e.target.value)}
+                >
+                  <option value="latest">Latest</option>
+                  {scenarios.map((s) => (
+                    <option key={`base-${s.scenario_id}`} value={s.scenario_id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="control-group">
+                <label htmlFor="compare-scenario">Compare</label>
+                <select
+                  id="compare-scenario"
+                  value={compareScenario}
+                  onChange={(e) => setCompareScenario(e.target.value)}
+                >
+                  <option value="latest">Latest</option>
+                  {scenarios.map((s) => (
+                    <option key={`cmp-${s.scenario_id}`} value={s.scenario_id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="compare-chart">
+              {compareSeries.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={compareSeries}>
+                    <XAxis dataKey="ts" hide />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="base" dot={false} stroke="#0f766e" strokeWidth={2} />
+                    <Line type="monotone" dataKey="compare" dot={false} stroke="#f97316" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="empty-state">Choose scenarios to compare.</div>
+              )}
+            </div>
+            {loadingCompare && <div className="empty-state">Loading comparison...</div>}
+            {compareStats && (
+              <div className="compare-stats">
+                <div>
+                  <span>Avg delta</span>
+                  <strong>{compareStats.avg.toFixed(3)}</strong>
+                </div>
+                <div>
+                  <span>Max delta</span>
+                  <strong>{compareStats.max.toFixed(3)}</strong>
+                </div>
+                <div>
+                  <span>Min delta</span>
+                  <strong>{compareStats.min.toFixed(3)}</strong>
+                </div>
+              </div>
+            )}
+          </div>
 
           {selected && (
             <div className="metrics-grid">

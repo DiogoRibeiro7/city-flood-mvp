@@ -18,6 +18,9 @@ class IngestRecord:
     value: float
     quality_flag: str = "ok"
     source: str = "external"
+    source_type: str = "file"
+    source_id: str | None = None
+    lineage: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -104,9 +107,12 @@ def validate_records(
     city_by_asset: dict[str, str] | None = None,
     city_id: str | None = None,
     source: str = "external",
+    source_type: str = "file",
+    lineage_base: dict[str, Any] | None = None,
 ) -> tuple[list[IngestRecord], IngestStats]:
     stats = IngestStats()
     records: list[IngestRecord] = []
+    lineage_base = dict(lineage_base or {})
 
     for row in rows:
         stats.received += 1
@@ -147,6 +153,10 @@ def validate_records(
             continue
 
         quality_flag = str(row.get("quality_flag") or "ok")
+        lineage = dict(lineage_base)
+        lineage["raw_device_id"] = str(device_id)
+        if asset_id != device_id:
+            lineage["mapped_asset_id"] = str(asset_id)
         records.append(
             IngestRecord(
                 asset_id=asset_id,
@@ -155,6 +165,9 @@ def validate_records(
                 value=float(value_raw),
                 quality_flag=quality_flag,
                 source=source,
+                source_type=source_type,
+                source_id=str(device_id),
+                lineage=lineage,
             )
         )
         stats.accepted += 1

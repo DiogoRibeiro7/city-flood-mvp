@@ -8,6 +8,17 @@ export type Asset = {
 };
 
 export type City = { city_id: string; name: string; country: string };
+export type Note = {
+  note_id: string;
+  city_id: string;
+  asset_id?: string | null;
+  event_id?: string | null;
+  title: string;
+  body: string;
+  author: string;
+  created_at: string;
+  updated_at: string;
+};
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 const TOKEN_KEY = "floodmvp.jwt";
@@ -72,6 +83,27 @@ export async function fetchObservations(
   return r.json();
 }
 
+export async function fetchObservationsCompare(
+  assetId: string,
+  metric: string,
+  from: string,
+  to: string,
+  baseScenarioId: string,
+  compareScenarioId: string
+) {
+  const q = new URLSearchParams();
+  q.set("metric", metric);
+  q.set("from", from);
+  q.set("to", to);
+  q.set("granularity", "5m");
+  q.set("agg", "avg");
+  q.set("base_scenario_id", baseScenarioId);
+  q.set("compare_scenario_id", compareScenarioId);
+  const r = await fetch(`${API_BASE}/v1/assets/${assetId}/observations:compare?${q.toString()}`);
+  if (!r.ok) throw new Error(`observations compare: ${r.status}`);
+  return r.json();
+}
+
 export async function fetchScenarios() {
   const r = await fetch(`${API_BASE}/v1/telemetry/scenarios`);
   if (!r.ok) throw new Error(`scenarios: ${r.status}`);
@@ -117,6 +149,51 @@ export async function fetchEvents(
   if (type) q.set("type", type);
   const r = await fetch(`${API_BASE}/v1/events?${q.toString()}`);
   if (!r.ok) throw new Error(`events: ${r.status}`);
+  return r.json();
+}
+
+export async function fetchNotes(
+  cityId: string,
+  assetId?: string,
+  eventId?: string,
+  limit = 50
+): Promise<Note[]> {
+  const q = new URLSearchParams();
+  q.set("city_id", cityId);
+  if (assetId) q.set("asset_id", assetId);
+  if (eventId) q.set("event_id", eventId);
+  q.set("limit", String(limit));
+  const r = await fetch(`${API_BASE}/v1/notes?${q.toString()}`);
+  if (!r.ok) throw new Error(`notes: ${r.status}`);
+  return r.json();
+}
+
+export async function fetchNote(noteId: string): Promise<Note> {
+  const r = await fetch(`${API_BASE}/v1/notes/${noteId}`);
+  if (!r.ok) throw new Error(`note: ${r.status}`);
+  return r.json();
+}
+
+export async function createNote(payload: {
+  city_id: string;
+  asset_id?: string | null;
+  event_id?: string | null;
+  title: string;
+  body: string;
+  author: string;
+}): Promise<Note> {
+  const r = await fetch(`${API_BASE}/v1/notes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!r.ok) throw new Error(`create note: ${r.status}`);
+  return r.json();
+}
+
+export async function deleteNote(noteId: string) {
+  const r = await fetch(`${API_BASE}/v1/notes/${noteId}`, { method: "DELETE" });
+  if (!r.ok) throw new Error(`delete note: ${r.status}`);
   return r.json();
 }
 
