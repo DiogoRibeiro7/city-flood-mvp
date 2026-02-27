@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import desc, select, delete
+from sqlalchemy import delete, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.common.ids import new_id

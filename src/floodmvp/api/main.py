@@ -13,7 +13,17 @@ from fastapi.responses import JSONResponse, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from floodmvp.api.routers import analytics, assets, cities, events, health, ingest, jobs, notes, telemetry
+from floodmvp.api.routers import (
+    analytics,
+    assets,
+    cities,
+    events,
+    health,
+    ingest,
+    jobs,
+    notes,
+    telemetry,
+)
 from floodmvp.common.auth import extract_tenant, try_decode_token
 from floodmvp.common.errors import AppError, as_error_payload, as_error_payload_raw
 from floodmvp.common.logging import configure_logging, log_json
