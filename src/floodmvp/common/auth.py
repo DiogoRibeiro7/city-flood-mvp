@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import importlib
+from dataclasses import dataclass
 from typing import Any, cast
+
+from fastapi import Header
+
+from floodmvp.common.errors import AppError
+from floodmvp.config.settings import settings
 
 _jwt: Any | None
 
@@ -31,10 +36,6 @@ if _jwt is not None:
     JwtExpiredSignatureError = cast(
         type[Exception], getattr(_jwt, "ExpiredSignatureError", ExpiredSignatureError)
     )
-from fastapi import Header
-
-from floodmvp.common.errors import AppError
-from floodmvp.config.settings import settings
 
 
 @dataclass
