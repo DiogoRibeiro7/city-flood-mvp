@@ -1,21 +1,36 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import importlib
 from typing import Any, cast
 
 _jwt: Any | None
 
+
+class InvalidTokenError(Exception):
+    pass
+
+
+class ExpiredSignatureError(InvalidTokenError):
+    pass
+
+
 try:
-    import jwt as _jwt
-    from jwt import ExpiredSignatureError, InvalidTokenError
+    _jwt = importlib.import_module("jwt")
 except ImportError:  # pragma: no cover - runtime guard
     _jwt = None
 
-    class InvalidTokenError(Exception):
-        pass
 
-    class ExpiredSignatureError(InvalidTokenError):
-        pass
+JwtInvalidTokenError: type[Exception] = InvalidTokenError
+JwtExpiredSignatureError: type[Exception] = ExpiredSignatureError
+
+if _jwt is not None:
+    JwtInvalidTokenError = cast(
+        type[Exception], getattr(_jwt, "InvalidTokenError", InvalidTokenError)
+    )
+    JwtExpiredSignatureError = cast(
+        type[Exception], getattr(_jwt, "ExpiredSignatureError", ExpiredSignatureError)
+    )
 from fastapi import Header
 
 from floodmvp.common.errors import AppError
@@ -43,13 +58,16 @@ def _decode_token(token: str) -> dict[str, Any]:
         "verify_aud": bool(settings.jwt_audience),
         "verify_iss": bool(settings.jwt_issuer),
     }
-    return _jwt.decode(
-        token,
-        settings.jwt_secret,
-        algorithms=["HS256"],
-        audience=settings.jwt_audience,
-        issuer=settings.jwt_issuer,
-        options=cast(Any, options),
+    return cast(
+        dict[str, Any],
+        _jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+            audience=settings.jwt_audience,
+            issuer=settings.jwt_issuer,
+            options=cast(Any, options),
+        ),
     )
 
 
@@ -58,7 +76,7 @@ def try_decode_token(token: str) -> dict[str, Any] | None:
         return None
     try:
         return _decode_token(token)
-    except InvalidTokenError:
+    except JwtInvalidTokenError:
         return None
 
 
@@ -86,9 +104,9 @@ def get_current_user(authorization: str | None = Header(default=None, alias="Aut
     token = authorization.removeprefix("Bearer ").strip()
     try:
         claims = _decode_token(token)
-    except ExpiredSignatureError as exc:
+    except JwtExpiredSignatureError as exc:
         raise AppError(code="UNAUTHORIZED", message="Token expired", status_code=401) from exc
-    except InvalidTokenError as exc:
+    except JwtInvalidTokenError as exc:
         raise AppError(code="UNAUTHORIZED", message="Invalid token", status_code=401) from exc
     sub = str(claims.get("sub", ""))
     roles = _extract_roles(claims)

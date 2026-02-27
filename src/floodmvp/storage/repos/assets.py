@@ -16,7 +16,7 @@ def _geom_to_geojson(geom: Any) -> dict[str, Any] | None:
     if geom is None:
         return None
     shp = to_shape(geom)
-    return cast(dict[str, Any], mapping(shp))
+    return mapping(shp)
 
 
 async def list_cities(session: AsyncSession) -> list[City]:
