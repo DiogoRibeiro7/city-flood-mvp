@@ -81,7 +81,7 @@ jobs:
           docker save city-flood-mvp-web:ci -o /tmp/city-flood-mvp-web.tar
 
       - name: Upload image artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: docker-images
           path: |
@@ -161,7 +161,7 @@ jobs:
           SCREENSHOT_MODE: light
 
       - name: Upload screenshots
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: demo-screenshots
           path: docs/screenshots/*.png
