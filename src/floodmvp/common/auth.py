@@ -3,8 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, cast
 
+_jwt: Any | None
+
 try:
     import jwt as _jwt
+    from jwt import ExpiredSignatureError, InvalidTokenError
 except ImportError:  # pragma: no cover - runtime guard
     _jwt = None
 
@@ -13,9 +16,6 @@ except ImportError:  # pragma: no cover - runtime guard
 
     class ExpiredSignatureError(InvalidTokenError):
         pass
-else:
-    InvalidTokenError = _jwt.InvalidTokenError
-    ExpiredSignatureError = _jwt.ExpiredSignatureError
 from fastapi import Header
 
 from floodmvp.common.errors import AppError
@@ -43,7 +43,7 @@ def _decode_token(token: str) -> dict[str, Any]:
         "verify_aud": bool(settings.jwt_audience),
         "verify_iss": bool(settings.jwt_issuer),
     }
-    return _jwt.decode(  # type: ignore[union-attr]
+    return _jwt.decode(
         token,
         settings.jwt_secret,
         algorithms=["HS256"],

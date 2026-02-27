@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from typing import Any, cast
 
 from geoalchemy2.shape import to_shape
+from shapely.geometry import mapping
 from sqlalchemy import func, select
 from sqlalchemy import tuple_ as sql_tuple
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,8 +16,7 @@ def _geom_to_geojson(geom: Any) -> dict[str, Any] | None:
     if geom is None:
         return None
     shp = to_shape(geom)
-    # shapely mapping compatible
-    return cast(dict[str, Any], shp.__geo_interface__)
+    return cast(dict[str, Any], mapping(shp))
 
 
 async def list_cities(session: AsyncSession) -> list[City]:
