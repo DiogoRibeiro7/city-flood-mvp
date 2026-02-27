@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, cast
 
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
