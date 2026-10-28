@@ -5,10 +5,11 @@ import pathlib
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import and_, desc, func, select, text
+from sqlalchemy import Interval, and_, bindparam, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.common.ids import new_id
+from floodmvp.common.time import parse_bucket_interval
 from floodmvp.config.settings import settings
 from floodmvp.models.db import (
     AnalyticsEvent,
@@ -533,7 +534,7 @@ async def run_export_csv(
         GROUP BY asset_id, metric, bucket
         ORDER BY asset_id, bucket
         """
-    )
+    ).bindparams(bindparam("granularity", type_=Interval()))
     res = await session.execute(
         q,
         {
@@ -541,7 +542,7 @@ async def run_export_csv(
             "metric": query.metric,
             "start": query.from_ts,
             "end": query.to_ts,
-            "granularity": query.granularity,
+            "granularity": parse_bucket_interval(query.granularity),
         },
     )
     rows = res.all()

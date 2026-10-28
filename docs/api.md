@@ -46,6 +46,9 @@ with `python -m floodmvp.jobs.queue_worker`, then poll the job endpoint until
 its status is `completed` or `failed`. Download is available only after the job
 has completed. Failed tasks are retried with backoff up to their configured
 attempt limit; the worker records the final error in the job status and logs.
+Export granularity accepts positive seconds, minutes, hours or days (for
+example `5m`, `1h`, `1d`), up to 30 days. The worker passes this value to
+PostgreSQL as a typed interval.
 
 ## Protected ingestion (kept for future)
 - `POST /telemetry/events:batch` with header `Authorization: Bearer <INGEST_TOKEN>`

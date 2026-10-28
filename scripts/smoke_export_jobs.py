@@ -55,6 +55,25 @@ async def _process_and_test_sql_failure(query: dict[str, Any]) -> None:
     """Process valid jobs, then ensure a PostgreSQL error is recorded as failed."""
     await run_worker(poll_seconds=0, once=True)
 
+    async with SessionLocal() as session:
+        queued_jobs = (
+            await session.execute(
+                select(JobQueue).where(JobQueue.job_type.in_(["export_csv", "report_csv"]))
+            )
+        ).scalars().all()
+    unfinished = [
+        {
+            "type": job.job_type,
+            "status": job.status,
+            "attempts": job.attempts,
+            "error": job.last_error,
+        }
+        for job in queued_jobs
+        if job.status != "completed"
+    ]
+    if unfinished:
+        raise AssertionError(f"Worker did not finish the valid jobs: {unfinished}")
+
     bad_id = new_id("job")
     async with SessionLocal() as session:
         session.add(

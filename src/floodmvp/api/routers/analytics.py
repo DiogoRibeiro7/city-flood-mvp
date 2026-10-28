@@ -15,7 +15,7 @@ from floodmvp.api.openapi_examples import (
 from floodmvp.common.auth import get_current_user, require_roles
 from floodmvp.common.errors import AppError
 from floodmvp.common.ids import new_id
-from floodmvp.common.time import parse_iso8601
+from floodmvp.common.time import parse_bucket_interval, parse_iso8601
 from floodmvp.config.settings import settings
 from floodmvp.models.db import ExportJob
 from floodmvp.models.domain import (
@@ -430,6 +430,10 @@ async def create_job(
             raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
         if payload.query.agg not in {"avg", "min", "max"}:
             raise AppError(code="INVALID_ARGUMENT", message="agg must be one of ['avg','min','max']")
+        try:
+            parse_bucket_interval(payload.query.granularity)
+        except ValueError as exc:
+            raise AppError(code="INVALID_ARGUMENT", message=str(exc)) from exc
         if not payload.query.asset_ids and not payload.query.city_id:
             raise AppError(code="INVALID_ARGUMENT", message="asset_ids or city_id must be provided")
     elif payload.type == "report_csv":
