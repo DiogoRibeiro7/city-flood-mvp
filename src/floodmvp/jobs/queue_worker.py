@@ -148,16 +148,18 @@ async def run_worker(poll_seconds: float, once: bool) -> None:
             JOB_QUEUE_AGE.labels(job_type=job.job_type).observe(max(0.0, queue_age))
             started = time.perf_counter()
             try:
-                if job.job_type == "export_csv":
-                    await _handle_export(session, job.payload)
-                elif job.job_type == "report_csv":
-                    await _handle_report(session, job.payload)
-                elif job.job_type == "analytics_run":
-                    await _handle_analytics(session, job.payload)
-                else:
-                    raise ValueError(f"Unknown job_type {job.job_type}")
-                await mark_job_success(session, job)
-                await session.commit()
+                # PostgreSQL marks a transaction as aborted after a SQL error.
+                # Rolling back to this savepoint keeps the outer transaction
+                # usable so the failure and retry schedule can be persisted.
+                async with session.begin_nested():
+                    if job.job_type == "export_csv":
+                        await _handle_export(session, job.payload)
+                    elif job.job_type == "report_csv":
+                        await _handle_report(session, job.payload)
+                    elif job.job_type == "analytics_run":
+                        await _handle_analytics(session, job.payload)
+                    else:
+                        raise ValueError(f"Unknown job_type {job.job_type}")
             except Exception as exc:  # noqa: BLE001
                 backoff = _backoff_seconds(job.attempts)
                 if job.job_type in {"export_csv", "report_csv"}:
@@ -179,10 +181,16 @@ async def run_worker(poll_seconds: float, once: bool) -> None:
                             details={"error": str(exc)},
                         )
                 await mark_job_failed(session, job, str(exc), backoff)
-                await session.commit()
+            else:
+                await mark_job_success(session, job)
             finally:
                 duration = time.perf_counter() - started
                 JOB_PROCESSING_DURATION.labels(job_type=job.job_type).observe(duration)
+
+            # Keep commit failures outside the task handler's retry path;
+            # otherwise we would try to write failure metadata in an invalid
+            # transaction and mask the original error.
+            await session.commit()
 
 
 def main() -> int:

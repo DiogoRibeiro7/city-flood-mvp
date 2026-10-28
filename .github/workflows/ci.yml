@@ -137,6 +137,9 @@ jobs:
       - name: Smoke test ingestion against PostgreSQL
         run: docker compose exec -T backend python /app/scripts/smoke_ingest_idempotency.py
 
+      - name: Smoke test queued CSV exports and worker recovery
+        run: docker compose exec -T backend python /app/scripts/smoke_export_jobs.py
+
       - uses: actions/setup-node@v6
         with:
           node-version: "20"

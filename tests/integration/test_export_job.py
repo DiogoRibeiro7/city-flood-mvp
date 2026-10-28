@@ -1,21 +1,25 @@
 from __future__ import annotations
 
 import datetime as dt
+from pathlib import Path
 
 import pytest
 from geoalchemy2.elements import WKTElement
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from floodmvp.api.main import app
 from floodmvp.config.settings import settings
+from floodmvp.jobs import queue_worker
 from floodmvp.models.db import Asset, City, TelemetryObservation
 from floodmvp.storage.db import get_session
 
 
 @pytest.fixture()
-async def app_client(db_session: AsyncSession, tmp_path) -> AsyncClient:
-    settings.export_dir = str(tmp_path / "exports")
+async def app_client(
+    db_session: AsyncSession, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> AsyncClient:
+    monkeypatch.setattr(settings, "export_dir", str(tmp_path / "exports"))
 
     async def _override_session():
         yield db_session
@@ -27,7 +31,9 @@ async def app_client(db_session: AsyncSession, tmp_path) -> AsyncClient:
 
 
 @pytest.mark.asyncio
-async def test_export_job_csv(app_client: AsyncClient, db_session: AsyncSession) -> None:
+async def test_export_job_csv(
+    app_client: AsyncClient, db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
     city_id = "city_export"
     asset_id = "pipe_export"
     db_session.add(City(city_id=city_id, name="Export City", country="US"))
@@ -78,8 +84,24 @@ async def test_export_job_csv(app_client: AsyncClient, db_session: AsyncSession)
     res = await app_client.post("/v1/analytics/jobs", json=payload)
     assert res.status_code == 200
     body = res.json()
-    assert body["status"] == "completed"
-    assert body["file_path"]
+    assert body["status"] == "queued"
+    assert body["file_path"] is None
+
+    # The API enqueues work; the worker processes it in a separate session.
+    assert db_session.bind is not None
+    monkeypatch.setattr(
+        queue_worker,
+        "SessionLocal",
+        async_sessionmaker(db_session.bind, expire_on_commit=False),
+    )
+    await queue_worker.run_worker(poll_seconds=0, once=True)
+    # The API test fixture reuses one session; real HTTP requests use fresh ones.
+    db_session.expire_all()
+
+    status = await app_client.get(f"/v1/analytics/jobs/{body['job_id']}")
+    assert status.status_code == 200
+    assert status.json()["status"] == "completed"
+    assert status.json()["file_path"]
 
     res_dl = await app_client.get(f"/v1/analytics/jobs/{body['job_id']}/download")
     assert res_dl.status_code == 200
