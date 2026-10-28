@@ -37,5 +37,9 @@ curl -X POST "$API_BASE/v1/telemetry/events:batch" \
 
 ## Operational notes
 - `device_id` must match an existing `asset.asset_id`.
-- Duplicate idempotency keys return the prior response without re-inserting.
+- Retries with the same idempotency key and identical request return the prior
+  response without inserting events again. Simultaneous retries are serialized.
+- Reusing a key with a different request, including a changed sensor reading,
+  returns HTTP 409 (`IDEMPOTENCY_CONFLICT`). Keys must be 1–128 characters.
 - The server cleans idempotency rows older than 7 days.
+- Invalid or missing bearer tokens return HTTP 401 with a Bearer challenge.

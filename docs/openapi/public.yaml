@@ -523,12 +523,12 @@ paths:
                 $ref: '#/components/schemas/IngestResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedBearer'
-        '403':
-          $ref: '#/components/responses/ForbiddenBearer'
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
       security:

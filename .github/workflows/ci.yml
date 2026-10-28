@@ -134,6 +134,9 @@ jobs:
           PIPE_TELEMETRY_LIMIT: "10"
           ANALYTICS_PIPE_LIMIT: "25"
 
+      - name: Smoke test ingestion against PostgreSQL
+        run: docker compose exec -T backend python /app/scripts/smoke_ingest_idempotency.py
+
       - uses: actions/setup-node@v6
         with:
           node-version: "20"
