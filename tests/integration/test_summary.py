@@ -4,7 +4,7 @@ import datetime as dt
 
 import pytest
 from geoalchemy2.elements import WKTElement
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.api.main import app
@@ -18,7 +18,7 @@ async def app_client(db_session: AsyncSession) -> AsyncClient:
         yield db_session
 
     app.dependency_overrides[get_session] = _override_session
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
     app.dependency_overrides.clear()
 

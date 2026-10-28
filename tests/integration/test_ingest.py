@@ -4,7 +4,7 @@ import datetime as dt
 
 import pytest
 from geoalchemy2.elements import WKTElement
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +19,7 @@ async def app_client(db_session: AsyncSession) -> AsyncClient:
         yield db_session
 
     app.dependency_overrides[get_session] = _override_session
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
     app.dependency_overrides.clear()
 
@@ -44,8 +44,8 @@ async def test_ingest_auth_required(app_client: AsyncClient, db_session: AsyncSe
     await _seed_asset(db_session)
     payload = {
         "device_id": "asset_1",
-        "sent_at": dt.datetime.utcnow().isoformat(),
-        "events": [{"ts": dt.datetime.utcnow().isoformat(), "type": "fill_ratio", "value": 0.7}],
+        "sent_at": dt.datetime.now(dt.UTC).isoformat(),
+        "events": [{"ts": dt.datetime.now(dt.UTC).isoformat(), "type": "fill_ratio", "value": 0.7}],
     }
     res = await app_client.post("/v1/telemetry/events:batch", json=payload)
     assert res.status_code == 401
@@ -63,8 +63,8 @@ async def test_ingest_idempotency(app_client: AsyncClient, db_session: AsyncSess
     await _seed_asset(db_session)
     payload = {
         "device_id": "asset_1",
-        "sent_at": dt.datetime.utcnow().isoformat(),
-        "events": [{"ts": dt.datetime.utcnow().isoformat(), "type": "fill_ratio", "value": 0.7}],
+        "sent_at": dt.datetime.now(dt.UTC).isoformat(),
+        "events": [{"ts": dt.datetime.now(dt.UTC).isoformat(), "type": "fill_ratio", "value": 0.7}],
     }
     headers = {"Authorization": "Bearer dev-ingest-token", "Idempotency-Key": "key-1"}
 
@@ -75,12 +75,16 @@ async def test_ingest_idempotency(app_client: AsyncClient, db_session: AsyncSess
     count1 = await db_session.scalar(select(func.count()).select_from(TelemetryObservation))
     assert count1 == 1
 
-    payload["events"].append(
-        {"ts": dt.datetime.utcnow().isoformat(), "type": "fill_ratio", "value": 0.8}
-    )
     res2 = await app_client.post("/v1/telemetry/events:batch", json=payload, headers=headers)
     assert res2.status_code == 200
     assert res2.json() == body1
+
+    payload["events"].append(
+        {"ts": dt.datetime.now(dt.UTC).isoformat(), "type": "fill_ratio", "value": 0.8}
+    )
+    res3 = await app_client.post("/v1/telemetry/events:batch", json=payload, headers=headers)
+    assert res3.status_code == 409
+    assert res3.json()["error"]["code"] == "IDEMPOTENCY_CONFLICT"
 
     count2 = await db_session.scalar(select(func.count()).select_from(TelemetryObservation))
     assert count2 == 1
@@ -91,10 +95,10 @@ async def test_ingest_partial_failure(app_client: AsyncClient, db_session: Async
     await _seed_asset(db_session)
     payload = {
         "device_id": "asset_1",
-        "sent_at": dt.datetime.utcnow().isoformat(),
+        "sent_at": dt.datetime.now(dt.UTC).isoformat(),
         "events": [
-            {"ts": dt.datetime.utcnow().isoformat(), "type": "fill_ratio", "value": 0.7},
-            {"ts": dt.datetime.utcnow().isoformat(), "type": "", "value": 0.2},
+            {"ts": dt.datetime.now(dt.UTC).isoformat(), "type": "fill_ratio", "value": 0.7},
+            {"ts": dt.datetime.now(dt.UTC).isoformat(), "type": "", "value": 0.2},
         ],
     }
     headers = {"Authorization": "Bearer dev-ingest-token"}

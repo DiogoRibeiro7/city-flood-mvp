@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 import math
 from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
-from sqlalchemy import delete, func, select, text
+from sqlalchemy import BigInteger, delete, func, literal, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.api.openapi_examples import (
-    RESP_FORBIDDEN_BEARER,
     RESP_UNAUTHORIZED_BEARER,
     error_response,
 )
@@ -23,6 +24,12 @@ router = APIRouter(tags=["ingest"])
 
 
 def _authorize(authorization: str | None) -> None:
+    if not settings.ingest_token:
+        raise AppError(
+            code="AUTH_NOT_CONFIGURED",
+            message="Ingestion authentication is not configured",
+            status_code=503,
+        )
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -30,12 +37,51 @@ def _authorize(authorization: str | None) -> None:
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = authorization.removeprefix("Bearer ").strip()
-    if token != settings.ingest_token:
+    if not token or not hmac.compare_digest(token, settings.ingest_token):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+def _validate_idempotency_key(key: str | None) -> str | None:
+    """Normalise and validate the caller-provided key before database access."""
+    if key is None:
+        return None
+    normalized = key.strip()
+    if not normalized or len(normalized) > 128:
+        raise AppError(
+            code="INVALID_ARGUMENT",
+            message="Idempotency-Key must contain between 1 and 128 characters",
+        )
+    return normalized
+
+
+def _request_digest(payload: IngestRequest) -> str:
+    """Fingerprint the validated request, including values and event timestamps."""
+    return hashlib.sha256(payload.model_dump_json().encode("utf-8")).hexdigest()
+
+
+def _replay_idempotent_response(
+    device_id: str,
+    stored: dict[str, Any],
+    payload: IngestRequest,
+    digest: str,
+) -> IngestResponse:
+    """Replay the original response only when the key represents the same request.
+
+    Older records have no digest; their original replay behaviour is retained
+    until the seven-day retention period expires.
+    """
+    stored_digest = stored.get("_request_digest")
+    if device_id != payload.device_id or (stored_digest is not None and stored_digest != digest):
+        raise AppError(
+            code="IDEMPOTENCY_CONFLICT",
+            message="Idempotency-Key was already used for a different request",
+            status_code=409,
+        )
+    return IngestResponse(**stored)
 
 
 def _is_finite_number(value: Any) -> bool:
@@ -50,7 +96,6 @@ def _is_finite_number(value: Any) -> bool:
     response_model=IngestResponse,
     responses={
         401: RESP_UNAUTHORIZED_BEARER,
-        403: RESP_FORBIDDEN_BEARER,
         400: {
             "content": {
                 "application/json": {
@@ -70,6 +115,10 @@ def _is_finite_number(value: Any) -> bool:
             message="Asset not found",
             details={"asset_id": "asset_missing"},
         ),
+        409: error_response(
+            code="IDEMPOTENCY_CONFLICT",
+            message="Idempotency-Key was already used for a different request",
+        ),
     },
 )
 async def ingest_events_batch(
@@ -80,6 +129,7 @@ async def ingest_events_batch(
     session: AsyncSession = Depends(get_session),
 ) -> IngestResponse:
     _authorize(authorization)
+    idempotency_key = _validate_idempotency_key(idempotency_key)
 
     await session.execute(
         delete(IngestIdempotency).where(
@@ -88,12 +138,23 @@ async def ingest_events_batch(
     )
 
     if idempotency_key:
+        digest = _request_digest(payload)
+        # Lock by key for the transaction to serialize simultaneous retries.
+        lock_id = int.from_bytes(
+            hashlib.sha256(idempotency_key.encode("utf-8")).digest()[:8],
+            byteorder="big",
+            signed=True,
+        )
+        # Explicit BIGINT prevents asyncpg from binding a 64-bit hash as INTEGER.
+        await session.execute(
+            select(func.pg_advisory_xact_lock(literal(lock_id, type_=BigInteger())))
+        )
         existing = await session.execute(
             select(IngestIdempotency).where(IngestIdempotency.idempotency_key == idempotency_key)
         )
         row = existing.scalar_one_or_none()
         if row is not None:
-            return IngestResponse(**row.response)
+            return _replay_idempotent_response(row.device_id, row.response, payload, digest)
 
     asset_exists = await session.scalar(
         select(Asset.asset_id).where(Asset.asset_id == payload.device_id)
@@ -174,9 +235,11 @@ async def ingest_events_batch(
             .values(
                 idempotency_key=idempotency_key,
                 device_id=payload.device_id,
-                response=response.model_dump(mode="json"),
+                response={
+                    **response.model_dump(mode="json"),
+                    "_request_digest": _request_digest(payload),
+                },
             )
-            .on_conflict_do_nothing(index_elements=["idempotency_key"])
         )
 
     await session.commit()
