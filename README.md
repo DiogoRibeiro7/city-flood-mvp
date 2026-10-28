@@ -37,6 +37,11 @@ City Flood MVP is an end-to-end, synthetic **city-scale flood monitoring** syste
 cp .env.example .env
 ```
 
+The `.env` file contains local settings and credentials, and is intentionally
+excluded from version control. The values in `.env.example` are for local demos
+only; replace the default database password and ingestion token before exposing
+the stack to other users or networks.
+
 2. Start services
 
 ```bash

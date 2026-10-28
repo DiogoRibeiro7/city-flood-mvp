@@ -31,7 +31,7 @@ async def mark_outliers(
             text(
                 """
                 WITH flagged AS (
-                    SELECT obs.asset_id, obs.metric, obs.ts
+                    SELECT t.asset_id, t.metric, t.ts
                     FROM (
                         SELECT
                             obs.asset_id,
@@ -74,8 +74,12 @@ async def mark_outliers(
             },
         )
         for city_id, metric_name, updated in res.all():
+            if not isinstance(city_id, str) or not isinstance(metric_name, str):
+                raise TypeError("Expected city and metric identifiers to be strings")
+            if not isinstance(updated, int):
+                raise TypeError("Expected an integer outlier count")
             key = (city_id, metric_name)
-            counts[key] = counts.get(key, 0) + int(updated or 0)
+            counts[key] = counts.get(key, 0) + updated
     return counts
 
 
@@ -139,8 +143,12 @@ async def mark_drift(
             },
         )
         for city_id, metric_name, updated in res.all():
+            if not isinstance(city_id, str) or not isinstance(metric_name, str):
+                raise TypeError("Expected city and metric identifiers to be strings")
+            if not isinstance(updated, int):
+                raise TypeError("Expected an integer drift count")
             key = (city_id, metric_name)
-            counts[key] = counts.get(key, 0) + int(updated or 0)
+            counts[key] = counts.get(key, 0) + updated
     return counts
 
 

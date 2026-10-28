@@ -102,6 +102,9 @@ jobs:
           name: docker-images
           path: /tmp
 
+      - name: Configure local demo environment
+        run: cp .env.example .env
+
       - name: Load images
         run: |
           docker load -i /tmp/city-flood-mvp-backend.tar
