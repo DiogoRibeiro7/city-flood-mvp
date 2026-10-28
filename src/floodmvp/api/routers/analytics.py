@@ -12,7 +12,7 @@ from floodmvp.api.openapi_examples import (
     RESP_INVALID_ARGUMENT,
     RESP_UNAUTHORIZED_API_KEY,
 )
-from floodmvp.common.auth import get_current_user, require_roles
+from floodmvp.common.auth import require_privileged_access
 from floodmvp.common.errors import AppError
 from floodmvp.common.ids import new_id
 from floodmvp.common.time import parse_bucket_interval, parse_iso8601
@@ -54,21 +54,6 @@ from floodmvp.storage.repos.analytics import (
 from floodmvp.storage.repos.jobs import enqueue_job
 
 router = APIRouter(tags=["analytics"])
-
-
-def _require_analytics_auth(
-    x_api_key: str | None, authorization: str | None, roles: set[str]
-) -> None:
-    if settings.jwt_secret:
-        user = get_current_user(authorization)
-        require_roles(user, roles)
-        return
-    if not settings.analytics_api_key:
-        return
-    if not x_api_key:
-        raise AppError(code="UNAUTHORIZED", message="Missing API key", status_code=401)
-    if x_api_key != settings.analytics_api_key:
-        raise AppError(code="FORBIDDEN", message="Invalid API key", status_code=403)
 
 
 def _export_job_out(job: ExportJob, logs: list[ExportJobLogOut]) -> ExportJobOut:
@@ -297,10 +282,11 @@ async def analytics_calibration_overrides(
 )
 async def analytics_calibration_override_create(
     payload: CalibrationOverrideIn,
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
     authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> CalibrationOverrideOut:
-    _require_analytics_auth(None, authorization, {"admin"})
+    require_privileged_access(x_api_key, authorization, {"admin"})
     _validate_season(payload.season)
     row = await create_threshold_override(
         session,
@@ -424,7 +410,7 @@ async def create_job(
     authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> ExportJobOut:
-    _require_analytics_auth(x_api_key, authorization, {"analyst", "admin"})
+    require_privileged_access(x_api_key, authorization, {"analyst", "admin"})
     if payload.type == "export_csv":
         if payload.query.from_ts >= payload.query.to_ts:
             raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
@@ -509,7 +495,7 @@ async def get_job(
     authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> ExportJobOut:
-    _require_analytics_auth(x_api_key, authorization, {"analyst", "admin"})
+    require_privileged_access(x_api_key, authorization, {"analyst", "admin"})
     job = await get_export_job(session, job_id)
     if job is None:
         raise AppError(code="JOB_NOT_FOUND", message="Job not found", status_code=404)
@@ -567,7 +553,7 @@ async def download_job(
     authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> FileResponse:
-    _require_analytics_auth(x_api_key, authorization, {"analyst", "admin"})
+    require_privileged_access(x_api_key, authorization, {"analyst", "admin"})
     job = await get_export_job(session, job_id)
     if job is None:
         raise AppError(code="JOB_NOT_FOUND", message="Job not found", status_code=404)

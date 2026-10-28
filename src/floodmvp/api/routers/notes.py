@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Header, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.common.auth import require_privileged_access
 from floodmvp.common.errors import AppError
 from floodmvp.models.domain import NoteIn, NoteOut
 from floodmvp.storage.db import get_session
@@ -68,8 +69,11 @@ async def note(
 @router.post("/notes", response_model=NoteOut)
 async def create(
     payload: NoteIn,
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> NoteOut:
+    require_privileged_access(x_api_key, authorization, {"analyst", "admin"})
     row = await create_note(
         session,
         city_id=payload.city_id,
@@ -96,8 +100,11 @@ async def create(
 @router.delete("/notes/{note_id}")
 async def remove(
     note_id: str,
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> dict[str, str]:
+    require_privileged_access(x_api_key, authorization, {"admin"})
     deleted = await delete_note(session, note_id)
     if not deleted:
         raise AppError(code="NOTE_NOT_FOUND", message="Note not found", status_code=404)
