@@ -448,7 +448,8 @@ async def create_job(
             job_type=payload.type,
             status="queued",
             progress=0.0,
-            query=payload.query.model_dump(by_alias=True),
+            # JSON columns cannot serialize Python datetime objects directly.
+            query=payload.query.model_dump(mode="json", by_alias=True),
         ),
     )
     await add_export_job_log(

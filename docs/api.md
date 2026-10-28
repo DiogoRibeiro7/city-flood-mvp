@@ -36,9 +36,16 @@ Base: `/v1`
 - `GET /analytics/calibration/recommendations?city_id=...&from=...&to=...&seasonality=all|monthly`
 - `GET /analytics/calibration/overrides?city_id=...`
 - `POST /analytics/calibration/overrides`
-- `POST /analytics/jobs` (export CSV)
+- `POST /analytics/jobs` (export CSV + report CSV)
 - `GET /analytics/jobs/{job_id}` (job status + logs)
 - `GET /analytics/jobs/{job_id}/download`
+
+CSV exports and reports run asynchronously. `POST /analytics/jobs` returns a
+job with `status: "queued"` and no download path. Start the background worker
+with `python -m floodmvp.jobs.queue_worker`, then poll the job endpoint until
+its status is `completed` or `failed`. Download is available only after the job
+has completed. Failed tasks are retried with backoff up to their configured
+attempt limit; the worker records the final error in the job status and logs.
 
 ## Protected ingestion (kept for future)
 - `POST /telemetry/events:batch` with header `Authorization: Bearer <INGEST_TOKEN>`
