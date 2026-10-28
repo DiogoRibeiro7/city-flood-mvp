@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, cast
+from typing import Any
 
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
-from shapely.geometry.base import BaseGeometry
 from sqlalchemy import func, select
 from sqlalchemy import tuple_ as sql_tuple
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +15,7 @@ from floodmvp.models.db import Asset, AssetTag, City
 def _geom_to_geojson(geom: Any) -> dict[str, Any] | None:
     if geom is None:
         return None
-    shp = cast(BaseGeometry, to_shape(geom))
+    shp = to_shape(geom)
     return mapping(shp)
 
 

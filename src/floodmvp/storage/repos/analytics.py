@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import pathlib
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import and_, desc, func, select, text
@@ -549,7 +550,14 @@ async def run_export_csv(
     with file_path.open("w", encoding="utf-8") as f:
         f.write("asset_id,metric,ts,value\n")
         for asset_id, metric, bucket, value in rows:
-            val_str = "" if value is None else str(float(value))
+            if not isinstance(bucket, dt.datetime):
+                raise TypeError("Expected a datetime bucket from TimescaleDB")
+            if value is None:
+                val_str = ""
+            elif isinstance(value, (int, float, Decimal)):
+                val_str = str(float(value))
+            else:
+                raise TypeError("Expected a numeric aggregate from TimescaleDB")
             f.write(f"{asset_id},{metric},{bucket.isoformat()},{val_str}\n")
 
     return str(file_path), len(rows)

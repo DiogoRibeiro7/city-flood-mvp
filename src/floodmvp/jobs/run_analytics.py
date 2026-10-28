@@ -34,10 +34,23 @@ def _clamp(val: float, lo: float = 0.0, hi: float = 1.0) -> float:
 def _coverage_ratio(
     df: pd.DataFrame, start: dt.datetime, end: dt.datetime, interval_minutes: int
 ) -> float:
-    if interval_minutes <= 0:
+    """Fraction of expected telemetry time buckets containing observations.
+
+    Count each bucket once so high-frequency bursts cannot hide outages.
+    """
+    if interval_minutes <= 0 or end <= start or df.empty:
         return 0.0
-    expected = max(1, int((end - start).total_seconds() / 60 / interval_minutes))
-    actual = len(df)
+
+    start_utc = pd.Timestamp(start).tz_convert("UTC")
+    end_utc = pd.Timestamp(end).tz_convert("UTC")
+    frequency = f"{interval_minutes}min"
+    first_bucket = start_utc.floor(frequency)
+    last_bucket = (end_utc - pd.Timedelta("1ns")).floor(frequency)
+    expected = int((last_bucket - first_bucket) / pd.Timedelta(minutes=interval_minutes)) + 1
+
+    timestamps = pd.to_datetime(df["ts"], utc=True, errors="coerce")
+    within_window = timestamps[(timestamps >= start_utc) & (timestamps < end_utc)]
+    actual = within_window.dt.floor(frequency).nunique()
     return _clamp(actual / expected)
 
 
@@ -94,9 +107,10 @@ async def run_city_analytics(
         rain_df,
         threshold_mmph=float(thresholds["rain_event_threshold_mmph"]),
         min_duration_minutes=int(thresholds["rain_event_min_duration_minutes"]),
+        max_gap_minutes=settings.telemetry_gap_granularity_minutes,
     )
     for s, e, peak in rain_events:
-        event_df = rain_df[(rain_df["ts"] >= s) & (rain_df["ts"] <= e)]
+        event_df = rain_df[(rain_df["ts"] >= s) & (rain_df["ts"] < e)]
         coverage = _coverage_ratio(
             event_df, s, e, settings.telemetry_gap_granularity_minutes
         )
@@ -137,6 +151,7 @@ async def run_city_analytics(
             fill_df,
             threshold=float(thresholds["overflow_fill_threshold"]),
             min_duration_minutes=int(thresholds["overflow_min_duration_minutes"]),
+            max_gap_minutes=settings.telemetry_gap_granularity_minutes,
         )
         score = overflow_minutes_score(events)
 
@@ -169,7 +184,7 @@ async def run_city_analytics(
             # event entry (collapsed)
             for s, e, peak in events[:3]:  # cap spam
                 overflow_event_count += 1
-                event_df = fill_df[(fill_df["ts"] >= s) & (fill_df["ts"] <= e)]
+                event_df = fill_df[(fill_df["ts"] >= s) & (fill_df["ts"] < e)]
                 coverage = _coverage_ratio(
                     event_df, s, e, settings.telemetry_gap_granularity_minutes
                 )
