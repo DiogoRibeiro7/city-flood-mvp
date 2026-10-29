@@ -10,6 +10,11 @@ HTTP 400 (`INVALID_ARGUMENT`); time windows must have `to` after `from`.
 - Generate: `python scripts/export_openapi.py`
 - Output: `docs/openapi/public.yaml`
 
+The public snapshot includes every live route, including the comparison,
+calibration, queue and notes endpoints. CI tests compare it with the current
+FastAPI schema and verify that endpoint-specific error codes are preserved.
+Regenerate the snapshot whenever an endpoint or its documented responses change.
+
 ## Timescale policies
 - See `docs/runbooks/timescale.md` for retention + continuous aggregate details.
 
