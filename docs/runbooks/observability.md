@@ -28,6 +28,12 @@ Exported metrics:
 - `job_queue_age_seconds_bucket{job_type}`
 - `job_processing_duration_seconds_bucket{job_type}`
 
+The request middleware records routed responses and its own early rejections:
+client/tenant quotas (429), body-size limits (413), and timeouts (504).
+Responses rejected before a route is matched use the fixed `<unmatched>` path
+label, while routed requests use path templates such as `/v1/notes/{note_id}`.
+Request logs retain the concrete URL path for troubleshooting.
+
 ## Local stack
 Start services:
 ```

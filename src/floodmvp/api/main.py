@@ -123,102 +123,20 @@ def _resolve_tenant_id(request: Request) -> str:
     return "public"
 
 
-@app.middleware("http")
-async def add_request_id(
-    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+def _finish_request(
+    request: Request,
+    response: Response,
+    *,
+    request_id: str,
+    tenant_id: str,
+    started_at: float,
 ) -> Response:
-    request_id = request.headers.get("x-request-id") or f"req_{uuid.uuid4().hex}"
-    request.state.request_id = request_id
-    tenant_id = _resolve_tenant_id(request)
-    request.state.tenant_id = tenant_id
-    # rate limiting (in-memory MVP)
-    client_id = request.client.host if request.client else "unknown"
-    bucket = _get_bucket(
-        _RATE_LIMITS,
-        client_id,
-        rate=settings.rate_limit_rps,
-        burst=settings.rate_limit_burst,
-    )
-    if not bucket.allow():
-        return JSONResponse(
-            status_code=429,
-            content=as_error_payload_raw(
-                code="RATE_LIMITED",
-                message="Too many requests",
-                details={},
-                request_id=request_id,
-            ),
-            headers={"x-request-id": request_id},
-        )
-
-    if settings.tenant_quota_rps > 0 and settings.tenant_quota_burst > 0:
-        tenant_bucket = _get_bucket(
-            _TENANT_LIMITS,
-            tenant_id,
-            rate=settings.tenant_quota_rps,
-            burst=settings.tenant_quota_burst,
-        )
-        if not tenant_bucket.allow():
-            return JSONResponse(
-                status_code=429,
-                content=as_error_payload_raw(
-                    code="TENANT_RATE_LIMITED",
-                    message="Tenant request quota exceeded",
-                    details={"tenant_id": tenant_id},
-                    request_id=request_id,
-                ),
-                headers={"x-request-id": request_id},
-            )
-
-    # request size limit
-    if request.headers.get("content-length"):
-        try:
-            size = int(request.headers["content-length"])
-            if size > settings.request_max_bytes:
-                return JSONResponse(
-                    status_code=413,
-                    content=as_error_payload_raw(
-                        code="REQUEST_TOO_LARGE",
-                        message="Request body too large",
-                        details={"max_bytes": settings.request_max_bytes},
-                        request_id=request_id,
-                    ),
-                    headers={"x-request-id": request_id},
-                )
-        except ValueError:
-            pass
-    else:
-        body = await request.body()
-        if len(body) > settings.request_max_bytes:
-            return JSONResponse(
-                status_code=413,
-                content=as_error_payload_raw(
-                    code="REQUEST_TOO_LARGE",
-                    message="Request body too large",
-                    details={"max_bytes": settings.request_max_bytes},
-                    request_id=request_id,
-                ),
-                headers={"x-request-id": request_id},
-            )
-
-    start = time.perf_counter()
-    try:
-        response = await asyncio.wait_for(call_next(request), timeout=settings.request_timeout_s)
-    except TimeoutError:
-        return JSONResponse(
-            status_code=504,
-            content=as_error_payload_raw(
-                code="REQUEST_TIMEOUT",
-                message="Request timed out",
-                details={"timeout_s": settings.request_timeout_s},
-                request_id=request_id,
-            ),
-            headers={"x-request-id": request_id},
-        )
-    duration = time.perf_counter() - start
+    """Record one response, including middleware-level rejections and timeouts."""
+    duration = time.perf_counter() - started_at
     response.headers["x-request-id"] = request_id
     path = request.url.path
     # Raw URLs contain user-controlled IDs: keep Prometheus label cardinality bounded.
+    # Requests rejected before routing have no matched route and use a fixed label.
     route_path = getattr(request.scope.get("route"), "path", None)
     metrics_path = route_path if isinstance(route_path, str) else "<unmatched>"
     method = request.method
@@ -248,6 +166,115 @@ async def add_request_id(
         tenant_id=tenant_id,
     )
     return response
+
+
+@app.middleware("http")
+async def add_request_id(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
+    started_at = time.perf_counter()
+    response: Response
+    request_id = request.headers.get("x-request-id") or f"req_{uuid.uuid4().hex}"
+    request.state.request_id = request_id
+    tenant_id = _resolve_tenant_id(request)
+    request.state.tenant_id = tenant_id
+    # rate limiting (in-memory MVP)
+    client_id = request.client.host if request.client else "unknown"
+    bucket = _get_bucket(
+        _RATE_LIMITS,
+        client_id,
+        rate=settings.rate_limit_rps,
+        burst=settings.rate_limit_burst,
+    )
+    if not bucket.allow():
+        response = JSONResponse(
+            status_code=429,
+            content=as_error_payload_raw(
+                code="RATE_LIMITED",
+                message="Too many requests",
+                details={},
+                request_id=request_id,
+            ),
+        )
+        return _finish_request(
+            request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
+        )
+
+    if settings.tenant_quota_rps > 0 and settings.tenant_quota_burst > 0:
+        tenant_bucket = _get_bucket(
+            _TENANT_LIMITS,
+            tenant_id,
+            rate=settings.tenant_quota_rps,
+            burst=settings.tenant_quota_burst,
+        )
+        if not tenant_bucket.allow():
+            response = JSONResponse(
+                status_code=429,
+                content=as_error_payload_raw(
+                    code="TENANT_RATE_LIMITED",
+                    message="Tenant request quota exceeded",
+                    details={"tenant_id": tenant_id},
+                    request_id=request_id,
+                ),
+            )
+            return _finish_request(
+                request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
+            )
+
+    # request size limit
+    if request.headers.get("content-length"):
+        try:
+            size = int(request.headers["content-length"])
+            if size > settings.request_max_bytes:
+                response = JSONResponse(
+                    status_code=413,
+                    content=as_error_payload_raw(
+                        code="REQUEST_TOO_LARGE",
+                        message="Request body too large",
+                        details={"max_bytes": settings.request_max_bytes},
+                        request_id=request_id,
+                    ),
+                )
+                return _finish_request(
+                    request,
+                    response,
+                    request_id=request_id,
+                    tenant_id=tenant_id,
+                    started_at=started_at,
+                )
+        except ValueError:
+            pass
+    else:
+        body = await request.body()
+        if len(body) > settings.request_max_bytes:
+            response = JSONResponse(
+                status_code=413,
+                content=as_error_payload_raw(
+                    code="REQUEST_TOO_LARGE",
+                    message="Request body too large",
+                    details={"max_bytes": settings.request_max_bytes},
+                    request_id=request_id,
+                ),
+            )
+            return _finish_request(
+                request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
+            )
+
+    try:
+        response = await asyncio.wait_for(call_next(request), timeout=settings.request_timeout_s)
+    except TimeoutError:
+        response = JSONResponse(
+            status_code=504,
+            content=as_error_payload_raw(
+                code="REQUEST_TIMEOUT",
+                message="Request timed out",
+                details={"timeout_s": settings.request_timeout_s},
+                request_id=request_id,
+            ),
+        )
+    return _finish_request(
+        request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
+    )
 
 
 @app.exception_handler(AppError)
