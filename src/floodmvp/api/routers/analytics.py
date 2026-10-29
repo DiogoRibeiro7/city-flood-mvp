@@ -12,10 +12,11 @@ from floodmvp.api.openapi_examples import (
     RESP_INVALID_ARGUMENT,
     RESP_UNAUTHORIZED_API_KEY,
 )
+from floodmvp.api.validation import parse_query_timestamp
 from floodmvp.common.auth import require_privileged_access
 from floodmvp.common.errors import AppError
 from floodmvp.common.ids import new_id
-from floodmvp.common.time import parse_bucket_interval, parse_iso8601
+from floodmvp.common.time import parse_bucket_interval
 from floodmvp.config.settings import settings
 from floodmvp.models.db import ExportJob
 from floodmvp.models.domain import (
@@ -225,8 +226,8 @@ async def analytics_calibration_recommendations(
     if seasonality not in {"all", "monthly"}:
         raise AppError(code="INVALID_ARGUMENT", message="seasonality must be 'all' or 'monthly'")
     now = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
-    end = parse_iso8601(to_ts) if to_ts else now
-    start = parse_iso8601(from_ts) if from_ts else end - dt.timedelta(days=30)
+    end = parse_query_timestamp(to_ts, "to") if to_ts else now
+    start = parse_query_timestamp(from_ts, "from") if from_ts else end - dt.timedelta(days=30)
     if end <= start:
         raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
 
