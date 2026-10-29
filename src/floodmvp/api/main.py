@@ -168,6 +168,35 @@ def _finish_request(
     return response
 
 
+async def _body_exceeds_limit(request: Request, max_bytes: int) -> bool:
+    """Read at most the configured body size, regardless of declared length.
+
+    Content-Length is an early rejection hint, not proof of the actual body size.
+    Cache accepted streamed bodies so Starlette can replay them to the endpoint.
+    """
+    declared_length = request.headers.get("content-length")
+    if declared_length is not None:
+        try:
+            if int(declared_length) > max_bytes:
+                return True
+        except ValueError:
+            # Malformed or unreliable declarations must still be checked on the wire.
+            pass
+
+    total = 0
+    chunks: list[bytes] = []
+    async for chunk in request.stream():
+        if len(chunk) > max_bytes - total:
+            return True
+        total += len(chunk)
+        chunks.append(chunk)
+
+    # Starlette's BaseHTTPMiddleware uses this cache to forward a body consumed
+    # by an upstream middleware. Without it, downstream JSON parsing sees EOF.
+    request._body = b"".join(chunks)
+    return False
+
+
 @app.middleware("http")
 async def add_request_id(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
@@ -221,44 +250,20 @@ async def add_request_id(
                 request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
             )
 
-    # request size limit
-    if request.headers.get("content-length"):
-        try:
-            size = int(request.headers["content-length"])
-            if size > settings.request_max_bytes:
-                response = JSONResponse(
-                    status_code=413,
-                    content=as_error_payload_raw(
-                        code="REQUEST_TOO_LARGE",
-                        message="Request body too large",
-                        details={"max_bytes": settings.request_max_bytes},
-                        request_id=request_id,
-                    ),
-                )
-                return _finish_request(
-                    request,
-                    response,
-                    request_id=request_id,
-                    tenant_id=tenant_id,
-                    started_at=started_at,
-                )
-        except ValueError:
-            pass
-    else:
-        body = await request.body()
-        if len(body) > settings.request_max_bytes:
-            response = JSONResponse(
-                status_code=413,
-                content=as_error_payload_raw(
-                    code="REQUEST_TOO_LARGE",
-                    message="Request body too large",
-                    details={"max_bytes": settings.request_max_bytes},
-                    request_id=request_id,
-                ),
-            )
-            return _finish_request(
-                request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
-            )
+    # Check streamed bytes, even when Content-Length understates the body size.
+    if await _body_exceeds_limit(request, settings.request_max_bytes):
+        response = JSONResponse(
+            status_code=413,
+            content=as_error_payload_raw(
+                code="REQUEST_TOO_LARGE",
+                message="Request body too large",
+                details={"max_bytes": settings.request_max_bytes},
+                request_id=request_id,
+            ),
+        )
+        return _finish_request(
+            request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
+        )
 
     try:
         response = await asyncio.wait_for(call_next(request), timeout=settings.request_timeout_s)
