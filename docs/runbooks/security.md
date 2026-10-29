@@ -21,7 +21,11 @@
   the limit against the actual streamed bytes, including absent, invalid or
   understated `Content-Length` headers. Accepted bodies are replayed to their
   endpoints for normal JSON parsing. This limit is per API process.
-- Request timeout: 10s (`REQUEST_TIMEOUT_S`).
+- Request timeout: 10s (`REQUEST_TIMEOUT_S`). A single deadline covers
+  receiving the request body and waiting for the endpoint's response headers.
+  A slow or stalled upload returns HTTP 504 with the normal request ID, log
+  entry, and HTTP error metrics. Streaming response bodies after headers are
+  sent are not covered by this deadline.
 
 ## API keys (analytics)
 - Privileged endpoints require JWT authentication when `JWT_SECRET` is set.

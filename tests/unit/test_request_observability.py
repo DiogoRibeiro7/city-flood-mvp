@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import AsyncGenerator, AsyncIterator
 from unittest.mock import Mock
@@ -180,3 +181,82 @@ async def test_timeout_is_counted_and_logged(
     assert json.loads(response.body)["error"]["code"] == "REQUEST_TIMEOUT"
     assert response.headers["x-request-id"] == "timed-out"
     assert_rejection_recorded(collectors, logger, status=504, request_id="timed-out")
+
+
+@pytest.mark.asyncio
+async def test_stalled_upload_times_out_before_routing(
+    observed: tuple[dict[str, Mock], Mock], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A client that stops sending body chunks cannot hold the connection forever."""
+    collectors, logger = observed
+    api_main._RATE_LIMITS.clear()
+    api_main._TENANT_LIMITS.clear()
+    monkeypatch.setattr(settings, "request_timeout_s", 0.025)
+
+    scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/v1/telemetry/events:batch",
+        "raw_path": b"/v1/telemetry/events:batch",
+        "query_string": b"",
+        "scheme": "http",
+        "headers": [(b"x-request-id", b"stalled-upload")],
+        "client": ("127.0.0.1", 12345),
+        "server": ("test", 80),
+    }
+    reads = 0
+
+    async def receive() -> Message:
+        nonlocal reads
+        reads += 1
+        if reads == 1:
+            return {"type": "http.request", "body": b"part", "more_body": True}
+        await asyncio.Event().wait()
+        raise AssertionError("Unreachable after cancellation")
+
+    async def handler(_request: Request) -> Response:
+        raise AssertionError("The handler must not run before the upload finishes")
+
+    response = await api_main.add_request_id(Request(scope, receive), handler)
+
+    assert reads == 2
+    assert response.status_code == 504
+    assert json.loads(response.body)["error"]["code"] == "REQUEST_TIMEOUT"
+    assert response.headers["x-request-id"] == "stalled-upload"
+    assert collectors["REQUEST_COUNT"].labels.call_args.kwargs["path"] == "<unmatched>"
+    assert_rejection_recorded(collectors, logger, status=504, request_id="stalled-upload")
+
+
+@pytest.mark.asyncio
+async def test_upload_and_handler_share_the_request_deadline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two individually short phases must not exceed the combined time budget."""
+    api_main._RATE_LIMITS.clear()
+    api_main._TENANT_LIMITS.clear()
+    monkeypatch.setattr(settings, "request_timeout_s", 0.07)
+
+    scope = {
+        "type": "http",
+        "method": "POST",
+        "path": "/v1/does-not-exist",
+        "raw_path": b"/v1/does-not-exist",
+        "query_string": b"",
+        "scheme": "http",
+        "headers": [],
+        "client": ("127.0.0.1", 12345),
+        "server": ("test", 80),
+    }
+
+    async def receive() -> Message:
+        await asyncio.sleep(0.05)
+        return {"type": "http.request", "body": b"{}", "more_body": False}
+
+    async def handler(_request: Request) -> Response:
+        await asyncio.sleep(0.05)
+        return Response(status_code=200)
+
+    response = await api_main.add_request_id(Request(scope, receive), handler)
+
+    assert response.status_code == 504
+    assert json.loads(response.body)["error"]["code"] == "REQUEST_TIMEOUT"
