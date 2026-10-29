@@ -1771,6 +1771,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NoteOut'
+        '404':
+          content:
+            application/json:
+              example:
+                error:
+                  code: ASSET_NOT_FOUND
+                  message: Asset not found in city
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: City, asset or event does not exist in the requested city
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
       security:

@@ -3,8 +3,9 @@ from __future__ import annotations
 from sqlalchemy import delete, desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.common.errors import AppError
 from floodmvp.common.ids import new_id
-from floodmvp.models.db import Note
+from floodmvp.models.db import AnalyticsEvent, Asset, City, Note
 
 
 async def list_notes(
@@ -39,6 +40,35 @@ async def create_note(
     body: str,
     author: str,
 ) -> Note:
+    """Create a note only when its optional references belong to its city.
+
+    A foreign key on ``asset_id`` establishes existence but cannot prevent a
+    note from linking assets in a different city. Events have no note FK.
+    Validate both associations explicitly before inserting the note.
+    """
+    if await session.scalar(select(City.city_id).where(City.city_id == city_id)) is None:
+        raise AppError(code="CITY_NOT_FOUND", message="City not found", status_code=404)
+
+    if (
+        asset_id is not None
+        and await session.scalar(
+            select(Asset.asset_id).where(Asset.asset_id == asset_id, Asset.city_id == city_id)
+        )
+        is None
+    ):
+        raise AppError(code="ASSET_NOT_FOUND", message="Asset not found in city", status_code=404)
+
+    if (
+        event_id is not None
+        and await session.scalar(
+            select(AnalyticsEvent.event_id).where(
+                AnalyticsEvent.event_id == event_id, AnalyticsEvent.city_id == city_id
+            )
+        )
+        is None
+    ):
+        raise AppError(code="EVENT_NOT_FOUND", message="Event not found in city", status_code=404)
+
     row = Note(
         note_id=new_id("note"),
         city_id=city_id,

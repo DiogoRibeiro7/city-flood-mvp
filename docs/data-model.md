@@ -51,7 +51,8 @@ Indexes:
 - fields: `import_id`, `city_id`, `source`, `source_uri`, `format`, `dataset_version`, `status`, `validation_report`
 
 ## note
-- collaborative notes tied to city, assets, or events
+- collaborative notes tied to a city, with optional asset and analytics-event references;
+  creation rejects nonexistent references and assets/events from other cities (HTTP 404)
 - fields: `note_id`, `city_id`, `asset_id`, `event_id`, `title`, `body`, `author`, `created_at`
 
 ## city
