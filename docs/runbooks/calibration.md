@@ -49,7 +49,7 @@ Override values must be finite and nonnegative. Duration thresholds must be
 positive whole minutes, and an explicitly supplied `risk_fill_watch` cannot
 exceed an explicitly supplied `risk_fill_warning`. Risk and overflow fill
 thresholds may exceed 1.0, as they do in the configured city defaults.
-Unknown threshold names and malformed values return HTTP 422. An unknown
+Unknown threshold names and malformed values return HTTP 400. An unknown
 `city_id` returns HTTP 404 rather than a database error.
 
 List overrides:

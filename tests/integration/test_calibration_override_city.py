@@ -59,7 +59,8 @@ async def test_override_city_and_thresholds_are_validated_before_insert(
         "/v1/analytics/calibration/overrides",
         json={"city_id": "city_calibration", "thresholds": {"overflow_min_duration_minutes": -2}},
     )
-    assert invalid.status_code == 422
+    assert invalid.status_code == 400
+    assert invalid.json()["error"]["code"] == "INVALID_ARGUMENT"
 
     valid = await client.post(
         "/v1/analytics/calibration/overrides",
