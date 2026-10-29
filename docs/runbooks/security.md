@@ -4,6 +4,16 @@
 - In-memory token bucket per client IP.
 - Defaults: 5 rps with burst 20.
 - Tunable via `RATE_LIMIT_RPS` and `RATE_LIMIT_BURST`.
+- Per-client and per-tenant bucket caches use a least-recently-used cap
+  (`RATE_LIMIT_BUCKET_CAPACITY`, default 4096 entries each, per process).
+- Tenant quotas use a verified JWT tenant claim, or a shared `analytics-key`
+  identity for requests with the configured API key. A valid JWT without a
+  tenant claim is counted as `authenticated`; other traffic as `public`.
+  Untrusted `X-Tenant-Id` request headers do not select quota buckets.
+- Prometheus HTTP metrics use route templates instead of concrete request
+  paths; unknown URLs are grouped under `<unmatched>`.
+- Limits are process-local. Use an external rate limiter for consistent limits
+  across multiple API replicas.
 
 ## Request limits
 - Max request size: 1 MB (`REQUEST_MAX_BYTES`).

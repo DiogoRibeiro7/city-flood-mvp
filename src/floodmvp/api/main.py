@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import hmac
 import logging
 import time
 import uuid
+from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request
@@ -60,8 +62,34 @@ class _TokenBucket:
         return False
 
 
-_RATE_LIMITS: dict[str, _TokenBucket] = {}
-_TENANT_LIMITS: dict[str, _TokenBucket] = {}
+_RATE_LIMITS: OrderedDict[str, _TokenBucket] = OrderedDict()
+_TENANT_LIMITS: OrderedDict[str, _TokenBucket] = OrderedDict()
+
+
+def _get_bucket(
+    cache: OrderedDict[str, _TokenBucket],
+    key: str,
+    *,
+    rate: float,
+    burst: int,
+) -> _TokenBucket:
+    """Reuse recently seen limits while bounding per-process memory usage.
+
+    Evict the least-recently used bucket if the configured capacity is reached.
+    A returning, evicted client starts with a fresh bucket.
+    """
+    bucket = cache.get(key)
+    if bucket is not None:
+        cache.move_to_end(key)
+        return bucket
+
+    while len(cache) >= settings.rate_limit_bucket_capacity:
+        cache.popitem(last=False)
+
+    bucket = _TokenBucket(rate, burst)
+    cache[key] = bucket
+    return bucket
+
 
 # MVP: permissive CORS for local web app
 app.add_middleware(
@@ -74,9 +102,7 @@ app.add_middleware(
 
 
 def _resolve_tenant_id(request: Request) -> str:
-    header = request.headers.get(settings.tenant_header)
-    if header:
-        return header.strip()
+    """Derive metric/quota identity from verified credentials, never client labels."""
     auth_header = request.headers.get("authorization")
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.removeprefix("Bearer ").strip()
@@ -85,8 +111,14 @@ def _resolve_tenant_id(request: Request) -> str:
             tenant = extract_tenant(claims)
             if tenant:
                 return tenant
+            return "authenticated"
     api_key = request.headers.get("x-api-key")
-    if api_key and settings.analytics_api_key and api_key == settings.analytics_api_key:
+    if (
+        not settings.jwt_secret
+        and api_key
+        and settings.analytics_api_key
+        and hmac.compare_digest(api_key, settings.analytics_api_key)
+    ):
         return "analytics-key"
     return "public"
 
@@ -101,10 +133,12 @@ async def add_request_id(
     request.state.tenant_id = tenant_id
     # rate limiting (in-memory MVP)
     client_id = request.client.host if request.client else "unknown"
-    bucket = _RATE_LIMITS.get(client_id)
-    if bucket is None:
-        bucket = _TokenBucket(settings.rate_limit_rps, settings.rate_limit_burst)
-        _RATE_LIMITS[client_id] = bucket
+    bucket = _get_bucket(
+        _RATE_LIMITS,
+        client_id,
+        rate=settings.rate_limit_rps,
+        burst=settings.rate_limit_burst,
+    )
     if not bucket.allow():
         return JSONResponse(
             status_code=429,
@@ -118,10 +152,12 @@ async def add_request_id(
         )
 
     if settings.tenant_quota_rps > 0 and settings.tenant_quota_burst > 0:
-        tenant_bucket = _TENANT_LIMITS.get(tenant_id)
-        if tenant_bucket is None:
-            tenant_bucket = _TokenBucket(settings.tenant_quota_rps, settings.tenant_quota_burst)
-            _TENANT_LIMITS[tenant_id] = tenant_bucket
+        tenant_bucket = _get_bucket(
+            _TENANT_LIMITS,
+            tenant_id,
+            rate=settings.tenant_quota_rps,
+            burst=settings.tenant_quota_burst,
+        )
         if not tenant_bucket.allow():
             return JSONResponse(
                 status_code=429,
@@ -182,19 +218,24 @@ async def add_request_id(
     duration = time.perf_counter() - start
     response.headers["x-request-id"] = request_id
     path = request.url.path
+    # Raw URLs contain user-controlled IDs: keep Prometheus label cardinality bounded.
+    route_path = getattr(request.scope.get("route"), "path", None)
+    metrics_path = route_path if isinstance(route_path, str) else "<unmatched>"
     method = request.method
     status_code = response.status_code
-    REQUEST_COUNT.labels(method=method, path=path, status=str(status_code)).inc()
-    REQUEST_LATENCY.labels(method=method, path=path).observe(duration)
+    REQUEST_COUNT.labels(method=method, path=metrics_path, status=str(status_code)).inc()
+    REQUEST_LATENCY.labels(method=method, path=metrics_path).observe(duration)
     TENANT_REQUEST_COUNT.labels(
-        tenant=tenant_id, method=method, path=path, status=str(status_code)
+        tenant=tenant_id, method=method, path=metrics_path, status=str(status_code)
     ).inc()
-    TENANT_REQUEST_LATENCY.labels(tenant=tenant_id, method=method, path=path).observe(duration)
+    TENANT_REQUEST_LATENCY.labels(tenant=tenant_id, method=method, path=metrics_path).observe(
+        duration
+    )
     if status_code >= 400:
         status_class = "4xx" if status_code < 500 else "5xx"
-        HTTP_ERRORS.labels(method=method, path=path, status_class=status_class).inc()
+        HTTP_ERRORS.labels(method=method, path=metrics_path, status_class=status_class).inc()
         TENANT_HTTP_ERRORS.labels(
-            tenant=tenant_id, method=method, path=path, status_class=status_class
+            tenant=tenant_id, method=method, path=metrics_path, status_class=status_class
         ).inc()
     log_json(
         logging.INFO,

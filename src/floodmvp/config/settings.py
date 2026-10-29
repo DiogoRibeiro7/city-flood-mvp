@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,9 +21,9 @@ class Settings(BaseSettings):
     jwt_audience: str | None = None
     jwt_roles_claim: str = "roles"
     jwt_tenant_claim: str = "tenant"
-    tenant_header: str = "X-Tenant-Id"
     rate_limit_rps: float = 5.0
     rate_limit_burst: int = 20
+    rate_limit_bucket_capacity: int = Field(default=4096, ge=1)
     tenant_quota_rps: float = 8.0
     tenant_quota_burst: int = 40
     request_max_bytes: int = 1_000_000

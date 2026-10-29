@@ -106,6 +106,9 @@ The web UI sends a configured JWT on note reads and writes; do not embed an
 
 ## Ops notes
 
+- Per-IP and per-tenant request quotas are in-memory and process-local. Tenant
+  attribution comes from verified JWT claims or the configured API key;
+  client-supplied `X-Tenant-Id` headers are ignored for quotas and metrics.
 - PostGIS is installed in the Timescale image but must be enabled per DB (`CREATE EXTENSION postgis`).
 - To limit seeding to specific cities, set `CITY_IDS` (comma-separated).
 - Background jobs are queued; run the worker with:
