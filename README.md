@@ -20,7 +20,7 @@ City Flood MVP is an end-to-end, synthetic **city-scale flood monitoring** syste
 - Scenario comparison API (`observations:compare`)
 - Report builder (CSV export job) + async job queue
 - UI with map, incident timeline, drill-downs, saved views, shareable links
-- Optional JWT role enforcement for report/export jobs and queue admin APIs
+- Optional JWT role enforcement for reports, queue administration and field notes
 
 ## Stack
 
@@ -71,8 +71,14 @@ JWT role enforcement is disabled by default. To enable, set:
 Roles used:
 
 - `viewer`: read-only UI
-- `analyst`: report/export jobs
-- `admin`: calibration overrides + job queue admin APIs
+- `analyst`: report/export jobs + note creation
+- `admin`: calibration overrides, job queue administration + note deletion
+
+Note list/detail reads require `viewer`, `analyst` or `admin` when JWT auth is
+enabled. If JWT is disabled, the configured `X-API-Key` is accepted instead.
+Anonymous note reads remain available only for local demos without credentials.
+The web UI sends a configured JWT on note reads and writes; do not embed an
+`ANALYTICS_API_KEY` in client-side code.
 
 ## Key endpoints
 
@@ -85,6 +91,8 @@ Roles used:
 - `GET /v1/cities/{city_id}/summary?minutes=15`
 - `GET /v1/hotspots?city_id=...&metric=overflow_risk&top=20`
 - `GET /v1/events?city_id=...&type=overflow&from=...&to=...`
+- `GET /v1/notes?city_id=...` (authenticated outside local development)
+- `GET /v1/notes/{note_id}` (authenticated outside local development)
 - `GET /v1/analytics/runs`
 - `GET /v1/analytics/runs/diff`
 - `GET /v1/analytics/calibration/recommendations`

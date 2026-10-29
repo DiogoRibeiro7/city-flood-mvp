@@ -163,13 +163,13 @@ export async function fetchNotes(
   if (assetId) q.set("asset_id", assetId);
   if (eventId) q.set("event_id", eventId);
   q.set("limit", String(limit));
-  const r = await fetch(`${API_BASE}/v1/notes?${q.toString()}`);
+  const r = await fetch(`${API_BASE}/v1/notes?${q.toString()}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`notes: ${r.status}`);
   return r.json();
 }
 
 export async function fetchNote(noteId: string): Promise<Note> {
-  const r = await fetch(`${API_BASE}/v1/notes/${noteId}`);
+  const r = await fetch(`${API_BASE}/v1/notes/${noteId}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`note: ${r.status}`);
   return r.json();
 }

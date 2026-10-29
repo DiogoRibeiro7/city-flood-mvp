@@ -21,10 +21,13 @@
 - Protected operations:
   - Analytics/report job creation, status and downloads: `analyst` or `admin`.
   - Calibration overrides and job queue administration: `admin`.
+  - List/read notes: `viewer`, `analyst` or `admin`.
   - Create notes: `analyst` or `admin`; delete notes: `admin`.
 - The legacy API key has no role distinction; prefer JWT for production.
-- Public read endpoints, including note reads, remain unauthenticated. Do not
-  store sensitive content in notes without adding read authorization.
+- Other read endpoints remain public. Note list/detail responses carry
+  `Cache-Control: private, no-store` to avoid caching note content.
+- Note reads and writes from the web UI use a configured JWT. Keep the legacy
+  API key server-side; never expose it in a browser bundle.
 
 ## Ingest endpoint (protected)
 - Endpoint: `POST /v1/telemetry/events:batch`

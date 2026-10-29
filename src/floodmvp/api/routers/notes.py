@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, Query
+from fastapi import APIRouter, Depends, Header, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.common.auth import require_privileged_access
@@ -14,13 +14,18 @@ router = APIRouter(tags=["notes"])
 
 @router.get("/notes", response_model=list[NoteOut])
 async def notes(
+    response: Response,
     city_id: str = Query(...),
     asset_id: str | None = Query(default=None),
     event_id: str | None = Query(default=None),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> list[NoteOut]:
+    require_privileged_access(x_api_key, authorization, {"viewer", "analyst", "admin"})
+    response.headers["Cache-Control"] = "private, no-store"
     rows = await list_notes(
         session,
         city_id=city_id,
@@ -48,8 +53,13 @@ async def notes(
 @router.get("/notes/{note_id}", response_model=NoteOut)
 async def note(
     note_id: str,
+    response: Response,
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> NoteOut:
+    require_privileged_access(x_api_key, authorization, {"viewer", "analyst", "admin"})
+    response.headers["Cache-Control"] = "private, no-store"
     row = await get_note(session, note_id)
     if row is None:
         raise AppError(code="NOTE_NOT_FOUND", message="Note not found", status_code=404)
