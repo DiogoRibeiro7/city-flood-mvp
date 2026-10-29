@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,14 +14,32 @@ from floodmvp.storage.repos.assets import asset_to_out, get_asset, list_assets, 
 router = APIRouter(tags=["assets"])
 
 
+def _validate_lon_lat(lon: float, lat: float, parameter: str) -> None:
+    """Reject coordinates that cannot represent a WGS84 longitude/latitude pair."""
+    if not math.isfinite(lon) or not math.isfinite(lat):
+        raise ValueError(f"{parameter} coordinates must be finite")
+    if not -180 <= lon <= 180:
+        raise ValueError(f"{parameter} longitude must be between -180 and 180")
+    if not -90 <= lat <= 90:
+        raise ValueError(f"{parameter} latitude must be between -90 and 90")
+
+
 def _parse_bbox(bbox: str | None) -> tuple[float, float, float, float] | None:
     if bbox is None:
         return None
     parts = bbox.split(",")
     if len(parts) != 4:
         raise ValueError("bbox must be 'minLon,minLat,maxLon,maxLat'")
-    vals = tuple(float(x) for x in parts)
-    return vals  # type: ignore[return-value]
+    try:
+        min_lon, min_lat, max_lon, max_lat = (float(part) for part in parts)
+    except ValueError as exc:
+        raise ValueError("bbox must be 'minLon,minLat,maxLon,maxLat'") from exc
+    _validate_lon_lat(min_lon, min_lat, "bbox")
+    _validate_lon_lat(max_lon, max_lat, "bbox")
+    # ST_MakeEnvelope does not model an antimeridian-wrapping rectangle.
+    if min_lon >= max_lon or min_lat >= max_lat:
+        raise ValueError("bbox must have minLon < maxLon and minLat < maxLat")
+    return min_lon, min_lat, max_lon, max_lat
 
 
 def _parse_near(near: str | None) -> tuple[float, float] | None:
@@ -28,8 +48,12 @@ def _parse_near(near: str | None) -> tuple[float, float] | None:
     parts = near.split(",")
     if len(parts) != 2:
         raise ValueError("near must be 'lon,lat'")
-    vals = tuple(float(x) for x in parts)
-    return vals  # type: ignore[return-value]
+    try:
+        lon, lat = (float(part) for part in parts)
+    except ValueError as exc:
+        raise ValueError("near must be 'lon,lat'") from exc
+    _validate_lon_lat(lon, lat, "near")
+    return lon, lat
 
 
 def _parse_tags(tags: list[str] | None) -> list[tuple[str, str]] | None:
@@ -78,9 +102,11 @@ async def city_assets(
     city_id: str,
     response: Response,
     type: str | None = Query(default=None, description="asset_type filter"),
-    bbox: str | None = Query(default=None, description="minLon,minLat,maxLon,maxLat"),
-    near: str | None = Query(default=None, description="lon,lat for radial search"),
-    radius_m: float = Query(default=500.0, ge=1, le=50_000),
+    bbox: str | None = Query(
+        default=None, description="minLon,minLat,maxLon,maxLat (WGS84, non-wrapping extent)"
+    ),
+    near: str | None = Query(default=None, description="WGS84 lon,lat for radial search"),
+    radius_m: float = Query(default=500.0, ge=1, le=50_000, allow_inf_nan=False),
     tag: list[str] | None = Query(default=None, description="tag filter key:value (repeatable)"),
     limit: int = Query(default=2000, ge=1, le=5000),
     offset: int = Query(default=0, ge=0),

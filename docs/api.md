@@ -29,6 +29,11 @@ HTTP 400 (`INVALID_ARGUMENT`); time windows must have `to` after `from`.
 
 Asset searches using `near=lon,lat&radius_m=500` measure `radius_m` in geodesic
 metres (PostGIS geography), not projected Web Mercator metres.
+Both `bbox` and `near` require finite WGS84 coordinates: longitudes from -180
+to 180 and latitudes from -90 to 90. Bounding boxes must have `minLon < maxLon`
+and `minLat < maxLat`; extents that cross the antimeridian are not supported.
+The search radius must be finite and between 1 and 50,000 metres. Invalid
+spatial parameters return HTTP 400 (`INVALID_ARGUMENT`).
 
 ## Telemetry
 - `GET /assets/{asset_id}/metrics`
