@@ -16,6 +16,7 @@ async def test_qa_marks_suspect_spikes(db_session: AsyncSession) -> None:
     city_id = "city_qa"
     asset_id = "rain_qa"
     db_session.add(City(city_id=city_id, name="QA City", country="US"))
+    await db_session.flush()
     db_session.add(
         Asset(
             asset_id=asset_id,
@@ -26,6 +27,7 @@ async def test_qa_marks_suspect_spikes(db_session: AsyncSession) -> None:
             props={},
         )
     )
+    await db_session.flush()
     start = dt.datetime(2026, 1, 1, 0, 0, tzinfo=dt.UTC)
     db_session.add_all(
         [

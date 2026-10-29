@@ -34,6 +34,7 @@ async def test_observations_include_gaps(app_client: AsyncClient, db_session: As
     city_id = "city_gap"
     asset_id = "pipe_gap"
     db_session.add(City(city_id=city_id, name="Gap City", country="US"))
+    await db_session.flush()
     db_session.add(
         Asset(
             asset_id=asset_id,
@@ -44,6 +45,7 @@ async def test_observations_include_gaps(app_client: AsyncClient, db_session: As
             props={},
         )
     )
+    await db_session.flush()
     start = dt.datetime(2026, 1, 1, 0, 0, tzinfo=dt.UTC)
     db_session.add_all(
         [

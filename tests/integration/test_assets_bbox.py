@@ -12,6 +12,7 @@ from floodmvp.storage.repos.assets import asset_to_out, list_assets
 async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
     city_id = "city_test_bbox"
     db_session.add(City(city_id=city_id, name="Test City", country="US"))
+    await db_session.flush()
 
     assets = [
         Asset(
@@ -40,6 +41,7 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
         ),
     ]
     db_session.add_all(assets)
+    await db_session.flush()
     db_session.add_all(
         [
             AssetTag(asset_id="node_1", key="basin", value="basin_ne"),
@@ -147,6 +149,7 @@ async def test_near_filter_uses_geodesic_metres(db_session: AsyncSession) -> Non
     """
     city_id = "city_test_geodesic"
     db_session.add(City(city_id=city_id, name="Geodesic Test City", country="PT"))
+    await db_session.flush()
     db_session.add_all(
         [
             Asset(
