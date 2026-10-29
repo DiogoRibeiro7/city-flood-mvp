@@ -47,7 +47,7 @@ paths:
                 title: Response Cities V1 Cities Get
               example:
               - city_id: city_porto_mvp
-                name: MVP City
+                name: Porto
                 country: PT
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -73,10 +73,21 @@ paths:
                 $ref: '#/components/schemas/CityOut'
               example:
                 city_id: city_porto_mvp
-                name: MVP City
+                name: Porto
                 country: PT
         '404':
-          $ref: '#/components/responses/NotFound'
+          content:
+            application/json:
+              example:
+                error:
+                  code: CITY_NOT_FOUND
+                  message: City not found
+                  details:
+                    city_id: city_missing
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/cities/{city_id}/assets:
@@ -186,7 +197,17 @@ paths:
                   diameter_m: 0.5
                   material: PVC
         '400':
-          $ref: '#/components/responses/InvalidArgument'
+          content:
+            application/json:
+              example:
+                error:
+                  code: INVALID_ARGUMENT
+                  message: bbox must be 'minLon,minLat,maxLon,maxLat'
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Request
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/assets/{asset_id}:
@@ -225,7 +246,18 @@ paths:
                   diameter_m: 0.5
                   material: PVC
         '404':
-          $ref: '#/components/responses/AssetNotFound'
+          content:
+            application/json:
+              example:
+                error:
+                  code: ASSET_NOT_FOUND
+                  message: Asset not found
+                  details:
+                    asset_id: asset_missing
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/assets/{asset_id}/upstream:
@@ -261,7 +293,18 @@ paths:
                   $ref: '#/components/schemas/AssetOut'
                 title: Response Asset Upstream V1 Assets  Asset Id  Upstream Get
         '404':
-          $ref: '#/components/responses/AssetNotFound'
+          content:
+            application/json:
+              example:
+                error:
+                  code: ASSET_NOT_FOUND
+                  message: Asset not found
+                  details:
+                    asset_id: asset_missing
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/assets/{asset_id}/downstream:
@@ -297,7 +340,18 @@ paths:
                   $ref: '#/components/schemas/AssetOut'
                 title: Response Asset Downstream V1 Assets  Asset Id  Downstream Get
         '404':
-          $ref: '#/components/responses/AssetNotFound'
+          content:
+            application/json:
+              example:
+                error:
+                  code: ASSET_NOT_FOUND
+                  message: Asset not found
+                  details:
+                    asset_id: asset_missing
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/telemetry/scenarios:
@@ -397,7 +451,17 @@ paths:
               - fill_ratio
               - flow_m3s
         '404':
-          $ref: '#/components/responses/NotFound'
+          content:
+            application/json:
+              example:
+                error:
+                  code: SCENARIO_NOT_FOUND
+                  message: Scenario not found
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/assets/{asset_id}/observations:
@@ -484,9 +548,137 @@ paths:
                   value: 0.55
                 request_id: req_example
         '400':
-          $ref: '#/components/responses/InvalidArgument'
+          content:
+            application/json:
+              example:
+                error:
+                  code: INVALID_ARGUMENT
+                  message: '''to'' must be after ''from'''
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Request
         '404':
-          $ref: '#/components/responses/NotFound'
+          content:
+            application/json:
+              example:
+                error:
+                  code: SCENARIO_NOT_FOUND
+                  message: Scenario not found
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/assets/{asset_id}/observations:compare:
+    get:
+      tags:
+      - telemetry
+      summary: Observations Compare
+      operationId: observations_compare_v1_assets__asset_id__observations_compare_get
+      parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Asset Id
+      - name: metric
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Metric
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          title: From
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          title: To
+      - name: granularity
+        in: query
+        required: false
+        schema:
+          type: string
+          description: Timescale time_bucket interval, e.g. 1m,5m,1h
+          default: 5m
+          title: Granularity
+        description: Timescale time_bucket interval, e.g. 1m,5m,1h
+      - name: agg
+        in: query
+        required: false
+        schema:
+          type: string
+          description: avg|min|max
+          default: avg
+          title: Agg
+        description: avg|min|max
+      - name: base_scenario_id
+        in: query
+        required: true
+        schema:
+          type: string
+          description: scenario id or 'latest'
+          title: Base Scenario Id
+        description: scenario id or 'latest'
+      - name: compare_scenario_id
+        in: query
+        required: true
+        schema:
+          type: string
+          description: scenario id or 'latest'
+          title: Compare Scenario Id
+        description: scenario id or 'latest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScenarioCompareOut'
+              example:
+                metric: fill_ratio
+                base_scenario_id: scenario_base
+                compare_scenario_id: scenario_test
+                series:
+                - ts: '2026-02-01T10:00:00Z'
+                  base: 0.42
+                  compare: 0.55
+                  delta: 0.13
+                request_id: req_example
+        '400':
+          content:
+            application/json:
+              example:
+                error:
+                  code: INVALID_ARGUMENT
+                  message: '''to'' must be after ''from'''
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              example:
+                error:
+                  code: SCENARIO_NOT_FOUND
+                  message: Scenario not found
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/telemetry/events:batch:
@@ -528,11 +720,224 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedBearer'
         '400':
-          $ref: '#/components/responses/InvalidArgument'
+          content:
+            application/json:
+              example:
+                error:
+                  code: INVALID_ARGUMENT
+                  message: type is required
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Request
         '404':
-          $ref: '#/components/responses/NotFound'
+          content:
+            application/json:
+              example:
+                error:
+                  code: ASSET_NOT_FOUND
+                  message: Asset not found
+                  details:
+                    asset_id: asset_missing
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '409':
-          $ref: '#/components/responses/Conflict'
+          content:
+            application/json:
+              example:
+                error:
+                  code: IDEMPOTENCY_CONFLICT
+                  message: Idempotency-Key was already used for a different request
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Conflict
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+  /v1/jobs/queue:
+    get:
+      tags:
+      - jobs
+      summary: Queue List
+      operationId: queue_list_v1_jobs_queue_get
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: job_type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Job Type
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobQueueOut'
+                title: Response Queue List V1 Jobs Queue Get
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+  /v1/jobs/queue/{job_id}:
+    get:
+      tags:
+      - jobs
+      summary: Queue Get
+      operationId: queue_get_v1_jobs_queue__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobQueueOut'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+  /v1/jobs/queue/{job_id}/retry:
+    post:
+      tags:
+      - jobs
+      summary: Queue Retry
+      operationId: queue_retry_v1_jobs_queue__job_id__retry_post
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobQueueOut'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+  /v1/jobs/queue/{job_id}/cancel:
+    post:
+      tags:
+      - jobs
+      summary: Queue Cancel
+      operationId: queue_cancel_v1_jobs_queue__job_id__cancel_post
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobQueueOut'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
       security:
@@ -639,6 +1044,14 @@ paths:
           minimum: 1
           default: 20
           title: Top
+      - name: run_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Run Id
       responses:
         '200':
           description: Successful Response
@@ -693,6 +1106,220 @@ paths:
           $ref: '#/components/responses/InvalidArgument'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+  /v1/analytics/calibration/recommendations:
+    get:
+      tags:
+      - analytics
+      summary: Analytics Calibration Recommendations
+      operationId: analytics_calibration_recommendations_v1_analytics_calibration_recommendations_get
+      parameters:
+      - name: city_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: from
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: From
+      - name: to
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: To
+      - name: seasonality
+        in: query
+        required: false
+        schema:
+          type: string
+          description: all | monthly
+          default: all
+          title: Seasonality
+        description: all | monthly
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalibrationRecommendationOut'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/analytics/calibration/overrides:
+    get:
+      tags:
+      - analytics
+      summary: Analytics Calibration Overrides
+      operationId: analytics_calibration_overrides_v1_analytics_calibration_overrides_get
+      parameters:
+      - name: city_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalibrationOverrideOut'
+                title: Response Analytics Calibration Overrides V1 Analytics Calibration
+                  Overrides Get
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing API key
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Invalid API key
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+    post:
+      tags:
+      - analytics
+      summary: Analytics Calibration Override Create
+      operationId: analytics_calibration_override_create_v1_analytics_calibration_overrides_post
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalibrationOverrideIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalibrationOverrideOut'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+  /v1/analytics/runs/diff:
+    get:
+      tags:
+      - analytics
+      summary: Analytics Runs Diff
+      operationId: analytics_runs_diff_v1_analytics_runs_diff_get
+      parameters:
+      - name: city_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: base_run_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Base Run Id
+      - name: compare_run_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Compare Run Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsRunDiffOut'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /v1/analytics/jobs:
     post:
       tags:
@@ -708,12 +1335,23 @@ paths:
           - type: string
           - type: 'null'
           title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExportJobRequest'
+              anyOf:
+              - $ref: '#/components/schemas/ExportCsvRequest'
+              - $ref: '#/components/schemas/ReportCsvRequest'
+              title: Payload
       responses:
         '200':
           description: Successful Response
@@ -722,15 +1360,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExportJobOut'
         '401':
-          $ref: '#/components/responses/UnauthorizedApiKey'
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing API key
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized
         '403':
-          $ref: '#/components/responses/ForbiddenApiKey'
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Invalid API key
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden
         '400':
-          $ref: '#/components/responses/InvalidArgument'
+          content:
+            application/json:
+              example:
+                error:
+                  code: INVALID_ARGUMENT
+                  message: asset_ids must not be empty
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Request
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
   /v1/analytics/jobs/{job_id}:
     get:
       tags:
@@ -752,6 +1420,14 @@ paths:
           - type: string
           - type: 'null'
           title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -760,15 +1436,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExportJobOut'
         '401':
-          $ref: '#/components/responses/UnauthorizedApiKey'
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing API key
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized
         '403':
-          $ref: '#/components/responses/ForbiddenApiKey'
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Invalid API key
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden
         '404':
-          $ref: '#/components/responses/NotFound'
+          content:
+            application/json:
+              example:
+                error:
+                  code: JOB_NOT_FOUND
+                  message: Job not found
+                  details:
+                    job_id: job_missing
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
   /v1/analytics/jobs/{job_id}/download:
     get:
       tags:
@@ -790,6 +1497,14 @@ paths:
           - type: string
           - type: 'null'
           title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -797,17 +1512,58 @@ paths:
             application/json:
               schema: {}
         '401':
-          $ref: '#/components/responses/UnauthorizedApiKey'
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing API key
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized
         '403':
-          $ref: '#/components/responses/ForbiddenApiKey'
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Invalid API key
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Forbidden
         '400':
-          $ref: '#/components/responses/InvalidArgument'
+          content:
+            application/json:
+              example:
+                error:
+                  code: JOB_NOT_READY
+                  message: Job not completed
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Request
         '404':
-          $ref: '#/components/responses/NotFound'
+          content:
+            application/json:
+              example:
+                error:
+                  code: JOB_NOT_FOUND
+                  message: Job not found
+                  details:
+                    job_id: job_missing
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
   /v1/events:
     get:
       tags:
@@ -843,6 +1599,16 @@ paths:
         schema:
           type: string
           title: To
+      - name: run_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: analytics run_id
+          title: Run Id
+        description: analytics run_id
       - name: limit
         in: query
         required: false
@@ -881,11 +1647,305 @@ paths:
                 - pipe_456
                 summary: Overflow risk detected across 2 pipes.
         '400':
-          $ref: '#/components/responses/InvalidArgument'
+          content:
+            application/json:
+              example:
+                error:
+                  code: INVALID_ARGUMENT
+                  message: '''to'' must be after ''from'''
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Request
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+  /v1/notes:
+    get:
+      tags:
+      - notes
+      summary: Notes
+      operationId: notes_v1_notes_get
+      parameters:
+      - name: city_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: City Id
+      - name: asset_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Asset Id
+      - name: event_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NoteOut'
+                title: Response Notes V1 Notes Get
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+    post:
+      tags:
+      - notes
+      summary: Create
+      operationId: create_v1_notes_post
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteIn'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteOut'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+  /v1/notes/{note_id}:
+    get:
+      tags:
+      - notes
+      summary: Note
+      operationId: note_v1_notes__note_id__get
+      parameters:
+      - name: note_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Note Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoteOut'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
+    delete:
+      tags:
+      - notes
+      summary: Remove
+      operationId: remove_v1_notes__note_id__delete
+      parameters:
+      - name: note_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Note Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+                title: Response Remove V1 Notes  Note Id  Delete
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+      security:
+      - BearerAuth: []
 components:
   schemas:
+    AnalyticsEventDiffSummary:
+      properties:
+        base_count:
+          type: integer
+          title: Base Count
+        compare_count:
+          type: integer
+          title: Compare Count
+        added:
+          items:
+            $ref: '#/components/schemas/EventOut'
+          type: array
+          title: Added
+        removed:
+          items:
+            $ref: '#/components/schemas/EventOut'
+          type: array
+          title: Removed
+      type: object
+      required:
+      - base_count
+      - compare_count
+      title: AnalyticsEventDiffSummary
+    AnalyticsHotspotDiffSummary:
+      properties:
+        base_count:
+          type: integer
+          title: Base Count
+        compare_count:
+          type: integer
+          title: Compare Count
+        changed:
+          items:
+            $ref: '#/components/schemas/HotspotDiffItem'
+          type: array
+          title: Changed
+        added:
+          items:
+            $ref: '#/components/schemas/HotspotDiffItem'
+          type: array
+          title: Added
+        removed:
+          items:
+            $ref: '#/components/schemas/HotspotDiffItem'
+          type: array
+          title: Removed
+      type: object
+      required:
+      - base_count
+      - compare_count
+      title: AnalyticsHotspotDiffSummary
+    AnalyticsRunDiffOut:
+      properties:
+        city_id:
+          type: string
+          title: City Id
+        base_run_id:
+          type: string
+          title: Base Run Id
+        compare_run_id:
+          type: string
+          title: Compare Run Id
+        base_version:
+          type: string
+          title: Base Version
+        compare_version:
+          type: string
+          title: Compare Version
+        metrics_delta:
+          additionalProperties: true
+          type: object
+          title: Metrics Delta
+        events:
+          $ref: '#/components/schemas/AnalyticsEventDiffSummary'
+        hotspots:
+          $ref: '#/components/schemas/AnalyticsHotspotDiffSummary'
+      type: object
+      required:
+      - city_id
+      - base_run_id
+      - compare_run_id
+      - base_version
+      - compare_version
+      - metrics_delta
+      - events
+      - hotspots
+      title: AnalyticsRunDiffOut
     AnalyticsRunOut:
       properties:
         run_id:
@@ -977,6 +2037,120 @@ components:
       - asset_type
       - name
       title: AssetOut
+    CalibrationOverrideIn:
+      properties:
+        city_id:
+          type: string
+          title: City Id
+        season:
+          type: string
+          title: Season
+          default: all
+        thresholds:
+          $ref: '#/components/schemas/CalibrationThresholds'
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+      type: object
+      required:
+      - city_id
+      - thresholds
+      title: CalibrationOverrideIn
+    CalibrationOverrideOut:
+      properties:
+        override_id:
+          type: string
+          title: Override Id
+        city_id:
+          type: string
+          title: City Id
+        season:
+          type: string
+          title: Season
+        thresholds:
+          $ref: '#/components/schemas/CalibrationThresholds'
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - override_id
+      - city_id
+      - season
+      - thresholds
+      - created_at
+      title: CalibrationOverrideOut
+    CalibrationRecommendationOut:
+      properties:
+        city_id:
+          type: string
+          title: City Id
+        from_ts:
+          type: string
+          format: date-time
+          title: From Ts
+        to_ts:
+          type: string
+          format: date-time
+          title: To Ts
+        seasonality:
+          type: string
+          title: Seasonality
+        thresholds:
+          additionalProperties:
+            $ref: '#/components/schemas/CalibrationThresholds'
+          type: object
+          title: Thresholds
+      type: object
+      required:
+      - city_id
+      - from_ts
+      - to_ts
+      - seasonality
+      - thresholds
+      title: CalibrationRecommendationOut
+    CalibrationThresholds:
+      properties:
+        rain_event_threshold_mmph:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rain Event Threshold Mmph
+        rain_event_min_duration_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rain Event Min Duration Minutes
+        overflow_fill_threshold:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Overflow Fill Threshold
+        overflow_min_duration_minutes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Overflow Min Duration Minutes
+        risk_fill_watch:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Risk Fill Watch
+        risk_fill_warning:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Risk Fill Warning
+      type: object
+      title: CalibrationThresholds
     CityOut:
       properties:
         city_id:
@@ -1040,7 +2214,8 @@ components:
           type: number
           title: River Level M
         status_counts:
-          additionalProperties: true
+          additionalProperties:
+            type: integer
           type: object
           title: Status Counts
       type: object
@@ -1062,6 +2237,9 @@ components:
         severity:
           type: integer
           title: Severity
+        confidence:
+          type: number
+          title: Confidence
         start_ts:
           type: string
           format: date-time
@@ -1083,11 +2261,47 @@ components:
       - event_id
       - event_type
       - severity
+      - confidence
       - start_ts
       - end_ts
       - asset_ids
       - summary
       title: EventOut
+    ExportCsvRequest:
+      properties:
+        type:
+          type: string
+          const: export_csv
+          title: Type
+        query:
+          $ref: '#/components/schemas/ExportJobQuery'
+      type: object
+      required:
+      - type
+      - query
+      title: ExportCsvRequest
+    ExportJobLogOut:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        level:
+          type: string
+          title: Level
+        message:
+          type: string
+          title: Message
+        details:
+          additionalProperties: true
+          type: object
+          title: Details
+      type: object
+      required:
+      - ts
+      - level
+      - message
+      title: ExportJobLogOut
     ExportJobOut:
       properties:
         job_id:
@@ -1151,28 +2365,6 @@ components:
       - created_at
       - updated_at
       title: ExportJobOut
-    ExportJobLogOut:
-      properties:
-        ts:
-          type: string
-          format: date-time
-          title: Ts
-        level:
-          type: string
-          title: Level
-        message:
-          type: string
-          title: Message
-        details:
-          type: object
-          title: Details
-      type: object
-      required:
-      - ts
-      - level
-      - message
-      - details
-      title: ExportJobLogOut
     ExportJobQuery:
       properties:
         asset_ids:
@@ -1180,6 +2372,25 @@ components:
             type: string
           type: array
           title: Asset Ids
+        city_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City Id
+        asset_type:
+          anyOf:
+          - type: string
+            enum:
+            - river_segment
+            - node
+            - pipe
+            - outfall
+            - rain_gauge
+            - river_gauge
+            - tank
+            - pump
+          - type: 'null'
+          title: Asset Type
         metric:
           type: string
           title: Metric
@@ -1206,19 +2417,6 @@ components:
       - from
       - to
       title: ExportJobQuery
-    ExportJobRequest:
-      properties:
-        type:
-          type: string
-          const: export_csv
-          title: Type
-        query:
-          $ref: '#/components/schemas/ExportJobQuery'
-      type: object
-      required:
-      - type
-      - query
-      title: ExportJobRequest
     HTTPValidationError:
       properties:
         detail:
@@ -1228,6 +2426,39 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    HotspotDiffItem:
+      properties:
+        asset_id:
+          type: string
+          title: Asset Id
+        metric:
+          type: string
+          title: Metric
+        day:
+          type: string
+          format: date
+          title: Day
+        score_before:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Score Before
+        score_after:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Score After
+        delta:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Delta
+      type: object
+      required:
+      - asset_id
+      - metric
+      - day
+      title: HotspotDiffItem
     HotspotOut:
       properties:
         asset_id:
@@ -1236,6 +2467,9 @@ components:
         score:
           type: number
           title: Score
+        confidence:
+          type: number
+          title: Confidence
         details:
           additionalProperties: true
           type: object
@@ -1244,6 +2478,7 @@ components:
       required:
       - asset_id
       - score
+      - confidence
       title: HotspotOut
     IngestEventIn:
       properties:
@@ -1340,6 +2575,171 @@ components:
       - rejected
       - results
       title: IngestResponse
+    JobQueueOut:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        job_type:
+          type: string
+          title: Job Type
+        status:
+          type: string
+          title: Status
+        payload:
+          additionalProperties: true
+          type: object
+          title: Payload
+        attempts:
+          type: integer
+          title: Attempts
+        max_attempts:
+          type: integer
+          title: Max Attempts
+        scheduled_at:
+          type: string
+          format: date-time
+          title: Scheduled At
+        locked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Locked At
+        locked_by:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Locked By
+        last_error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Error
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - job_id
+      - job_type
+      - status
+      - payload
+      - attempts
+      - max_attempts
+      - scheduled_at
+      - created_at
+      - updated_at
+      title: JobQueueOut
+    NoteIn:
+      properties:
+        city_id:
+          type: string
+          title: City Id
+        asset_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Asset Id
+        event_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Id
+        title:
+          type: string
+          title: Title
+        body:
+          type: string
+          title: Body
+        author:
+          type: string
+          title: Author
+          default: Ops
+      type: object
+      required:
+      - city_id
+      - title
+      - body
+      title: NoteIn
+    NoteOut:
+      properties:
+        note_id:
+          type: string
+          title: Note Id
+        city_id:
+          type: string
+          title: City Id
+        asset_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Asset Id
+        event_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Id
+        title:
+          type: string
+          title: Title
+        body:
+          type: string
+          title: Body
+        author:
+          type: string
+          title: Author
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - note_id
+      - city_id
+      - title
+      - body
+      - author
+      - created_at
+      - updated_at
+      title: NoteOut
+    ObservationDeltaOut:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        base:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Base
+        compare:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Compare
+        delta:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Delta
+      type: object
+      required:
+      - ts
+      - base
+      - compare
+      - delta
+      title: ObservationDeltaOut
     ObservationOut:
       properties:
         ts:
@@ -1375,6 +2775,86 @@ components:
       - series
       - request_id
       title: ObservationsOut
+    ReportCsvRequest:
+      properties:
+        type:
+          type: string
+          const: report_csv
+          title: Type
+        query:
+          $ref: '#/components/schemas/ReportJobQuery'
+      type: object
+      required:
+      - type
+      - query
+      title: ReportCsvRequest
+    ReportJobQuery:
+      properties:
+        city_id:
+          type: string
+          title: City Id
+        from:
+          type: string
+          format: date-time
+          title: From
+        to:
+          type: string
+          format: date-time
+          title: To
+        event_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Type
+        top_hotspots:
+          type: integer
+          title: Top Hotspots
+          default: 10
+        include_summary:
+          type: boolean
+          title: Include Summary
+          default: true
+        include_hotspots:
+          type: boolean
+          title: Include Hotspots
+          default: true
+        include_events:
+          type: boolean
+          title: Include Events
+          default: true
+      type: object
+      required:
+      - city_id
+      - from
+      - to
+      title: ReportJobQuery
+    ScenarioCompareOut:
+      properties:
+        metric:
+          type: string
+          title: Metric
+        base_scenario_id:
+          type: string
+          title: Base Scenario Id
+        compare_scenario_id:
+          type: string
+          title: Compare Scenario Id
+        series:
+          items:
+            $ref: '#/components/schemas/ObservationDeltaOut'
+          type: array
+          title: Series
+        request_id:
+          type: string
+          title: Request Id
+      type: object
+      required:
+      - metric
+      - base_scenario_id
+      - compare_scenario_id
+      - series
+      - request_id
+      title: ScenarioCompareOut
     ScenarioRunOut:
       properties:
         scenario_id:
@@ -1425,6 +2905,14 @@ components:
         suspect_count:
           type: integer
           title: Suspect Count
+        outlier_count:
+          type: integer
+          title: Outlier Count
+          default: 0
+        drift_count:
+          type: integer
+          title: Drift Count
+          default: 0
       type: object
       required:
       - city_id
@@ -1451,6 +2939,11 @@ components:
         type:
           type: string
           title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
       type: object
       required:
       - loc
@@ -1550,19 +3043,6 @@ components:
               code: NOT_FOUND
               message: Resource not found
               details: {}
-              request_id: req_example
-    AssetNotFound:
-      description: 'ASSET_NOT_FOUND: Asset not found'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error:
-              code: ASSET_NOT_FOUND
-              message: Asset not found
-              details:
-                asset_id: asset_missing
               request_id: req_example
     Conflict:
       description: 'CONFLICT: Conflict'

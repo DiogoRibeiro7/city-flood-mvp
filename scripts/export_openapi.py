@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import copy
 import os
 import pathlib
+from typing import Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]  # PyYAML stubs are not a project dependency.
 
 if "DATABASE_URL" not in os.environ:
     os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:postgres@localhost:5432/floodmvp"
@@ -11,17 +13,23 @@ if "DATABASE_URL" not in os.environ:
 from floodmvp.api.main import app  # noqa: E402
 
 
+def build_public_spec() -> dict[str, Any]:
+    """Export the full live API without mutating FastAPI's cached schema."""
+    spec: dict[str, Any] = copy.deepcopy(app.openapi())
+    _add_error_components(spec)
+    return spec
+
+
 def main() -> None:
     out_path = pathlib.Path("docs/openapi/public.yaml")
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    spec = app.openapi()
-    _add_error_components(spec)
+    spec = build_public_spec()
     with out_path.open("w", encoding="utf-8") as f:
         yaml.safe_dump(spec, f, sort_keys=False)
     print(f"Wrote {out_path}")
 
 
-def _add_error_components(spec: dict) -> None:
+def _add_error_components(spec: dict[str, Any]) -> None:
     components = spec.setdefault("components", {})
     schemas = components.setdefault("schemas", {})
     responses = components.setdefault("responses", {})
@@ -103,23 +111,47 @@ def _add_error_components(spec: dict) -> None:
     _add_security_schemes(spec)
 
 
-def _replace_response_ref(responses: dict, status: str, ref_name: str) -> None:
+def _replace_response_ref(responses: dict[str, Any], status: str, ref_name: str) -> None:
     val = responses.get(status)
     if not isinstance(val, dict):
         return
     content = val.get("content")
     if not isinstance(content, dict):
         return
-    if "application/json" not in content:
+    media = content.get("application/json")
+    if not isinstance(media, dict):
         return
+
+    # Preserve specific runtime error codes and details. For example, a route
+    # returning ASSET_NOT_FOUND must not be documented as generic NOT_FOUND.
+    expected = {
+        "InvalidArgument": ("INVALID_ARGUMENT", "Validation error"),
+        "UnauthorizedApiKey": ("UNAUTHORIZED", "Missing API key"),
+        "ForbiddenApiKey": ("FORBIDDEN", "Invalid API key"),
+        "UnauthorizedBearer": ("UNAUTHORIZED", "Unauthorized"),
+        "ForbiddenBearer": ("FORBIDDEN", "Forbidden"),
+        "NotFound": ("NOT_FOUND", "Resource not found"),
+        "Conflict": ("CONFLICT", "Conflict"),
+        "UnprocessableEntity": ("UNPROCESSABLE_ENTITY", "Unprocessable entity"),
+    }[ref_name]
+    example = media.get("example")
+    error = example.get("error") if isinstance(example, dict) else None
+    if isinstance(error, dict) and (
+        error.get("code") != expected[0]
+        or error.get("message") != expected[1]
+        or error.get("details") != {}
+    ):
+        media.setdefault("schema", {"$ref": "#/components/schemas/ErrorResponse"})
+        return
+
     responses[status] = {"$ref": f"#/components/responses/{ref_name}"}
 
 
-def _is_bearer_auth(op: dict) -> bool:
+def _is_bearer_auth(op: dict[str, Any]) -> bool:
     return any(param.get("name") == "Authorization" for param in op.get("parameters", []) or [])
 
 
-def _add_security_schemes(spec: dict) -> None:
+def _add_security_schemes(spec: dict[str, Any]) -> None:
     components = spec.setdefault("components", {})
     security_schemes = components.setdefault("securitySchemes", {})
     security_schemes.setdefault(
@@ -146,7 +178,7 @@ def _add_security_schemes(spec: dict) -> None:
                 op["security"] = [{"ApiKeyAuth": []}]
 
 
-def _is_api_key_auth(op: dict) -> bool:
+def _is_api_key_auth(op: dict[str, Any]) -> bool:
     return any(param.get("name") == "X-API-Key" for param in op.get("parameters", []) or [])
 
 
