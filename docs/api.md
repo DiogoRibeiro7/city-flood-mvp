@@ -27,6 +27,11 @@ Base: `/v1`
 - `GET /assets/{asset_id}/observations?metric=...&from=...&to=...&granularity=5m&agg=avg`
 - `GET /assets/{asset_id}/observations:compare?metric=...&from=...&to=...&granularity=5m&agg=avg&base_scenario_id=...&compare_scenario_id=...`
 
+Both observation endpoints accept positive bucket widths in seconds, minutes,
+hours or days (for example `5m`, `1h`, `1d`), up to 30 days. Invalid widths
+return HTTP 400 (`INVALID_ARGUMENT`). The database receives validated, typed
+PostgreSQL intervals for raw and gap-filled aggregation queries.
+
 ## Analytics
 - `GET /cities/{city_id}/status`
 - `GET /hotspots?city_id=...&metric=overflow_risk&top=20&run_id=...` (includes `confidence`)

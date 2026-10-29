@@ -232,26 +232,29 @@ async def observations_compare(
     if compare_id is None:
         raise AppError(code="SCENARIO_NOT_FOUND", message="Scenario not found", status_code=404)
 
-    base_map = await get_observations_map(
-        session,
-        asset_id,
-        metric,
-        start,
-        end,
-        granularity,
-        agg,
-        scenario_id=base_id,
-    )
-    compare_map = await get_observations_map(
-        session,
-        asset_id,
-        metric,
-        start,
-        end,
-        granularity,
-        agg,
-        scenario_id=compare_id,
-    )
+    try:
+        base_map = await get_observations_map(
+            session,
+            asset_id,
+            metric,
+            start,
+            end,
+            granularity,
+            agg,
+            scenario_id=base_id,
+        )
+        compare_map = await get_observations_map(
+            session,
+            asset_id,
+            metric,
+            start,
+            end,
+            granularity,
+            agg,
+            scenario_id=compare_id,
+        )
+    except ValueError as e:
+        raise AppError(code="INVALID_ARGUMENT", message=str(e)) from e
 
     timestamps = sorted(set(base_map.keys()) | set(compare_map.keys()))
     series: list[ObservationDeltaOut] = []

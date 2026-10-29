@@ -3,9 +3,10 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any
 
-from sqlalchemy import func, select, text
+from sqlalchemy import Interval, bindparam, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.common.time import parse_bucket_interval
 from floodmvp.models.db import TelemetryObservation, TelemetryQaDaily
 
 ALLOWED_AGG = {"avg", "min", "max"}
@@ -79,6 +80,7 @@ async def get_observations(
 ) -> list[tuple[dt.datetime, float | None]]:
     if agg not in ALLOWED_AGG:
         raise ValueError(f"agg must be one of {sorted(ALLOWED_AGG)}")
+    interval = parse_bucket_interval(granularity)
     granularity_key = granularity.strip().lower()
     if granularity_key in _CAGG_GRANULARITY and not include_gaps and scenario_id is None:
         agg_col = {
@@ -107,10 +109,11 @@ async def get_observations(
         if scenario_id is not None
         else TelemetryObservation.scenario_id.is_(None)
     )
+    bucket_interval = bindparam("bucket_interval", value=interval, type_=Interval())
 
     if include_gaps:
         # Use Timescale gapfill to surface missing buckets as nulls.
-        bucket = func.time_bucket_gapfill(granularity, TelemetryObservation.ts).label("bucket")
+        bucket = func.time_bucket_gapfill(bucket_interval, TelemetryObservation.ts).label("bucket")
         agg_fn = getattr(func, agg)(TelemetryObservation.value).label("value")
         q_gap = (
             select(bucket, agg_fn)
@@ -126,7 +129,7 @@ async def get_observations(
         return [(r[0], float(r[1]) if r[1] is not None else None) for r in res.all()]
 
     # fallback to raw telemetry with time_bucket
-    bucket = func.time_bucket(granularity, TelemetryObservation.ts).label("bucket")
+    bucket = func.time_bucket(bucket_interval, TelemetryObservation.ts).label("bucket")
     agg_fn = getattr(func, agg)(TelemetryObservation.value).label("value")
     q_raw = (
         select(bucket, agg_fn)
