@@ -7,6 +7,7 @@ from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _LOCAL_ENVIRONMENTS = frozenset({"dev", "development", "local", "test"})
+_DEMO_INGEST_TOKEN = "dev-ingest-token"
 
 
 class Settings(BaseSettings):
@@ -47,6 +48,23 @@ class Settings(BaseSettings):
 
     telemetry_gap_granularity_minutes: int = 5
     telemetry_gap_window_days: int = 1
+
+    @property
+    def ingest_auth_configured(self) -> bool:
+        """Reject missing and public demo tokens in deployed environments."""
+        token = self.ingest_token.strip()
+        local = self.app_env.strip().lower() in _LOCAL_ENVIRONMENTS
+        return bool(token) and (local or token != _DEMO_INGEST_TOKEN)
+
+    @model_validator(mode="after")
+    def validate_ingest_auth(self) -> Self:
+        """Prevent production startup with the published development credential."""
+        if (
+            self.app_env.strip().lower() not in _LOCAL_ENVIRONMENTS
+            and not self.ingest_auth_configured
+        ):
+            raise ValueError("INGEST_TOKEN must be a non-default secret outside local development")
+        return self
 
     @property
     def cors_origins(self) -> list[str]:

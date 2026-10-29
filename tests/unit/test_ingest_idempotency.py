@@ -5,6 +5,7 @@ import datetime as dt
 import pytest
 from fastapi import HTTPException
 from httpx import ASGITransport, AsyncClient
+from pydantic import ValidationError
 
 from floodmvp.api.main import app
 from floodmvp.api.routers.ingest import (
@@ -14,7 +15,7 @@ from floodmvp.api.routers.ingest import (
     _validate_idempotency_key,
 )
 from floodmvp.common.errors import AppError
-from floodmvp.config.settings import settings
+from floodmvp.config.settings import Settings, settings
 from floodmvp.models.domain import IngestEventIn, IngestEventResult, IngestRequest, IngestResponse
 from floodmvp.storage.db import get_session
 
@@ -105,6 +106,75 @@ def test_ingestion_fails_closed_without_configured_token(monkeypatch: pytest.Mon
 
     assert exc_info.value.status_code == 503
     assert exc_info.value.code == "AUTH_NOT_CONFIGURED"
+
+
+@pytest.mark.parametrize("environment", ["prod", "production", "staging"])
+@pytest.mark.parametrize("token", ["", "   ", "dev-ingest-token", " dev-ingest-token "])
+def test_deployment_rejects_missing_or_demo_ingest_token(environment: str, token: str) -> None:
+    """A known development token must never authorize public ingestion."""
+    with pytest.raises(ValidationError, match="INGEST_TOKEN"):
+        Settings(app_env=environment, ingest_token=token)
+
+
+def test_local_demo_accepts_development_ingest_token() -> None:
+    """Keep the documented local Docker Compose and smoke-test workflow."""
+    configured = Settings(app_env="dev", ingest_token="dev-ingest-token")
+    assert configured.ingest_auth_configured
+
+
+def test_deployment_accepts_explicit_ingest_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A configured production token authorizes ingestion, and other values do not."""
+    token = "test-deployment-secret-token"
+    configured = Settings(app_env="prod", ingest_token=token)
+    assert configured.ingest_auth_configured
+
+    monkeypatch.setattr(settings, "app_env", "prod")
+    monkeypatch.setattr(settings, "ingest_token", token)
+    _authorize(f"Bearer {token}")
+
+    with pytest.raises(HTTPException) as exc_info:
+        _authorize("Bearer dev-ingest-token")
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.parametrize("token", ["", "dev-ingest-token", " dev-ingest-token "])
+def test_runtime_ingest_auth_rejects_unsafe_deployment_configuration(
+    monkeypatch: pytest.MonkeyPatch, token: str
+) -> None:
+    """Fail closed even if the settings object is updated after startup."""
+    monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr(settings, "ingest_token", token)
+
+    with pytest.raises(AppError) as exc_info:
+        _authorize("Bearer dev-ingest-token")
+    assert exc_info.value.status_code == 503
+    assert exc_info.value.code == "AUTH_NOT_CONFIGURED"
+
+
+@pytest.mark.asyncio
+async def test_deployment_api_rejects_published_ingest_token(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Even a correctly formatted request must not reach the database."""
+    monkeypatch.setattr(settings, "app_env", "prod")
+    monkeypatch.setattr(settings, "ingest_token", "dev-ingest-token")
+
+    async def fake_session():
+        yield None
+
+    app.dependency_overrides[get_session] = fake_session
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post(
+                "/v1/telemetry/events:batch",
+                headers={"Authorization": "Bearer dev-ingest-token"},
+                json=_request().model_dump(mode="json"),
+            )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "AUTH_NOT_CONFIGURED"
 
 
 def test_invalid_bearer_token_is_unauthorized() -> None:

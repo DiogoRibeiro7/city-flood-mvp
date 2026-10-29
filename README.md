@@ -145,4 +145,5 @@ See `docs/deployment/security_checklist.md` for the security checklist and compl
 For deployments outside local development, set `APP_ENV=prod` and configure
 `JWT_SECRET` (recommended) or `ANALYTICS_API_KEY`. Privileged endpoints return
 503 if neither credential is configured. The default `APP_ENV=dev` is for
-local demonstrations only.
+local demonstrations only. Ingestion also requires a separate, non-default
+`INGEST_TOKEN` in production; startup rejects the documented demo credential.
