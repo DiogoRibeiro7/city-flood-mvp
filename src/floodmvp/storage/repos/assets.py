@@ -127,12 +127,13 @@ async def traverse_network(
     asset_id: str,
     direction: str,
     depth: int,
-) -> list[Asset]:
+) -> list[Asset] | None:
+    """Traverse connected assets; return None if the starting asset is absent."""
     if depth <= 0:
         return []
     start = await get_asset(session, asset_id)
     if start is None:
-        return []
+        return None
 
     visited: set[str] = {start.asset_id}
     results: list[Asset] = []

@@ -214,3 +214,33 @@ async def test_branching_network_returns_stable_layers_without_cycle_duplicates(
         response = await app_client.get("/v1/assets/branch_n0/downstream?depth=3")
         assert response.status_code == 200
         assert [row["asset_id"] for row in response.json()] == expected_ids
+
+
+@pytest.mark.asyncio
+async def test_missing_asset_and_isolated_node_have_different_network_responses(
+    app_client: AsyncClient, db_session: AsyncSession
+) -> None:
+    city_id = "city_network_empty"
+    db_session.add(City(city_id=city_id, name="Isolated City", country="PT"))
+    await db_session.flush()
+    db_session.add(
+        Asset(
+            asset_id="isolated_node",
+            city_id=city_id,
+            asset_type="node",
+            name="Isolated Node",
+            geom=WKTElement("POINT(-8.61 41.15)", srid=4326),
+            props={},
+        )
+    )
+    await db_session.commit()
+
+    for direction in ("upstream", "downstream"):
+        missing = await app_client.get(f"/v1/assets/missing_asset/{direction}")
+        assert missing.status_code == 404
+        assert missing.json()["error"]["code"] == "ASSET_NOT_FOUND"
+        assert missing.json()["error"]["details"] == {"asset_id": "missing_asset"}
+
+        isolated = await app_client.get(f"/v1/assets/isolated_node/{direction}")
+        assert isolated.status_code == 200
+        assert isolated.json() == []

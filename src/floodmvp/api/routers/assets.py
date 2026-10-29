@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -180,21 +181,57 @@ async def asset(
     return AssetOut(**asset_to_out(a))
 
 
-@router.get("/assets/{asset_id}/upstream", response_model=list[AssetOut])
+async def _network_assets_or_404(
+    session: AsyncSession,
+    asset_id: str,
+    direction: Literal["upstream", "downstream"],
+    depth: int,
+) -> list[AssetOut]:
+    """Distinguish an unknown asset from an existing isolated asset."""
+    rows = await traverse_network(session, asset_id, direction, depth)
+    if rows is None:
+        raise AppError(
+            code="ASSET_NOT_FOUND",
+            message="Asset not found",
+            details={"asset_id": asset_id},
+            status_code=404,
+        )
+    return [AssetOut(**asset_to_out(a)) for a in rows]
+
+
+@router.get(
+    "/assets/{asset_id}/upstream",
+    response_model=list[AssetOut],
+    responses={
+        404: error_response(
+            code="ASSET_NOT_FOUND",
+            message="Asset not found",
+            details={"asset_id": "asset_missing"},
+        ),
+    },
+)
 async def asset_upstream(
     asset_id: str,
     depth: int = Query(3, ge=1, le=20),
     session: AsyncSession = Depends(get_session),
 ) -> list[AssetOut]:
-    rows = await traverse_network(session, asset_id, "upstream", depth)
-    return [AssetOut(**asset_to_out(a)) for a in rows]
+    return await _network_assets_or_404(session, asset_id, "upstream", depth)
 
 
-@router.get("/assets/{asset_id}/downstream", response_model=list[AssetOut])
+@router.get(
+    "/assets/{asset_id}/downstream",
+    response_model=list[AssetOut],
+    responses={
+        404: error_response(
+            code="ASSET_NOT_FOUND",
+            message="Asset not found",
+            details={"asset_id": "asset_missing"},
+        ),
+    },
+)
 async def asset_downstream(
     asset_id: str,
     depth: int = Query(3, ge=1, le=20),
     session: AsyncSession = Depends(get_session),
 ) -> list[AssetOut]:
-    rows = await traverse_network(session, asset_id, "downstream", depth)
-    return [AssetOut(**asset_to_out(a)) for a in rows]
+    return await _network_assets_or_404(session, asset_id, "downstream", depth)

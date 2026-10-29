@@ -38,6 +38,9 @@ starting asset is a pipe, its immediately adjacent node in the requested
 direction is included; the starting pipe itself is not repeated in the result.
 Each depth level returns pipes, then nodes, ordered by asset ID. Frontiers are
 queried in batches to avoid per-node database round trips on branching networks.
+For either direction, an unknown starting asset returns HTTP 404
+(`ASSET_NOT_FOUND`), while a known asset with no connections returns HTTP 200
+with an empty array.
 
 Asset searches using `near=lon,lat&radius_m=500` measure `radius_m` in geodesic
 metres (PostGIS geography), not projected Web Mercator metres.
