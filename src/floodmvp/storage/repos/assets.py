@@ -3,9 +3,10 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
+from geoalchemy2 import Geography
 from geoalchemy2.shape import to_shape
 from shapely.geometry import mapping
-from sqlalchemy import func, select
+from sqlalchemy import cast, func, select
 from sqlalchemy import tuple_ as sql_tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,10 +51,12 @@ async def list_assets(
     if near and radius_m:
         lon, lat = near
         point = func.ST_SetSRID(func.ST_MakePoint(lon, lat), 4326)
+        # Geography measures metres on the spheroid; Web Mercator metres are
+        # distorted by latitude and exclude assets near the requested radius.
         q = q.where(
             func.ST_DWithin(
-                func.ST_Transform(Asset.geom, 3857),
-                func.ST_Transform(point, 3857),
+                cast(Asset.geom, Geography(srid=4326)),
+                cast(point, Geography(srid=4326)),
                 radius_m,
             )
         )

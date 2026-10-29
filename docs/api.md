@@ -23,8 +23,12 @@ HTTP 400 (`INVALID_ARGUMENT`); time windows must have `to` after `from`.
 ## Assets
 - `GET /cities`
 - `GET /cities/{city_id}`
-- `GET /cities/{city_id}/assets?bbox=minLon,minLat,maxLon,maxLon&type=pipe|node|river_segment`
+- `GET /cities/{city_id}/assets?bbox=minLon,minLat,maxLon,maxLat&type=pipe|node|river_segment`
+- `GET /cities/{city_id}/assets?near=lon,lat&radius_m=500`
 - `GET /assets/{asset_id}`
+
+Asset searches using `near=lon,lat&radius_m=500` measure `radius_m` in geodesic
+metres (PostGIS geography), not projected Web Mercator metres.
 
 ## Telemetry
 - `GET /assets/{asset_id}/metrics`

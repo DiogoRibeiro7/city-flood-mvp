@@ -58,6 +58,7 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
         radius_m=None,
         tags=None,
         limit=100,
+        offset=0,
     )
     bbox_assets = await list_assets(
         db_session,
@@ -68,6 +69,7 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
         radius_m=None,
         tags=None,
         limit=100,
+        offset=0,
     )
     near_assets = await list_assets(
         db_session,
@@ -78,6 +80,7 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
         radius_m=300,
         tags=None,
         limit=100,
+        offset=0,
     )
 
     assert len(all_assets) == 3
@@ -94,6 +97,7 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
         radius_m=None,
         tags=[("basin", "basin_ne")],
         limit=100,
+        offset=0,
     )
     assert {a.asset_id for a in tag_assets} == {"node_1", "pipe_1"}
 
@@ -105,3 +109,46 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
     assert geojson_line is not None
     assert geojson_line["type"] == "LineString"
     assert isinstance(geojson_line["coordinates"], list | tuple)
+
+
+@pytest.mark.asyncio
+async def test_near_filter_uses_geodesic_metres(db_session: AsyncSession) -> None:
+    """A 500 m circle at Porto's latitude includes a point about 445 m away.
+
+    EPSG:3857 measures the same north-south displacement as roughly 590 m,
+    which previously excluded the point despite its real-world proximity.
+    """
+    city_id = "city_test_geodesic"
+    db_session.add(City(city_id=city_id, name="Geodesic Test City", country="PT"))
+    db_session.add_all(
+        [
+            Asset(
+                asset_id=asset_id,
+                city_id=city_id,
+                asset_type="node",
+                name=asset_id,
+                geom=WKTElement(f"POINT(-8.610 {lat})", srid=4326),
+                props={},
+            )
+            for asset_id, lat in [
+                ("center", 41.150),
+                ("within_500m", 41.154),
+                ("outside_500m", 41.158),
+            ]
+        ]
+    )
+    await db_session.commit()
+
+    nearby = await list_assets(
+        db_session,
+        city_id=city_id,
+        asset_type=None,
+        bbox=None,
+        near=(-8.610, 41.150),
+        radius_m=500,
+        tags=None,
+        limit=10,
+        offset=0,
+    )
+
+    assert {asset.asset_id for asset in nearby} == {"center", "within_500m"}
