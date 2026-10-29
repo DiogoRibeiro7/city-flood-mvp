@@ -72,12 +72,20 @@ async def fetch_next_job(session: AsyncSession, worker_id: str) -> JobQueue | No
 async def mark_job_success(session: AsyncSession, job: JobQueue) -> None:
     job.status = "completed"
     job.last_error = None
+    job.locked_at = None
+    job.locked_by = None
     await session.flush()
     JOB_COMPLETED.labels(job_type=job.job_type).inc()
 
 
-async def mark_job_failed(session: AsyncSession, job: JobQueue, error: str, backoff_seconds: int) -> None:
+async def mark_job_failed(
+    session: AsyncSession, job: JobQueue, error: str, backoff_seconds: int
+) -> None:
     job.last_error = error
+    # A failed attempt no longer owns its worker lock, whether the job will be
+    # retried or has exhausted its attempts. Keep the last_error for triage.
+    job.locked_at = None
+    job.locked_by = None
     if job.attempts >= job.max_attempts:
         job.status = "failed"
         JOB_FAILED.labels(job_type=job.job_type).inc()
@@ -118,7 +126,14 @@ async def retry_job(session: AsyncSession, job_id: str) -> bool:
         update(JobQueue)
         .where(JobQueue.job_id == job_id)
         .where(JobQueue.status.in_(["failed", "cancelled"]))
-        .values(status="queued", attempts=0, last_error=None, scheduled_at=now, locked_at=None, locked_by=None)
+        .values(
+            status="queued",
+            attempts=0,
+            last_error=None,
+            scheduled_at=now,
+            locked_at=None,
+            locked_by=None,
+        )
     )
     return _rowcount(res) > 0
 

@@ -59,6 +59,13 @@
 - See `docs/runbooks/calibration.md` for threshold recommendations and overrides.
 
 ## Daily ops
+### Queue state
+- Inspect `GET /v1/jobs/queue` with an administrator credential when investigating
+  exports or analytics workers. `locked_at` and `locked_by` identify only an
+  actively running attempt; they are cleared on completion, failure, or retry.
+- A queued retry retains `last_error` for diagnosis until it succeeds or is
+  manually retried. Check `scheduled_at` before assuming the queue is stalled.
+
 ### Alerts triage
 1) Check Prometheus alerts and identify the impacted service (API, ingest, analytics).
 2) Confirm recent deploys or config changes for the affected service.
