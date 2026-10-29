@@ -63,6 +63,12 @@ Gap-filled queries use PostgreSQL `generate_series` with TimescaleDB `time_bucke
 to include empty buckets as nulls; they work with the OSS image and are capped
 at 10,000 buckets per request.
 
+The optional `scenario_id` filter accepts an existing scenario ID or `latest`.
+The comparison endpoint requires two existing scenarios. An unknown ID, or
+`latest` when no scenarios have been created, returns HTTP 404
+(`SCENARIO_NOT_FOUND`); an existing scenario with no matching telemetry returns
+an empty result with HTTP 200.
+
 ## Analytics
 - `GET /cities/{city_id}/status`
 - `GET /hotspots?city_id=...&metric=overflow_risk&top=20&run_id=...` (includes `confidence`)
