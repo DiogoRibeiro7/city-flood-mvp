@@ -25,7 +25,11 @@ HTTP 400 (`INVALID_ARGUMENT`); time windows must have `to` after `from`.
 - `GET /cities/{city_id}`
 - `GET /cities/{city_id}/assets?bbox=minLon,minLat,maxLon,maxLat&type=pipe|node|river_segment`
 - `GET /cities/{city_id}/assets?near=lon,lat&radius_m=500`
+- `GET /cities/{city_id}/assets?tag=basin:basin_ne&tag=priority:critical`
 - `GET /assets/{asset_id}`
+
+Repeatable `tag=key:value` filters require every distinct tag to match (AND
+semantics). Repeating an identical filter does not change the results.
 
 Asset searches using `near=lon,lat&radius_m=500` measure `radius_m` in geodesic
 metres (PostGIS geography), not projected Web Mercator metres.

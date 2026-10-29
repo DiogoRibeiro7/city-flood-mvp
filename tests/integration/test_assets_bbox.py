@@ -43,6 +43,7 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
     db_session.add_all(
         [
             AssetTag(asset_id="node_1", key="basin", value="basin_ne"),
+            AssetTag(asset_id="node_1", key="priority", value="critical"),
             AssetTag(asset_id="pipe_1", key="basin", value="basin_ne"),
             AssetTag(asset_id="node_2", key="basin", value="basin_sw"),
         ]
@@ -100,6 +101,32 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
         offset=0,
     )
     assert {a.asset_id for a in tag_assets} == {"node_1", "pipe_1"}
+
+    repeated_tag_assets = await list_assets(
+        db_session,
+        city_id=city_id,
+        asset_type=None,
+        bbox=None,
+        near=None,
+        radius_m=None,
+        tags=[("basin", "basin_ne"), ("basin", "basin_ne")],
+        limit=100,
+        offset=0,
+    )
+    assert {a.asset_id for a in repeated_tag_assets} == {"node_1", "pipe_1"}
+
+    combined_tag_assets = await list_assets(
+        db_session,
+        city_id=city_id,
+        asset_type=None,
+        bbox=None,
+        near=None,
+        radius_m=None,
+        tags=[("basin", "basin_ne"), ("priority", "critical"), ("basin", "basin_ne")],
+        limit=100,
+        offset=0,
+    )
+    assert {a.asset_id for a in combined_tag_assets} == {"node_1"}
 
     geojson_point = asset_to_out(assets[0])["geom_geojson"]
     geojson_line = asset_to_out(assets[1])["geom_geojson"]
