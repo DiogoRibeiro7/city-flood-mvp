@@ -89,11 +89,12 @@ def _pipe_endpoint(pipe: Asset, direction: str) -> str | None:
 
 
 async def _list_pipes_by_node(
-    session: AsyncSession, node_id: str, direction: str
+    session: AsyncSession, node_id: str, direction: str, city_id: str
 ) -> list[Asset]:
     key = "downstream_node_id" if direction == "upstream" else "upstream_node_id"
     q = (
         select(Asset)
+        .where(Asset.city_id == city_id)
         .where(Asset.asset_type == "pipe")
         .where(func.jsonb_extract_path_text(Asset.props, key) == node_id)
     )
@@ -101,11 +102,15 @@ async def _list_pipes_by_node(
     return list(res.scalars().all())
 
 
-async def _list_assets_by_ids(session: AsyncSession, asset_ids: Iterable[str]) -> list[Asset]:
+async def _list_assets_by_ids(
+    session: AsyncSession, asset_ids: Iterable[str], city_id: str
+) -> list[Asset]:
     ids = list(asset_ids)
     if not ids:
         return []
-    res = await session.execute(select(Asset).where(Asset.asset_id.in_(ids)))
+    res = await session.execute(
+        select(Asset).where(Asset.city_id == city_id, Asset.asset_id.in_(ids))
+    )
     return list(res.scalars().all())
 
 
@@ -127,6 +132,12 @@ async def traverse_network(
     if start.asset_type == "pipe":
         node_id = _pipe_endpoint(start, direction)
         frontier_nodes = {node_id} if node_id else set()
+        # The endpoint adjacent to the starting pipe is part of the traversal.
+        adjacent_nodes = await _list_assets_by_ids(session, frontier_nodes, start.city_id)
+        for node in adjacent_nodes:
+            if node.asset_id not in visited:
+                visited.add(node.asset_id)
+                results.append(node)
     else:
         frontier_nodes = {start.asset_id}
 
@@ -137,7 +148,7 @@ async def traverse_network(
         for node_id in list(frontier_nodes):
             if not node_id:
                 continue
-            pipes = await _list_pipes_by_node(session, node_id, direction)
+            pipes = await _list_pipes_by_node(session, node_id, direction, start.city_id)
             for pipe in pipes:
                 if pipe.asset_id not in visited:
                     visited.add(pipe.asset_id)
@@ -146,7 +157,7 @@ async def traverse_network(
                 if node_next and node_next not in visited:
                     next_nodes.add(node_next)
 
-        node_assets = await _list_assets_by_ids(session, next_nodes)
+        node_assets = await _list_assets_by_ids(session, next_nodes, start.city_id)
         for node in node_assets:
             if node.asset_id not in visited:
                 visited.add(node.asset_id)

@@ -27,9 +27,15 @@ HTTP 400 (`INVALID_ARGUMENT`); time windows must have `to` after `from`.
 - `GET /cities/{city_id}/assets?near=lon,lat&radius_m=500`
 - `GET /cities/{city_id}/assets?tag=basin:basin_ne&tag=priority:critical`
 - `GET /assets/{asset_id}`
+- `GET /assets/{asset_id}/upstream?depth=2`
+- `GET /assets/{asset_id}/downstream?depth=2`
 
 Repeatable `tag=key:value` filters require every distinct tag to match (AND
 semantics). Repeating an identical filter does not change the results.
+
+Network traversal is limited to assets in the starting asset's city. When the
+starting asset is a pipe, its immediately adjacent node in the requested
+direction is included; the starting pipe itself is not repeated in the result.
 
 Asset searches using `near=lon,lat&radius_m=500` measure `radius_m` in geodesic
 metres (PostGIS geography), not projected Web Mercator metres.
