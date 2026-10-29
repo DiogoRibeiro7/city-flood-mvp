@@ -91,10 +91,10 @@ def _get_bucket(
     return bucket
 
 
-# MVP: permissive CORS for local web app
+# Local demo permits all origins; other environments require an explicit list.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -22,6 +22,8 @@ Use this checklist before production deployments or pilot rollouts.
 
 ## Application security
 
+- Browser CORS allowlist configured for deployed UI origins; no wildcard
+  outside local development (`CORS_ALLOWED_ORIGINS`)
 - Input validation at API boundaries
 - Rate limiting enabled (per-IP)
 - Dependency scan (Dependabot) enabled

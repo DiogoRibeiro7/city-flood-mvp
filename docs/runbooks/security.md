@@ -1,5 +1,16 @@
 # API Security (MVP)
 
+## Browser origins (CORS)
+- Local development (`APP_ENV=dev|development|local|test`) permits all browser
+  origins by default so the Vite demo works from `http://localhost:5173`.
+- Other environments deny cross-origin browser access by default. Set
+  `CORS_ALLOWED_ORIGINS=https://dashboard.example.com,https://admin.example.com`
+  to allow specific origins. Include the scheme and port (when applicable),
+  without paths or a trailing slash.
+- A wildcard origin (`*`) is rejected outside local development. Credentials
+  are not enabled in the CORS middleware. Browser CORS checks do not replace
+  endpoint authorization or restrict non-browser HTTP clients.
+
 ## Rate limiting
 - In-memory token bucket per client IP.
 - Defaults: 5 rps with burst 20.
