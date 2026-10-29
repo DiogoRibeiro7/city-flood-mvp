@@ -9,6 +9,20 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      test-db:
+        image: timescale/timescaledb-ha:pg16.11-ts2.25.0-all-oss
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: floodmvp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d floodmvp_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v6
 
@@ -31,6 +45,11 @@ jobs:
 
       - name: Tests
         run: poetry run pytest -q tests/unit
+
+      - name: PostgreSQL integration tests
+        env:
+          TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/floodmvp_test
+        run: poetry run pytest -q tests/integration
 
   web:
     runs-on: ubuntu-latest

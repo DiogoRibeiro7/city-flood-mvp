@@ -4,20 +4,43 @@ import os
 
 import pytest
 import sqlalchemy as sa
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from floodmvp.models.db import Base
 
 
 def _get_database_url() -> str | None:
-    return os.environ.get("TEST_DATABASE_URL") or os.environ.get("DATABASE_URL")
+    """Return an explicitly configured, unmistakably test-only PostgreSQL URL.
+
+    The integration fixture recreates application tables. Never infer its target
+    from DATABASE_URL, which may point to a running demo or real deployment.
+    """
+    database_url = os.environ.get("TEST_DATABASE_URL")
+    if not database_url:
+        return None
+
+    try:
+        url = make_url(database_url)
+    except sa.exc.ArgumentError as exc:
+        raise ValueError("TEST_DATABASE_URL must be a valid SQLAlchemy URL") from exc
+
+    database_name = url.database or ""
+    if url.get_backend_name() != "postgresql" or not (
+        database_name.startswith("test_") or database_name.endswith("_test")
+    ):
+        raise ValueError(
+            "TEST_DATABASE_URL must target a dedicated PostgreSQL test database "
+            "whose name starts with 'test_' or ends with '_test'"
+        )
+    return database_url
 
 
 @pytest.fixture()
 async def db_session() -> AsyncSession:
     database_url = _get_database_url()
     if not database_url:
-        pytest.skip("DATABASE_URL or TEST_DATABASE_URL not set")
+        pytest.skip("TEST_DATABASE_URL not set; integration tests require an isolated database")
 
     engine = create_async_engine(database_url, pool_pre_ping=True)
     async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
