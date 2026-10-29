@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import pathlib
 
-from fastapi import APIRouter, Depends, Header, Query, Request
+from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -254,13 +254,23 @@ async def analytics_calibration_recommendations(
 @router.get(
     "/analytics/calibration/overrides",
     response_model=list[CalibrationOverrideOut],
-    responses={400: RESP_INVALID_ARGUMENT},
+    responses={
+        400: RESP_INVALID_ARGUMENT,
+        401: RESP_UNAUTHORIZED_API_KEY,
+        403: RESP_FORBIDDEN_API_KEY,
+    },
 )
 async def analytics_calibration_overrides(
+    response: Response,
     city_id: str = Query(...),
     limit: int = Query(50, ge=1, le=200),
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> list[CalibrationOverrideOut]:
+    # The stored overrides include operator notes and production risk thresholds.
+    require_privileged_access(x_api_key, authorization, {"admin"})
+    response.headers["Cache-Control"] = "private, no-store"
     rows = await list_threshold_overrides(session, city_id, limit=limit)
     return [
         CalibrationOverrideOut(

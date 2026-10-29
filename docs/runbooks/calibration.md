@@ -20,6 +20,10 @@ GET /v1/analytics/calibration/recommendations?city_id=city_porto_mvp&from=2026-0
 ```
 
 ## Overrides
+Reading or writing stored overrides requires the `admin` JWT role outside
+local development. If JWT is not configured, trusted server-side clients can
+use the legacy `X-API-Key` header. Do not embed that key in a browser app.
+
 Store a threshold override for a city (applied at analytics runtime):
 
 ```
@@ -45,6 +49,7 @@ List overrides:
 ```
 GET /v1/analytics/calibration/overrides?city_id=city_porto_mvp
 ```
+Responses include operator notes and use `Cache-Control: private, no-store`.
 
 ## Notes
 - Overrides are applied by month if present, otherwise fall back to `season=all`.
