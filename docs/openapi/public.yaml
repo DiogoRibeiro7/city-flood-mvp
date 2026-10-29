@@ -225,7 +225,7 @@ paths:
                   diameter_m: 0.5
                   material: PVC
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/AssetNotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/assets/{asset_id}/upstream:
@@ -260,6 +260,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/AssetOut'
                 title: Response Asset Upstream V1 Assets  Asset Id  Upstream Get
+        '404':
+          $ref: '#/components/responses/AssetNotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/assets/{asset_id}/downstream:
@@ -294,6 +296,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/AssetOut'
                 title: Response Asset Downstream V1 Assets  Asset Id  Downstream Get
+        '404':
+          $ref: '#/components/responses/AssetNotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
   /v1/telemetry/scenarios:
@@ -1546,6 +1550,19 @@ components:
               code: NOT_FOUND
               message: Resource not found
               details: {}
+              request_id: req_example
+    AssetNotFound:
+      description: 'ASSET_NOT_FOUND: Asset not found'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: ASSET_NOT_FOUND
+              message: Asset not found
+              details:
+                asset_id: asset_missing
               request_id: req_example
     Conflict:
       description: 'CONFLICT: Conflict'
