@@ -23,13 +23,19 @@ def test_local_demo_allows_all_origins_by_default() -> None:
 @pytest.mark.parametrize("environment", ["prod", "production", "staging"])
 def test_nonlocal_environments_deny_cross_origin_by_default(environment: str) -> None:
     """Missing configuration must not silently allow arbitrary websites."""
-    assert Settings(app_env=environment, cors_allowed_origins="").cors_origins == []
+    configured = Settings(
+        app_env=environment,
+        ingest_token="test-deployment-token",
+        cors_allowed_origins="",
+    )
+    assert configured.cors_origins == []
 
 
 def test_exact_origins_are_normalized_from_environment_string() -> None:
     """Accept a comma-separated origin list without trailing whitespace."""
     configured = Settings(
         app_env="prod",
+        ingest_token="test-deployment-token",
         cors_allowed_origins=" https://dashboard.example.com, http://localhost:5173 , ",
     )
     assert configured.cors_origins == [
@@ -42,7 +48,11 @@ def test_exact_origins_are_normalized_from_environment_string() -> None:
 def test_wildcard_origin_is_rejected_outside_development(environment: str) -> None:
     """Do not permit an explicit wildcard in a deployed environment."""
     with pytest.raises(ValidationError, match="Wildcard CORS"):
-        Settings(app_env=environment, cors_allowed_origins="https://trusted.example.com, *")
+        Settings(
+            app_env=environment,
+            ingest_token="test-deployment-token",
+            cors_allowed_origins="https://trusted.example.com, *",
+        )
 
 
 @pytest.mark.parametrize(
@@ -60,7 +70,7 @@ def test_wildcard_origin_is_rejected_outside_development(environment: str) -> No
 def test_non_origin_urls_are_rejected(origin: str) -> None:
     """A browser origin contains only HTTP(S) scheme, host, and optional port."""
     with pytest.raises(ValidationError, match="Invalid CORS"):
-        Settings(app_env="prod", cors_allowed_origins=origin)
+        Settings(app_env="prod", ingest_token="test-deployment-token", cors_allowed_origins=origin)
 
 
 def test_api_uses_validated_configured_origins() -> None:
@@ -74,7 +84,11 @@ def test_api_uses_validated_configured_origins() -> None:
 @pytest.fixture()
 async def production_client() -> AsyncGenerator[AsyncClient, None]:
     """Exercise Starlette preflight behavior using the production allowlist."""
-    configured = Settings(app_env="prod", cors_allowed_origins="https://trusted.example.com")
+    configured = Settings(
+        app_env="prod",
+        ingest_token="test-deployment-token",
+        cors_allowed_origins="https://trusted.example.com",
+    )
     test_app = FastAPI()
     test_app.add_middleware(
         CORSMiddleware,

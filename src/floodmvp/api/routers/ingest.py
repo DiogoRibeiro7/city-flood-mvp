@@ -24,7 +24,8 @@ router = APIRouter(tags=["ingest"])
 
 
 def _authorize(authorization: str | None) -> None:
-    if not settings.ingest_token:
+    # Check again at request time for dynamically reconfigured deployments.
+    if not settings.ingest_auth_configured:
         raise AppError(
             code="AUTH_NOT_CONFIGURED",
             message="Ingestion authentication is not configured",

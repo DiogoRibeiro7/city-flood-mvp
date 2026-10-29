@@ -11,7 +11,9 @@ Use this checklist before production deployments or pilot rollouts.
 - Note reads and writes authenticated; note reads require at least the `viewer`
   JWT role (or the configured legacy API key when JWT is disabled)
 - Note responses marked `Cache-Control: private, no-store`
-- Ingest token rotated and stored in secrets manager
+- `INGEST_TOKEN` set to a unique deployment secret (not `dev-ingest-token`),
+  rotated and stored in a secrets manager; production startup must reject
+  missing or demo credentials
 
 ## Data protection
 

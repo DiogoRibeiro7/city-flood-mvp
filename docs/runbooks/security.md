@@ -61,6 +61,11 @@
 ## Ingest endpoint (protected)
 - Endpoint: `POST /v1/telemetry/events:batch`
 - Requires `Authorization: Bearer <INGEST_TOKEN>`.
+- The documented `dev-ingest-token` is for local use only. For staging and
+  production, set `INGEST_TOKEN` to a unique secret (for example one generated
+  with `openssl rand -hex 32`). Non-local application startup rejects a missing
+  token or the development token. The endpoint also checks this at request
+  time, failing closed if configuration changes without restarting.
 - Rotate tokens regularly; never embed in client-side code.
 - Prefer server-to-server usage behind TLS and allowlist by IP when possible.
 - Use `Idempotency-Key` to safely retry batches (7-day retention).
