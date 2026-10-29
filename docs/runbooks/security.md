@@ -53,8 +53,9 @@
   - List/read notes: `viewer`, `analyst` or `admin`.
   - Create notes: `analyst` or `admin`; delete notes: `admin`.
 - The legacy API key has no role distinction; prefer JWT for production.
-- Other read endpoints remain public. Note list/detail responses carry
-  `Cache-Control: private, no-store` to avoid caching note content.
+- Other read endpoints remain public. Note list/detail and calibration
+  override list responses carry `Cache-Control: private, no-store` to avoid
+  caching operational notes and settings.
 - Note reads and writes from the web UI use a configured JWT. Keep the legacy
   API key server-side; never expose it in a browser bundle.
 

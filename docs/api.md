@@ -34,8 +34,8 @@ Base: `/v1`
 - `GET /analytics/runs?city_id=...`
 - `GET /analytics/runs/diff?city_id=...&base_run_id=...&compare_run_id=...`
 - `GET /analytics/calibration/recommendations?city_id=...&from=...&to=...&seasonality=all|monthly`
-- `GET /analytics/calibration/overrides?city_id=...`
-- `POST /analytics/calibration/overrides`
+- `GET /analytics/calibration/overrides?city_id=...` (admin authentication outside local development; private, non-cacheable)
+- `POST /analytics/calibration/overrides` (admin authentication outside local development)
 - `POST /analytics/jobs` (export CSV + report CSV)
 - `GET /analytics/jobs/{job_id}` (job status + logs)
 - `GET /analytics/jobs/{job_id}/download`

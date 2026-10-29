@@ -96,7 +96,8 @@ The web UI sends a configured JWT on note reads and writes; do not embed an
 - `GET /v1/analytics/runs`
 - `GET /v1/analytics/runs/diff`
 - `GET /v1/analytics/calibration/recommendations`
-- `POST /v1/analytics/calibration/overrides`
+- `GET /v1/analytics/calibration/overrides` (admin authentication outside local development)
+- `POST /v1/analytics/calibration/overrides` (admin authentication outside local development)
 - `POST /v1/analytics/jobs` (export CSV + report CSV)
 - `GET /v1/analytics/jobs/{job_id}`
 - `GET /v1/analytics/jobs/{job_id}/download`
