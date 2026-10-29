@@ -10,6 +10,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.api import main as api_main
 from floodmvp.api.main import app
 from floodmvp.config.settings import settings
 from floodmvp.models.db import AnalyticsEvent, AnalyticsRun, Asset, City, Note
@@ -24,6 +25,10 @@ async def client(
     monkeypatch.setattr(settings, "app_env", "dev")
     monkeypatch.setattr(settings, "jwt_secret", None)
     monkeypatch.setattr(settings, "analytics_api_key", None)
+    # Keep this multi-request integration test from exhausting the shared
+    # in-memory request quotas for tests that run later in the same process.
+    api_main._RATE_LIMITS.clear()
+    api_main._TENANT_LIMITS.clear()
 
     async def override_session() -> AsyncIterator[AsyncSession]:
         yield db_session
@@ -34,6 +39,8 @@ async def client(
             yield api
     finally:
         app.dependency_overrides.pop(get_session, None)
+        api_main._RATE_LIMITS.clear()
+        api_main._TENANT_LIMITS.clear()
 
 
 @pytest.mark.asyncio
