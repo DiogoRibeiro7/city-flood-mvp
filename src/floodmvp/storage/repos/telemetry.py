@@ -8,7 +8,7 @@ from sqlalchemy import DateTime, Interval, bindparam, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.common.time import parse_bucket_interval
-from floodmvp.models.db import TelemetryObservation, TelemetryQaDaily
+from floodmvp.models.db import ScenarioRun, TelemetryObservation, TelemetryQaDaily
 
 ALLOWED_AGG = {"avg", "min", "max"}
 _CAGG_GRANULARITY = {"5m", "5min", "5minutes", "5 minutes"}
@@ -34,13 +34,16 @@ async def list_metrics(
 
 
 async def resolve_scenario_id(session: AsyncSession, scenario_id: str) -> str | None:
+    """Resolve ``latest`` or check that an explicitly named scenario exists."""
     if scenario_id == "latest":
-        res = await session.execute(
-            text("SELECT scenario_id FROM scenario_run ORDER BY created_at DESC LIMIT 1")
+        query = (
+            select(ScenarioRun.scenario_id)
+            .order_by(ScenarioRun.created_at.desc(), ScenarioRun.scenario_id.desc())
+            .limit(1)
         )
-        row = res.first()
-        return row[0] if row else None
-    return scenario_id
+    else:
+        query = select(ScenarioRun.scenario_id).where(ScenarioRun.scenario_id == scenario_id)
+    return await session.scalar(query)
 
 
 async def list_scenarios(session: AsyncSession) -> list[dict[str, Any]]:
