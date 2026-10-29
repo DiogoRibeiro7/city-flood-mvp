@@ -59,6 +59,27 @@ bash ./scripts/seed_all.sh
 - API docs: http://localhost:8000/docs
 - Web UI: http://localhost:5173
 
+## Tests
+
+```bash
+poetry run pytest -q tests/unit
+```
+
+The integration tests recreate application tables and therefore require a
+**separate disposable PostgreSQL/TimescaleDB database** with PostGIS available.
+They are skipped locally unless `TEST_DATABASE_URL` is set. Its database name
+must start with `test_` or end with `_test`; the fixture never falls back to
+the application `DATABASE_URL`.
+
+```bash
+TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/floodmvp_test \
+  poetry run pytest -q tests/integration
+```
+
+GitHub Actions provisions an isolated database for the integration suite as
+part of the backend job. Never point `TEST_DATABASE_URL` at a database
+containing data that you need to preserve.
+
 ## Auth (optional)
 
 JWT role enforcement is disabled by default. To enable, set:

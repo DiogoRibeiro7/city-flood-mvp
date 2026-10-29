@@ -26,6 +26,7 @@ async def app_client(db_session: AsyncSession) -> AsyncClient:
 
 async def _seed_asset(session: AsyncSession, asset_id: str = "asset_1") -> None:
     session.add(City(city_id="city_test", name="Test City", country="US"))
+    await session.flush()
     session.add(
         Asset(
             asset_id=asset_id,

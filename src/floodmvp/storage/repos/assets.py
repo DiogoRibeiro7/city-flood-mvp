@@ -96,7 +96,8 @@ async def _list_pipes_by_node(
         select(Asset)
         .where(Asset.city_id == city_id)
         .where(Asset.asset_type == "pipe")
-        .where(func.jsonb_extract_path_text(Asset.props, key) == node_id)
+        # JSON ->> works for both JSON and JSONB, including fresh test schemas.
+        .where(Asset.props[key].as_string() == node_id)
     )
     res = await session.execute(q)
     return list(res.scalars().all())

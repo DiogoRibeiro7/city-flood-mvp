@@ -29,6 +29,9 @@ async def test_network_lookup_is_scoped_to_start_city(helper: str) -> None:
     compiled = query.compile(dialect=asyncpg.dialect())
     assert "asset.city_id =" in str(compiled).lower()
     assert "city_a" in compiled.params.values()
+    if helper == "pipes":
+        assert " ->> " in str(compiled)
+        assert "jsonb_extract_path_text" not in str(compiled)
 
 
 @pytest.mark.asyncio

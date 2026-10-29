@@ -25,6 +25,7 @@ async def app_client(db_session: AsyncSession) -> AsyncClient:
 async def test_upstream_downstream_traversal(app_client: AsyncClient, db_session: AsyncSession) -> None:
     city_id = "city_graph"
     db_session.add(City(city_id=city_id, name="Graph City", country="US"))
+    await db_session.flush()
     db_session.add_all(
         [
             Asset(
@@ -95,6 +96,7 @@ async def test_pipe_endpoints_and_cross_city_links(
             City(city_id=city_b, name="Graph B", country="PT"),
         ]
     )
+    await db_session.flush()
     db_session.add_all(
         [
             Asset(
@@ -112,6 +114,7 @@ async def test_pipe_endpoints_and_cross_city_links(
             ]
         ]
     )
+    await db_session.flush()
     db_session.add_all(
         [
             Asset(
