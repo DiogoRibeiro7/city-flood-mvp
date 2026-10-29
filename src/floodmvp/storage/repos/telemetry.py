@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import datetime as dt
+import math
 from typing import Any
 
-from sqlalchemy import Interval, bindparam, func, select, text
+from sqlalchemy import DateTime, Interval, bindparam, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.common.time import parse_bucket_interval
@@ -11,6 +12,7 @@ from floodmvp.models.db import TelemetryObservation, TelemetryQaDaily
 
 ALLOWED_AGG = {"avg", "min", "max"}
 _CAGG_GRANULARITY = {"5m", "5min", "5minutes", "5 minutes"}
+_MAX_GAP_BUCKETS = 10_000
 
 
 async def list_metrics(
@@ -112,10 +114,25 @@ async def get_observations(
     bucket_interval = bindparam("bucket_interval", value=interval, type_=Interval())
 
     if include_gaps:
-        # Use Timescale gapfill to surface missing buckets as nulls.
-        bucket = func.time_bucket_gapfill(bucket_interval, TelemetryObservation.ts).label("bucket")
+        # Bound the generated grid before querying to avoid unbounded responses.
+        if math.ceil((end - start) / interval) + 1 > _MAX_GAP_BUCKETS:
+            raise ValueError(f"include_gaps supports at most {_MAX_GAP_BUCKETS} buckets")
+
+        # Generate the full grid in PostgreSQL. TimescaleDB's gapfill function
+        # is unavailable in the project's Apache-licensed OSS image.
+        first_bucket = func.time_bucket(
+            bucket_interval, bindparam("gap_start", start, type_=DateTime(timezone=True))
+        )
+        last_bucket = func.time_bucket(
+            bucket_interval,
+            bindparam("gap_end", end - dt.timedelta(microseconds=1), type_=DateTime(timezone=True)),
+        )
+        buckets = select(
+            func.generate_series(first_bucket, last_bucket, bucket_interval).label("bucket")
+        ).subquery("buckets")
+        bucket = func.time_bucket(bucket_interval, TelemetryObservation.ts).label("bucket")
         agg_fn = getattr(func, agg)(TelemetryObservation.value).label("value")
-        q_gap = (
+        observed = (
             select(bucket, agg_fn)
             .where(TelemetryObservation.asset_id == asset_id)
             .where(TelemetryObservation.metric == metric)
@@ -123,7 +140,12 @@ async def get_observations(
             .where(TelemetryObservation.ts >= start)
             .where(TelemetryObservation.ts < end)
             .group_by(bucket)
-            .order_by(bucket)
+            .subquery("observed")
+        )
+        q_gap = (
+            select(buckets.c.bucket, observed.c.value)
+            .select_from(buckets.outerjoin(observed, buckets.c.bucket == observed.c.bucket))
+            .order_by(buckets.c.bucket)
         )
         res = await session.execute(q_gap)
         return [(r[0], float(r[1]) if r[1] is not None else None) for r in res.all()]

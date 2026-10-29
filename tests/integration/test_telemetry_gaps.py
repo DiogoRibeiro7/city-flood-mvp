@@ -5,7 +5,6 @@ import datetime as dt
 import pytest
 from geoalchemy2.elements import WKTElement
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.api.main import app
@@ -26,11 +25,6 @@ async def app_client(db_session: AsyncSession) -> AsyncClient:
 
 @pytest.mark.asyncio
 async def test_observations_include_gaps(app_client: AsyncClient, db_session: AsyncSession) -> None:
-    has_gapfill = await db_session.scalar(
-        text("SELECT 1 FROM pg_proc WHERE proname = 'time_bucket_gapfill' LIMIT 1")
-    )
-    if not has_gapfill:
-        pytest.skip("time_bucket_gapfill not available")
     city_id = "city_gap"
     asset_id = "pipe_gap"
     db_session.add(City(city_id=city_id, name="Gap City", country="US"))

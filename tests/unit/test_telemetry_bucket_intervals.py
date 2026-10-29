@@ -23,9 +23,9 @@ END = START + dt.timedelta(days=1)
     ("granularity", "include_gaps", "scenario_id", "bucket_function", "expected"),
     [
         ("1h", False, None, "time_bucket(", dt.timedelta(hours=1)),
-        ("5m", True, None, "time_bucket_gapfill(", dt.timedelta(minutes=5)),
+        ("5m", True, None, "generate_series(", dt.timedelta(minutes=5)),
         ("5m", False, "scenario_1", "time_bucket(", dt.timedelta(minutes=5)),
-        ("5 minutes", True, "scenario_1", "time_bucket_gapfill(", dt.timedelta(minutes=5)),
+        ("5 minutes", True, "scenario_1", "generate_series(", dt.timedelta(minutes=5)),
     ],
 )
 async def test_observation_queries_bind_typed_bucket_intervals(
@@ -57,9 +57,22 @@ async def test_observation_queries_bind_typed_bucket_intervals(
     statement = session.execute.await_args.args[0]
     compiled = statement.compile(dialect=asyncpg.dialect())
     assert bucket_function in str(compiled)
+    assert "time_bucket_gapfill" not in str(compiled)
     assert "::INTERVAL" in str(compiled)
     assert compiled.params["bucket_interval"] == expected
     assert isinstance(compiled.binds["bucket_interval"].type, Interval)
+
+
+@pytest.mark.asyncio
+async def test_gapfilled_observations_limit_grid_size_before_database_access() -> None:
+    session = AsyncMock(spec=AsyncSession)
+
+    with pytest.raises(ValueError, match="at most 10000 buckets"):
+        await get_observations(
+            session, "pipe_1", "fill_ratio", START, END, "1s", "avg", include_gaps=True
+        )
+
+    session.execute.assert_not_awaited()
 
 
 @pytest.mark.asyncio

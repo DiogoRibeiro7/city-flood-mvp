@@ -54,6 +54,9 @@ Both observation endpoints accept positive bucket widths in seconds, minutes,
 hours or days (for example `5m`, `1h`, `1d`), up to 30 days. Invalid widths
 return HTTP 400 (`INVALID_ARGUMENT`). The database receives validated, typed
 PostgreSQL intervals for raw and gap-filled aggregation queries.
+Gap-filled queries use PostgreSQL `generate_series` with TimescaleDB `time_bucket`
+to include empty buckets as nulls; they work with the OSS image and are capped
+at 10,000 buckets per request.
 
 ## Analytics
 - `GET /cities/{city_id}/status`
