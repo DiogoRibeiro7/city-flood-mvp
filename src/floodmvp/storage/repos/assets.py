@@ -88,16 +88,21 @@ def _pipe_endpoint(pipe: Asset, direction: str) -> str | None:
     return str(val) if val else None
 
 
-async def _list_pipes_by_node(
-    session: AsyncSession, node_id: str, direction: str, city_id: str
+async def _list_pipes_by_nodes(
+    session: AsyncSession, node_ids: Iterable[str], direction: str, city_id: str
 ) -> list[Asset]:
+    """Fetch pipes adjacent to an entire traversal frontier in one query."""
+    ids = sorted(set(node_ids))
+    if not ids:
+        return []
     key = "downstream_node_id" if direction == "upstream" else "upstream_node_id"
     q = (
         select(Asset)
         .where(Asset.city_id == city_id)
         .where(Asset.asset_type == "pipe")
         # JSON ->> works for both JSON and JSONB, including fresh test schemas.
-        .where(Asset.props[key].as_string() == node_id)
+        .where(Asset.props[key].as_string().in_(ids))
+        .order_by(Asset.asset_id)
     )
     res = await session.execute(q)
     return list(res.scalars().all())
@@ -106,11 +111,13 @@ async def _list_pipes_by_node(
 async def _list_assets_by_ids(
     session: AsyncSession, asset_ids: Iterable[str], city_id: str
 ) -> list[Asset]:
-    ids = list(asset_ids)
+    ids = sorted(set(asset_ids))
     if not ids:
         return []
     res = await session.execute(
-        select(Asset).where(Asset.city_id == city_id, Asset.asset_id.in_(ids))
+        select(Asset)
+        .where(Asset.city_id == city_id, Asset.asset_id.in_(ids))
+        .order_by(Asset.asset_id)
     )
     return list(res.scalars().all())
 
@@ -146,17 +153,14 @@ async def traverse_network(
         if not frontier_nodes:
             break
         next_nodes: set[str] = set()
-        for node_id in list(frontier_nodes):
-            if not node_id:
-                continue
-            pipes = await _list_pipes_by_node(session, node_id, direction, start.city_id)
-            for pipe in pipes:
-                if pipe.asset_id not in visited:
-                    visited.add(pipe.asset_id)
-                    results.append(pipe)
-                node_next = _pipe_endpoint(pipe, direction)
-                if node_next and node_next not in visited:
-                    next_nodes.add(node_next)
+        pipes = await _list_pipes_by_nodes(session, frontier_nodes, direction, start.city_id)
+        for pipe in pipes:
+            if pipe.asset_id not in visited:
+                visited.add(pipe.asset_id)
+                results.append(pipe)
+            node_next = _pipe_endpoint(pipe, direction)
+            if node_next and node_next not in visited:
+                next_nodes.add(node_next)
 
         node_assets = await _list_assets_by_ids(session, next_nodes, start.city_id)
         for node in node_assets:
