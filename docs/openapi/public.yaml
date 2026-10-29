@@ -109,9 +109,9 @@ paths:
           anyOf:
           - type: string
           - type: 'null'
-          description: minLon,minLat,maxLon,maxLat
+          description: minLon,minLat,maxLon,maxLat (WGS84, non-wrapping extent)
           title: Bbox
-        description: minLon,minLat,maxLon,maxLat
+        description: minLon,minLat,maxLon,maxLat (WGS84, non-wrapping extent)
       - name: near
         in: query
         required: false
@@ -119,9 +119,9 @@ paths:
           anyOf:
           - type: string
           - type: 'null'
-          description: lon,lat for radial search
+          description: WGS84 lon,lat for radial search
           title: Near
-        description: lon,lat for radial search
+        description: WGS84 lon,lat for radial search
       - name: radius_m
         in: query
         required: false
