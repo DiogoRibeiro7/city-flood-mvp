@@ -163,3 +163,54 @@ async def test_pipe_endpoints_and_cross_city_links(
     assert downstream.status_code == 200
     # The same-city pipe may appear, but its other-city endpoint must not.
     assert {a["asset_id"] for a in downstream.json()} == {"scope_bridge"}
+
+
+@pytest.mark.asyncio
+async def test_branching_network_returns_stable_layers_without_cycle_duplicates(
+    app_client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Batched traversal keeps depth order and emits shared nodes only once."""
+    city_id = "city_graph_branching"
+    db_session.add(City(city_id=city_id, name="Branching City", country="PT"))
+    await db_session.flush()
+
+    nodes = [
+        Asset(
+            asset_id=f"branch_n{index}",
+            city_id=city_id,
+            asset_type="node",
+            name=f"Node {index}",
+            geom=WKTElement("POINT(-8.61 41.15)", srid=4326),
+            props={},
+        )
+        for index in range(4)
+    ]
+    links = [
+        ("branch_pz", "branch_n0", "branch_n2"),
+        ("branch_pa", "branch_n0", "branch_n1"),
+        ("branch_pb", "branch_n1", "branch_n3"),
+        ("branch_pc", "branch_n2", "branch_n3"),
+        ("branch_pd", "branch_n3", "branch_n0"),
+    ]
+    pipes = [
+        Asset(
+            asset_id=pipe_id,
+            city_id=city_id,
+            asset_type="pipe",
+            name=pipe_id,
+            geom=WKTElement("LINESTRING(-8.61 41.15, -8.62 41.16)", srid=4326),
+            props={"upstream_node_id": upstream, "downstream_node_id": downstream},
+        )
+        for pipe_id, upstream, downstream in links
+    ]
+    db_session.add_all([*nodes, *pipes])
+    await db_session.commit()
+
+    expected_ids = [
+        "branch_pa", "branch_pz", "branch_n1", "branch_n2",
+        "branch_pb", "branch_pc", "branch_n3", "branch_pd",
+    ]
+    for _ in range(2):
+        response = await app_client.get("/v1/assets/branch_n0/downstream?depth=3")
+        assert response.status_code == 200
+        assert [row["asset_id"] for row in response.json()] == expected_ids
