@@ -202,6 +202,7 @@ async def add_request_id(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
     started_at = time.perf_counter()
+    deadline = asyncio.get_running_loop().time() + settings.request_timeout_s
     response: Response
     request_id = request.headers.get("x-request-id") or f"req_{uuid.uuid4().hex}"
     request.state.request_id = request_id
@@ -250,23 +251,23 @@ async def add_request_id(
                 request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
             )
 
-    # Check streamed bytes, even when Content-Length understates the body size.
-    if await _body_exceeds_limit(request, settings.request_max_bytes):
-        response = JSONResponse(
-            status_code=413,
-            content=as_error_payload_raw(
-                code="REQUEST_TOO_LARGE",
-                message="Request body too large",
-                details={"max_bytes": settings.request_max_bytes},
-                request_id=request_id,
-            ),
-        )
-        return _finish_request(
-            request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
-        )
-
     try:
-        response = await asyncio.wait_for(call_next(request), timeout=settings.request_timeout_s)
+        # A single deadline covers both streamed uploads and the downstream
+        # handler. Resetting the timer after the upload permits slow clients to
+        # hold connections open for longer than REQUEST_TIMEOUT_S.
+        async with asyncio.timeout_at(deadline):
+            if await _body_exceeds_limit(request, settings.request_max_bytes):
+                response = JSONResponse(
+                    status_code=413,
+                    content=as_error_payload_raw(
+                        code="REQUEST_TOO_LARGE",
+                        message="Request body too large",
+                        details={"max_bytes": settings.request_max_bytes},
+                        request_id=request_id,
+                    ),
+                )
+            else:
+                response = await call_next(request)
     except TimeoutError:
         response = JSONResponse(
             status_code=504,

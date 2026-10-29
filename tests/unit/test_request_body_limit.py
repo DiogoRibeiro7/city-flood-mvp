@@ -110,3 +110,10 @@ def test_body_limit_must_be_positive() -> None:
     """Invalid size limits must fail during application configuration."""
     with pytest.raises(ValidationError):
         Settings(request_max_bytes=0)
+
+
+@pytest.mark.parametrize("timeout_s", [0.0, -1.0])
+def test_request_timeout_must_be_positive(timeout_s: float) -> None:
+    """Invalid deadlines must be caught when loading configuration."""
+    with pytest.raises(ValidationError):
+        Settings(request_timeout_s=timeout_s)
