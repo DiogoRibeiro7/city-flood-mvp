@@ -17,6 +17,10 @@
 
 ## Request limits
 - Max request size: 1 MB (`REQUEST_MAX_BYTES`).
+- The API rejects declared oversize bodies before reading them and enforces
+  the limit against the actual streamed bytes, including absent, invalid or
+  understated `Content-Length` headers. Accepted bodies are replayed to their
+  endpoints for normal JSON parsing. This limit is per API process.
 - Request timeout: 10s (`REQUEST_TIMEOUT_S`).
 
 ## API keys (analytics)

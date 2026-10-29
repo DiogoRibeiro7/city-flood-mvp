@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     rate_limit_bucket_capacity: int = Field(default=4096, ge=1)
     tenant_quota_rps: float = 8.0
     tenant_quota_burst: int = 40
-    request_max_bytes: int = 1_000_000
+    request_max_bytes: int = Field(default=1_000_000, ge=1)
     request_timeout_s: float = 10.0
 
     analytics_version: str = "v1"
