@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Header, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.api.openapi_examples import error_response
 from floodmvp.common.auth import require_privileged_access
 from floodmvp.common.errors import AppError
 from floodmvp.models.domain import NoteIn, NoteOut
@@ -76,7 +77,16 @@ async def note(
     )
 
 
-@router.post("/notes", response_model=NoteOut)
+@router.post(
+    "/notes",
+    response_model=NoteOut,
+    responses={
+        404: {
+            **error_response(code="ASSET_NOT_FOUND", message="Asset not found in city"),
+            "description": "City, asset or event does not exist in the requested city",
+        }
+    },
+)
 async def create(
     payload: NoteIn,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
