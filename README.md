@@ -131,3 +131,7 @@ See `docs/deployment/backup_restore_drills.md` for RTO/RPO targets and drill che
 ## Security review
 
 See `docs/deployment/security_checklist.md` for the security checklist and compliance notes.
+For deployments outside local development, set `APP_ENV=prod` and configure
+`JWT_SECRET` (recommended) or `ANALYTICS_API_KEY`. Privileged endpoints return
+503 if neither credential is configured. The default `APP_ENV=dev` is for
+local demonstrations only.

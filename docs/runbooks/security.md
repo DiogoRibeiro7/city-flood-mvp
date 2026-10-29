@@ -10,8 +10,21 @@
 - Request timeout: 10s (`REQUEST_TIMEOUT_S`).
 
 ## API keys (analytics)
-- Heavy analytics endpoints require `X-API-Key` when `ANALYTICS_API_KEY` is set.
-- Endpoints: `/v1/analytics/jobs`, `/v1/analytics/jobs/{job_id}/download`.
+- Privileged endpoints require JWT authentication when `JWT_SECRET` is set.
+  JWT roles are checked server-side. The legacy `X-API-Key` is accepted only
+  when JWT is not configured.
+- Outside `APP_ENV=dev|development|local|test`, missing both credentials makes
+  privileged endpoints return HTTP 503 (`AUTH_NOT_CONFIGURED`). This avoids
+  silently exposing administrative operations in staging or production.
+- Anonymous access without configured credentials is retained for local demos
+  only. Never deploy with a development `APP_ENV` on a public network.
+- Protected operations:
+  - Analytics/report job creation, status and downloads: `analyst` or `admin`.
+  - Calibration overrides and job queue administration: `admin`.
+  - Create notes: `analyst` or `admin`; delete notes: `admin`.
+- The legacy API key has no role distinction; prefer JWT for production.
+- Public read endpoints, including note reads, remain unauthenticated. Do not
+  store sensitive content in notes without adding read authorization.
 
 ## Ingest endpoint (protected)
 - Endpoint: `POST /v1/telemetry/events:batch`

@@ -184,7 +184,7 @@ export async function createNote(payload: {
 }): Promise<Note> {
   const r = await fetch(`${API_BASE}/v1/notes`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(payload),
   });
   if (!r.ok) throw new Error(`create note: ${r.status}`);
@@ -192,7 +192,10 @@ export async function createNote(payload: {
 }
 
 export async function deleteNote(noteId: string) {
-  const r = await fetch(`${API_BASE}/v1/notes/${noteId}`, { method: "DELETE" });
+  const r = await fetch(`${API_BASE}/v1/notes/${noteId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
   if (!r.ok) throw new Error(`delete note: ${r.status}`);
   return r.json();
 }

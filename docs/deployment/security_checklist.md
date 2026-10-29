@@ -6,6 +6,9 @@ Use this checklist before production deployments or pilot rollouts.
 
 - JWT auth enabled for report/export jobs and admin endpoints
 - Roles validated server-side (`admin`, `analyst`, `viewer`)
+- `APP_ENV=prod` (or other non-development setting), with `JWT_SECRET`
+  configured; without JWT or `ANALYTICS_API_KEY`, privileged requests return 503
+- Note writes authenticated; note reads are public until separately secured
 - Ingest token rotated and stored in secrets manager
 
 ## Data protection

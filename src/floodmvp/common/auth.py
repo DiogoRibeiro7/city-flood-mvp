@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hmac
 import importlib
 from dataclasses import dataclass
 from typing import Any, cast
@@ -120,3 +121,35 @@ def require_roles(user: AuthUser, allowed: set[str]) -> None:
     if any(r in allowed for r in user.roles):
         return
     raise AppError(code="FORBIDDEN", message="Insufficient role", status_code=403)
+
+
+def require_privileged_access(
+    x_api_key: str | None,
+    authorization: str | None,
+    allowed_roles: set[str],
+) -> None:
+    """Authorize write/admin operations without silently opening production APIs.
+
+    JWT takes precedence over the legacy API key and enforces roles. In local
+    development only, anonymous access remains available for the demo UI.
+    Other environments require an explicitly configured authentication method.
+    """
+    if settings.jwt_secret:
+        user = get_current_user(authorization)
+        require_roles(user, allowed_roles)
+        return
+
+    if settings.analytics_api_key:
+        if not x_api_key:
+            raise AppError(code="UNAUTHORIZED", message="Missing API key", status_code=401)
+        if not hmac.compare_digest(x_api_key, settings.analytics_api_key):
+            raise AppError(code="FORBIDDEN", message="Invalid API key", status_code=403)
+        return
+
+    if settings.app_env.strip().lower() in {"dev", "development", "local", "test"}:
+        return
+    raise AppError(
+        code="AUTH_NOT_CONFIGURED",
+        message="Authentication must be configured for privileged API operations",
+        status_code=503,
+    )
