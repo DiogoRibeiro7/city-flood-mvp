@@ -11,6 +11,7 @@ from floodmvp.api.openapi_examples import (
     RESP_FORBIDDEN_API_KEY,
     RESP_INVALID_ARGUMENT,
     RESP_UNAUTHORIZED_API_KEY,
+    error_response,
 )
 from floodmvp.api.validation import parse_query_timestamp
 from floodmvp.common.auth import require_privileged_access
@@ -289,7 +290,10 @@ async def analytics_calibration_overrides(
 @router.post(
     "/analytics/calibration/overrides",
     response_model=CalibrationOverrideOut,
-    responses={400: RESP_INVALID_ARGUMENT},
+    responses={
+        400: RESP_INVALID_ARGUMENT,
+        404: error_response(code="CITY_NOT_FOUND", message="City not found"),
+    },
 )
 async def analytics_calibration_override_create(
     payload: CalibrationOverrideIn,

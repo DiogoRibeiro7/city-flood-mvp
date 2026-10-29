@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 AssetType = Literal[
     "river_segment",
@@ -237,6 +237,34 @@ class CalibrationThresholds(BaseModel):
     risk_fill_warning: float | None = None
 
 
+class CalibrationOverrideThresholds(CalibrationThresholds):
+    """Validate user-supplied thresholds without constraining historical outputs.
+
+    Flood-risk values can exceed 1.0 (some city defaults do), so only enforce
+    finite, nonnegative quantities and positive duration windows here.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    rain_event_threshold_mmph: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    rain_event_min_duration_minutes: int | None = Field(default=None, ge=1)
+    overflow_fill_threshold: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    overflow_min_duration_minutes: int | None = Field(default=None, ge=1)
+    risk_fill_watch: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    risk_fill_warning: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def validate_risk_order(self) -> CalibrationOverrideThresholds:
+        """Reject inverted watch/warning levels when both are supplied."""
+        if (
+            self.risk_fill_watch is not None
+            and self.risk_fill_warning is not None
+            and self.risk_fill_watch > self.risk_fill_warning
+        ):
+            raise ValueError("risk_fill_watch must not exceed risk_fill_warning")
+        return self
+
+
 class CalibrationRecommendationOut(BaseModel):
     city_id: str
     from_ts: dt.datetime
@@ -248,7 +276,7 @@ class CalibrationRecommendationOut(BaseModel):
 class CalibrationOverrideIn(BaseModel):
     city_id: str
     season: str = "all"
-    thresholds: CalibrationThresholds
+    thresholds: CalibrationOverrideThresholds
     notes: str | None = None
 
 
