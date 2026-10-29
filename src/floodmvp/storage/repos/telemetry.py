@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import math
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import DateTime, Interval, bindparam, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,7 +43,8 @@ async def resolve_scenario_id(session: AsyncSession, scenario_id: str) -> str | 
         )
     else:
         query = select(ScenarioRun.scenario_id).where(ScenarioRun.scenario_id == scenario_id)
-    return await session.scalar(query)
+    # SQLAlchemy's async scalar method is typed as Any by some mypy versions.
+    return cast(str | None, await session.scalar(query))
 
 
 async def list_scenarios(session: AsyncSession) -> list[dict[str, Any]]:
