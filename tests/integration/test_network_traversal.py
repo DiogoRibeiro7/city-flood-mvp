@@ -80,3 +80,83 @@ async def test_upstream_downstream_traversal(app_client: AsyncClient, db_session
     assert res_down.status_code == 200
     downstream_ids = {a["asset_id"] for a in res_down.json()}
     assert downstream_ids == {"p1", "n2", "p2", "n3"}
+
+
+@pytest.mark.asyncio
+async def test_pipe_endpoints_and_cross_city_links(
+    app_client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """Traversal includes direct pipe endpoints without escaping the starting city."""
+    city_a = "city_graph_scope_a"
+    city_b = "city_graph_scope_b"
+    db_session.add_all(
+        [
+            City(city_id=city_a, name="Graph A", country="PT"),
+            City(city_id=city_b, name="Graph B", country="PT"),
+        ]
+    )
+    db_session.add_all(
+        [
+            Asset(
+                asset_id=asset_id,
+                city_id=city_id,
+                asset_type="node",
+                name=asset_id,
+                geom=WKTElement("POINT(-8.61 41.15)", srid=4326),
+                props={},
+            )
+            for asset_id, city_id in [
+                ("scope_n1", city_a),
+                ("scope_n2", city_a),
+                ("scope_other_node", city_b),
+            ]
+        ]
+    )
+    db_session.add_all(
+        [
+            Asset(
+                asset_id="scope_pipe",
+                city_id=city_a,
+                asset_type="pipe",
+                name="Pipe A",
+                geom=WKTElement("LINESTRING(-8.61 41.15, -8.62 41.16)", srid=4326),
+                props={"upstream_node_id": "scope_n1", "downstream_node_id": "scope_n2"},
+            ),
+            Asset(
+                asset_id="scope_foreign_pipe",
+                city_id=city_b,
+                asset_type="pipe",
+                name="Cross-city pipe",
+                geom=WKTElement("LINESTRING(-8.61 41.15, -8.62 41.16)", srid=4326),
+                props={
+                    "upstream_node_id": "scope_other_node",
+                    "downstream_node_id": "scope_n2",
+                },
+            ),
+            Asset(
+                asset_id="scope_bridge",
+                city_id=city_a,
+                asset_type="pipe",
+                name="Pipe with foreign endpoint",
+                geom=WKTElement("LINESTRING(-8.61 41.15, -8.62 41.16)", srid=4326),
+                props={
+                    "upstream_node_id": "scope_n2",
+                    "downstream_node_id": "scope_other_node",
+                },
+            ),
+        ]
+    )
+    await db_session.commit()
+
+    up_from_pipe = await app_client.get("/v1/assets/scope_pipe/upstream?depth=1")
+    assert up_from_pipe.status_code == 200
+    assert {a["asset_id"] for a in up_from_pipe.json()} == {"scope_n1"}
+
+    upstream = await app_client.get("/v1/assets/scope_n2/upstream?depth=1")
+    assert upstream.status_code == 200
+    assert {a["asset_id"] for a in upstream.json()} == {"scope_pipe", "scope_n1"}
+
+    downstream = await app_client.get("/v1/assets/scope_n2/downstream?depth=1")
+    assert downstream.status_code == 200
+    # The same-city pipe may appear, but its other-city endpoint must not.
+    assert {a["asset_id"] for a in downstream.json()} == {"scope_bridge"}
