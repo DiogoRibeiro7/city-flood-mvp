@@ -2,6 +2,10 @@
 
 Base: `/v1`
 
+Endpoints with `from` and `to` query parameters accept ISO 8601 timestamps
+(including UTC `Z` and explicit time-zone offsets). Invalid timestamps return
+HTTP 400 (`INVALID_ARGUMENT`); time windows must have `to` after `from`.
+
 ## OpenAPI snapshot
 - Generate: `python scripts/export_openapi.py`
 - Output: `docs/openapi/public.yaml`

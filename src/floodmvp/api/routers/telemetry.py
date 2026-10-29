@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.api.openapi_examples import RESP_INVALID_ARGUMENT, error_response
+from floodmvp.api.validation import parse_query_timestamp
 from floodmvp.common.errors import AppError
-from floodmvp.common.time import parse_iso8601
 from floodmvp.models.domain import (
     ObservationDeltaOut,
     ObservationOut,
@@ -147,8 +147,8 @@ async def observations(
     scenario_id: str | None = Query(default=None, description="scenario id or 'latest'"),
     session: AsyncSession = Depends(get_session),
 ) -> ObservationsOut:
-    start = parse_iso8601(from_ts)
-    end = parse_iso8601(to_ts)
+    start = parse_query_timestamp(from_ts, "from")
+    end = parse_query_timestamp(to_ts, "to")
     if end <= start:
         raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
 
@@ -220,8 +220,8 @@ async def observations_compare(
     compare_scenario_id: str = Query(..., description="scenario id or 'latest'"),
     session: AsyncSession = Depends(get_session),
 ) -> ScenarioCompareOut:
-    start = parse_iso8601(from_ts)
-    end = parse_iso8601(to_ts)
+    start = parse_query_timestamp(from_ts, "from")
+    end = parse_query_timestamp(to_ts, "to")
     if end <= start:
         raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
 

@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.api.openapi_examples import error_response
-from floodmvp.common.time import parse_iso8601
+from floodmvp.api.validation import parse_query_timestamp
+from floodmvp.common.errors import AppError
 from floodmvp.models.domain import EventOut
 from floodmvp.storage.db import get_session
 from floodmvp.storage.repos.analytics import list_events
@@ -50,11 +51,9 @@ async def events(
     offset: int = Query(0, ge=0),
     session: AsyncSession = Depends(get_session),
 ) -> list[EventOut]:
-    start = parse_iso8601(from_ts)
-    end = parse_iso8601(to_ts)
+    start = parse_query_timestamp(from_ts, "from")
+    end = parse_query_timestamp(to_ts, "to")
     if end <= start:
-        from floodmvp.common.errors import AppError
-
         raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
     rows = await list_events(session, city_id, type, start, end, limit, offset, run_id=run_id)
     return [
