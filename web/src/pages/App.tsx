@@ -250,26 +250,53 @@ export default function App() {
   }, [cityId, rangeHours, eventType]);
 
   useEffect(() => {
+    // Discard notes from the previous city or token before loading another scope.
+    setNotes([]);
     if (!cityId) return;
-    fetchNotes(cityId)
-      .then(setNotes)
-      .catch((err) => {
-        setErrorMsg(err?.message ?? "Failed to load notes");
-        console.error(err);
-      });
-  }, [cityId]);
+    let active = true;
+    // Token edits are saved on every keystroke; wait until input settles.
+    const handle = window.setTimeout(() => {
+      fetchNotes(cityId)
+        .then((rows) => {
+          if (active) setNotes(rows);
+        })
+        .catch((err) => {
+          if (!active) return;
+          setErrorMsg(err?.message ?? "Failed to load notes");
+          console.error(err);
+        });
+    }, 250);
+    return () => {
+      active = false;
+      window.clearTimeout(handle);
+    };
+  }, [cityId, jwtToken]);
 
   useEffect(() => {
     if (!activeNoteId) return;
     const exists = notes.some((n) => n.note_id === activeNoteId);
     if (exists) return;
-    fetchNote(activeNoteId)
-      .then((note) => setNotes((prev) => [note, ...prev]))
-      .catch((err) => {
-        setErrorMsg(err?.message ?? "Failed to load shared note");
-        console.error(err);
-      });
-  }, [activeNoteId, notes]);
+    let active = true;
+    const handle = window.setTimeout(() => {
+      fetchNote(activeNoteId)
+        .then((note) => {
+          if (active) {
+            setNotes((prev) =>
+              prev.some((n) => n.note_id === note.note_id) ? prev : [note, ...prev]
+            );
+          }
+        })
+        .catch((err) => {
+          if (!active) return;
+          setErrorMsg(err?.message ?? "Failed to load shared note");
+          console.error(err);
+        });
+    }, 250);
+    return () => {
+      active = false;
+      window.clearTimeout(handle);
+    };
+  }, [activeNoteId, notes, jwtToken]);
 
   useEffect(() => {
     if (!selected) return;

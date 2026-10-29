@@ -28,12 +28,14 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 
     app.dependency_overrides[get_session] = fake_session
     api_main._RATE_LIMITS.clear()
+    api_main._TENANT_LIMITS.clear()
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
             yield http
     finally:
         app.dependency_overrides.clear()
         api_main._RATE_LIMITS.clear()
+        api_main._TENANT_LIMITS.clear()
 
 
 @pytest.fixture()
@@ -73,6 +75,8 @@ def production_without_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
             "/v1/notes",
             {"city_id": "city_porto_mvp", "title": "Incident", "body": "Check drain"},
         ),
+        ("GET", "/v1/notes?city_id=city_porto_mvp", None),
+        ("GET", "/v1/notes/note_123", None),
         ("DELETE", "/v1/notes/note_123", None),
     ],
 )
@@ -120,9 +124,7 @@ async def test_api_key_fallback_enforces_authentication(
 
     missing = await client.get("/v1/jobs/queue")
     invalid = await client.get("/v1/jobs/queue", headers={"X-API-Key": "wrong"})
-    accepted = await client.get(
-        "/v1/jobs/queue", headers={"X-API-Key": "sample-strong-key"}
-    )
+    accepted = await client.get("/v1/jobs/queue", headers={"X-API-Key": "sample-strong-key"})
 
     assert missing.status_code == 401
     assert invalid.status_code == 403
@@ -237,3 +239,123 @@ async def test_authorized_note_writes_enforce_analyst_and_admin_roles(
     assert created.status_code == 200
     assert created.json()["note_id"] == "note_123"
     assert deleted.status_code == 200
+
+
+def sample_note() -> SimpleNamespace:
+    """Provide a repository row with the fields exposed by NoteOut."""
+    now = dt.datetime(2026, 10, 28, tzinfo=dt.UTC)
+    return SimpleNamespace(
+        note_id="note_123",
+        city_id="city_porto_mvp",
+        asset_id=None,
+        event_id=None,
+        title="Inspection",
+        body="Check inlet",
+        author="Ops",
+        created_at=now,
+        updated_at=now,
+    )
+
+
+@pytest.mark.asyncio
+async def test_local_demo_allows_anonymous_note_reads(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "app_env", "dev")
+    monkeypatch.setattr(settings, "jwt_secret", None)
+    monkeypatch.setattr(settings, "analytics_api_key", None)
+
+    async def fake_list_notes(*args: Any, **kwargs: Any) -> list[SimpleNamespace]:
+        return [sample_note()]
+
+    async def fake_get_note(*args: Any, **kwargs: Any) -> SimpleNamespace:
+        return sample_note()
+
+    monkeypatch.setattr(notes_router, "list_notes", fake_list_notes)
+    monkeypatch.setattr(notes_router, "get_note", fake_get_note)
+
+    listed = await client.get("/v1/notes?city_id=city_porto_mvp")
+    detail = await client.get("/v1/notes/note_123")
+
+    assert listed.status_code == detail.status_code == 200
+    assert listed.json()[0]["note_id"] == detail.json()["note_id"] == "note_123"
+    assert listed.headers["cache-control"] == "private, no-store"
+    assert detail.headers["cache-control"] == "private, no-store"
+
+
+@pytest.mark.asyncio
+async def test_production_note_reads_require_jwt_and_viewer_role(
+    client: AsyncClient, production_without_credentials: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    secret = "test-jwt-signing-secret-at-least-32-bytes"
+    monkeypatch.setattr(settings, "jwt_secret", secret)
+    monkeypatch.setattr(settings, "analytics_api_key", "fallback-key")
+    monkeypatch.setattr(settings, "jwt_audience", None)
+    monkeypatch.setattr(settings, "jwt_issuer", None)
+    calls = 0
+
+    async def fake_list_notes(*args: Any, **kwargs: Any) -> list[SimpleNamespace]:
+        nonlocal calls
+        calls += 1
+        return [sample_note()]
+
+    async def fake_get_note(*args: Any, **kwargs: Any) -> SimpleNamespace:
+        nonlocal calls
+        calls += 1
+        return sample_note()
+
+    monkeypatch.setattr(notes_router, "list_notes", fake_list_notes)
+    monkeypatch.setattr(notes_router, "get_note", fake_get_note)
+
+    def bearer(role: str) -> dict[str, str]:
+        token = jwt.encode({"sub": "tester", "roles": [role]}, secret, algorithm="HS256")
+        return {"Authorization": f"Bearer {token}"}
+
+    list_path = "/v1/notes?city_id=city_porto_mvp"
+    assert (await client.get(list_path)).status_code == 401
+    assert (await client.get(list_path, headers={"X-API-Key": "fallback-key"})).status_code == 401
+    assert (await client.get(list_path, headers=bearer("auditor"))).status_code == 403
+    assert (await client.get("/v1/notes/note_123")).status_code == 401
+    assert calls == 0  # Authorization must precede repository access.
+
+    for role in ("viewer", "analyst", "admin"):
+        listed = await client.get(list_path, headers=bearer(role))
+        assert listed.status_code == 200
+        assert listed.json()[0]["author"] == "Ops"
+        assert listed.headers["cache-control"] == "private, no-store"
+
+    detail = await client.get("/v1/notes/note_123", headers=bearer("viewer"))
+    assert detail.status_code == 200
+    assert detail.json()["body"] == "Check inlet"
+    assert detail.headers["cache-control"] == "private, no-store"
+    assert calls == 4
+
+
+@pytest.mark.asyncio
+async def test_production_note_reads_allow_legacy_api_key(
+    client: AsyncClient, production_without_credentials: None, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "analytics_api_key", "sample-strong-key")
+
+    async def fake_list_notes(*args: Any, **kwargs: Any) -> list[SimpleNamespace]:
+        return [sample_note()]
+
+    async def fake_get_note(*args: Any, **kwargs: Any) -> SimpleNamespace | None:
+        return sample_note() if args[1] == "note_123" else None
+
+    monkeypatch.setattr(notes_router, "list_notes", fake_list_notes)
+    monkeypatch.setattr(notes_router, "get_note", fake_get_note)
+
+    path = "/v1/notes?city_id=city_porto_mvp"
+    assert (await client.get(path)).status_code == 401
+    assert (await client.get(path, headers={"X-API-Key": "invalid"})).status_code == 403
+
+    headers = {"X-API-Key": "sample-strong-key"}
+    listed = await client.get(path, headers=headers)
+    detail = await client.get("/v1/notes/note_123", headers=headers)
+    missing = await client.get("/v1/notes/missing", headers=headers)
+
+    assert listed.status_code == detail.status_code == 200
+    assert listed.json()[0]["title"] == detail.json()["title"] == "Inspection"
+    assert missing.status_code == 404
+    assert missing.json()["error"]["code"] == "NOTE_NOT_FOUND"

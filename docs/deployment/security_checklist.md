@@ -8,7 +8,9 @@ Use this checklist before production deployments or pilot rollouts.
 - Roles validated server-side (`admin`, `analyst`, `viewer`)
 - `APP_ENV=prod` (or other non-development setting), with `JWT_SECRET`
   configured; without JWT or `ANALYTICS_API_KEY`, privileged requests return 503
-- Note writes authenticated; note reads are public until separately secured
+- Note reads and writes authenticated; note reads require at least the `viewer`
+  JWT role (or the configured legacy API key when JWT is disabled)
+- Note responses marked `Cache-Control: private, no-store`
 - Ingest token rotated and stored in secrets manager
 
 ## Data protection

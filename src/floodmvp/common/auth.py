@@ -54,7 +54,9 @@ def _decode_token(token: str) -> dict[str, Any]:
             status_code=500,
         )
     if not settings.jwt_secret:
-        raise AppError(code="AUTH_NOT_CONFIGURED", message="JWT auth not configured", status_code=500)
+        raise AppError(
+            code="AUTH_NOT_CONFIGURED", message="JWT auth not configured", status_code=500
+        )
     options: dict[str, object] = {
         "verify_signature": True,
         "verify_aud": bool(settings.jwt_audience),
@@ -100,7 +102,9 @@ def extract_tenant(claims: dict[str, Any]) -> str | None:
     return str(raw).strip() or None
 
 
-def get_current_user(authorization: str | None = Header(default=None, alias="Authorization")) -> AuthUser:
+def get_current_user(
+    authorization: str | None = Header(default=None, alias="Authorization"),
+) -> AuthUser:
     if not authorization or not authorization.startswith("Bearer "):
         raise AppError(code="UNAUTHORIZED", message="Missing bearer token", status_code=401)
     token = authorization.removeprefix("Bearer ").strip()
@@ -128,7 +132,7 @@ def require_privileged_access(
     authorization: str | None,
     allowed_roles: set[str],
 ) -> None:
-    """Authorize write/admin operations without silently opening production APIs.
+    """Authorize protected endpoints without silently opening production APIs.
 
     JWT takes precedence over the legacy API key and enforces roles. In local
     development only, anonymous access remains available for the demo UI.
