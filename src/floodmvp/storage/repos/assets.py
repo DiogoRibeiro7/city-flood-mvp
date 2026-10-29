@@ -61,11 +61,14 @@ async def list_assets(
             )
         )
     if tags:
+        # Repeating a filter does not require an asset to hold the same tag twice.
+        # The (asset_id, key, value) primary key makes matching tag rows unique.
+        unique_tags = list(dict.fromkeys(tags))
         tag_subq = (
             select(AssetTag.asset_id)
-            .where(sql_tuple(AssetTag.key, AssetTag.value).in_(tags))
+            .where(sql_tuple(AssetTag.key, AssetTag.value).in_(unique_tags))
             .group_by(AssetTag.asset_id)
-            .having(func.count(func.distinct(func.concat(AssetTag.key, ":", AssetTag.value))) == len(tags))
+            .having(func.count() == len(unique_tags))
         )
         q = q.where(Asset.asset_id.in_(tag_subq))
     q = q.order_by(Asset.asset_id).offset(offset).limit(limit)
