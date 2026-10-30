@@ -38,7 +38,11 @@ interpreter. The host runner itself uses only the standard library.
    queued analytics job completes. This step uses the scheduler's current-time
    window, which may contain no fixture observations; it verifies scheduling and
    execution, not current hydrological coverage or detector accuracy.
-7. Save diagnostics and remove this run's containers, networks, data/export
+7. Stop the scheduler/worker consumers, then run the existing ingestion
+   authentication/replay/concurrency and export/report SQL-failure regression
+   scripts in the backend. The export script drives its own worker, avoiding
+   competing consumers during its failure/retry assertions.
+8. Save diagnostics and remove this run's containers, networks, data/export
    volumes and two built image tags. Shared base images remain cached.
 
 This smoke checks web serving/configuration, not rendered browser interaction
@@ -111,12 +115,13 @@ two image tags `<printed-project>-backend` and `<printed-project>-web` afterward
 Ctrl+C/SIGTERM attempts normal diagnostics and cleanup; a machine crash or force
 kill may require the same manual cleanup.
 
-## Opt-in CI and focused tests
+## CI and focused tests
 
-The **Disposable full-stack smoke** workflow is `workflow_dispatch` only, so
-routine PR jobs do not incur another full stack build. By default it runs both
-the success path and the stopped-worker negative path, checking the precise
-failure phase and cleanup status and uploading artifacts even on failure.
+The **Disposable full-stack smoke** workflow is shared through `workflow_call`
+and `workflow_dispatch`. Required PR CI calls its positive path, replacing the
+previous build/image-transfer/screenshot chain. A manual run defaults to both
+the success and stopped-worker negative paths, checking the precise failure
+phase and cleanup status. Both modes retain artifacts even on failure.
 
 ```text
 poetry run pytest -q tests/unit/test_smoke_stack.py
@@ -130,6 +135,10 @@ readiness polling/deadlines, terminal job failures, CSV content, command-timeout
 logs, and cleanup ownership/error paths.
 
 ## Observed local verification (2026-10-30)
+
+The table below is the original prompt 2 record. Prompt 5 changes the web image
+to Node 24 and adds the retained regression scripts; its new positive/negative
+results are recorded in the [candidate checklist](../releases/rc-checklist.md).
 
 Executed on Windows with Python 3.12.10, Docker server 29.8.2 and Compose 5.6.0.
 The container builds used the existing Python 3.14 and Node 25 Dockerfiles;

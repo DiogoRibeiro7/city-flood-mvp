@@ -15,7 +15,7 @@ scope; carry the other gates forward as visible limitations.
 
 | Gate | Required observation and retained evidence | Current disposition / follow-up |
 | --- | --- | --- |
-| G1: clean installation and static checks | Fresh locked Python/web installs; identified supported Python/Node versions; successful container builds, `ruff check`, `ruff format --check`, mypy including the OpenAPI exporter, web typecheck and build. Record tool versions, lock hashes and logs. | Open: local installs/lint/types/web checks pass, and the smoke follow-up verifies container builds. Formatting still fails in 51 existing Python files after prompt 4 (53 at baseline). CI uses Python 3.12 while the backend image uses 3.14; supported runtime/CI versions still need reconciliation. Prompt 5. |
+| G1: clean installation and static checks | Fresh locked Python/web installs; identified supported Python/Node versions; successful container builds, `ruff check`, `ruff format --check`, mypy including the OpenAPI exporter, web typecheck and build. Record tool versions, lock hashes and logs. | Prompt 5 clears the formatting baseline, separates static checks from Python 3.12–3.14 tests and aligns Node 24/Poetry versions across CI and containers. Local results and hosted-run limitations are recorded in the [candidate checklist](rc-checklist.md); repeat on the reviewed candidate. |
 | G2: isolated migrations and data integrity | Test harness rejects application/non-test names. Fresh PostGIS/Timescale DB reaches the single Alembic head; a second upgrade is a no-op. Assert expected extensions, hypertables, constraints/indexes, foreign keys and UTC timestamps against models. Upgrade representative seeded data without loss; document locking and manual steps. | Partial: the [prompt 4 suite/runbook](../runbooks/migrations.md) verifies fresh and seeded upgrades, schema comparisons, repeat runs, integrity, unsafe-target rejection and lock failure/retry. 359 unit + 38 integration + 5 migration tests pass. Twenty legacy timestamp nullability differences remain explicit; retention/aggregate policies are absent on the tested OSS image. Deployment-specific upgrade/provenance review remains required. |
 | G3: seeded end-to-end workflow | A single documented command provisions or verifies isolated prerequisites, waits with bounded polls, migrates, seeds a fixed small dataset, checks API/web readiness and key endpoints, queues an export, observes a terminal success and validates its CSV. A rerun succeeds without duplicate data. An induced failure returns nonzero with useful logs; cleanup removes only that run's resources. | Local verification passed in prompt 2: `python -m scripts.smoke_stack` uses a separate Compose stack, fixed input, actual worker/scheduler containers, failure diagnostics and cleanup. Two successful runs produced identical CSV; stopped-worker failure behaved as expected. See the [smoke evidence](../runbooks/smoke.md#observed-local-verification-2026-10-30); repeat on the reviewed candidate. |
 | G4: API contract | Passing unit/integration suites and live public-schema comparison; error envelopes/status codes, malformed input, pagination/filter boundaries, timestamps and scenarios have documented assertions. Any changed contract has a regenerated snapshot and compatibility explanation. | Partial: the [prompt 3 contract audit](api-contract-audit.md) fixes validation 400/schema alignment, malformed-input crashes, and job UTC handling; 350 unit and 38 PostgreSQL tests plus full-stack smoke pass. Pagination/filter assertions are expanded. CSV media types, auth/error declarations, and pagination ties remain documented follow-ups. |
@@ -29,7 +29,8 @@ scope; carry the other gates forward as visible limitations.
 
 Run from the repository root after selecting the candidate revision. Record
 stdout/stderr and exit status for each command; do not infer success from CI
-configuration or a badge. Use Python 3.12 for the existing backend CI baseline.
+configuration or a badge. Use Python 3.12 for static checks and repeat tests on
+the Python 3.12–3.14 matrix described in the [version policy](version-policy.md).
 
 ```text
 poetry env use <absolute-path-to-python-3.12>
@@ -61,8 +62,8 @@ corepack yarn build --outDir ../test-results/readiness-web-dist
 ```
 
 The output override keeps generated files under ignored `test-results/`.
-The actual audit used Node 24.19.0 and Yarn 4.1.1; it does not substitute for
-running the Node 20 environment configured in CI.
+The baseline audit used Node 24.19.0 and Yarn 4.1.1. Prompt 5 aligns web CI and
+the container with Node 24; hosted Linux results remain separate evidence.
 
 ### Disposable PostgreSQL integration checks
 

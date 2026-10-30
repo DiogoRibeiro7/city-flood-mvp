@@ -360,6 +360,12 @@ def exercise(stack: Stack, args: argparse.Namespace, report: dict[str, Any]) -> 
 
     wait_for("scheduler analytics completion", scheduled, bool, args.job_timeout)
     report["checks"].append("scheduler enqueued analytics completed by worker")
+    phase("regressions")
+    # The regression script drives the queue itself; stop competing consumers.
+    stack.command("stop", "scheduler", "worker")
+    for script in ("smoke_ingest_idempotency.py", "smoke_export_jobs.py"):
+        stack.command("exec", "-T", "backend", "python", f"/app/scripts/{script}")
+    report["checks"].append("ingestion replay/concurrency and export/report SQL-failure recovery")
 
 
 def run(args: argparse.Namespace) -> int:

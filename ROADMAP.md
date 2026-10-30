@@ -41,7 +41,10 @@ not satisfy an end-to-end release gate.
    failures; reconcile CI's Python 3.12 environment with the Python 3.14 backend
    image; cover format and OpenAPI-export typing, failure artifacts, and action
    pinning. Define the tested version matrix, changelog, and candidate checklist.
-   Current backend static checks already run once, not once per matrix entry.
+   The [candidate checklist](docs/releases/rc-checklist.md), version policy and
+   changelog now accompany separate static checks, a Python 3.12–3.14 test matrix,
+   Node 24 web checks and the shared stack smoke. Formatting passes; action pins
+   and failure artifacts are explicit. Static checks run once outside the matrix.
 
 **Checkpoint:** decide whether gates G1-G4 and G6 in the acceptance document
 support an RC. The candidate may remain synthetic, with real-data and recovery

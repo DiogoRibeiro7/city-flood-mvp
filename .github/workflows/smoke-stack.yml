@@ -1,6 +1,11 @@
 name: Disposable full-stack smoke
 
 on:
+  workflow_call:
+    inputs:
+      check_failure_path:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       check_failure_path:
@@ -16,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
       - name: Exercise the disposable stack
@@ -45,9 +50,10 @@ jobs:
           assert report["cleanup"] == "completed", report
       - name: Upload command logs, service logs, CSV and summaries
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: disposable-stack-smoke
+          retention-days: 14
           path: |
             test-results/smoke/
             test-results/smoke-negative/
