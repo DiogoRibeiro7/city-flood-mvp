@@ -5,6 +5,7 @@ import pathlib
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from fastapi.responses import FileResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.api.openapi_examples import (
@@ -19,7 +20,7 @@ from floodmvp.common.errors import AppError
 from floodmvp.common.ids import new_id
 from floodmvp.common.time import parse_bucket_interval
 from floodmvp.config.settings import settings
-from floodmvp.models.db import ExportJob
+from floodmvp.models.db import Asset, City, ExportJob
 from floodmvp.models.domain import (
     AnalyticsEventDiffSummary,
     AnalyticsHotspotDiffSummary,
@@ -34,6 +35,7 @@ from floodmvp.models.domain import (
     EventOut,
     ExportJobLogOut,
     ExportJobOut,
+    ExportJobQuery,
     ExportJobRequest,
     HotspotDiffItem,
     HotspotOut,
@@ -86,6 +88,43 @@ def _validate_season(season: str) -> None:
         raise AppError(code="INVALID_ARGUMENT", message="season must be 'all' or 'month-01'..'month-12'") from exc
     if month < 1 or month > 12:
         raise AppError(code="INVALID_ARGUMENT", message="season must be 'all' or 'month-01'..'month-12'")
+
+
+async def _require_export_city(session: AsyncSession, city_id: str) -> None:
+    """Reject unknown cities before submitting an asynchronous export."""
+    exists = await session.scalar(select(City.city_id).where(City.city_id == city_id))
+    if exists is None:
+        raise AppError(
+            code="CITY_NOT_FOUND",
+            message="City not found",
+            details={"city_id": city_id},
+            status_code=404,
+        )
+
+
+async def _validate_export_assets(session: AsyncSession, query: ExportJobQuery) -> None:
+    """Check explicit asset references and their optional city/type filters in one query."""
+    if not query.asset_ids:
+        return
+    rows = await session.execute(
+        select(Asset.asset_id, Asset.city_id, Asset.asset_type).where(
+            Asset.asset_id.in_(set(query.asset_ids))
+        )
+    )
+    found = {asset_id: (city_id, asset_type) for asset_id, city_id, asset_type in rows.all()}
+    for asset_id in dict.fromkeys(query.asset_ids):
+        asset = found.get(asset_id)
+        if (
+            asset is None
+            or (query.city_id is not None and asset[0] != query.city_id)
+            or (query.asset_type is not None and asset[1] != query.asset_type)
+        ):
+            raise AppError(
+                code="ASSET_NOT_FOUND",
+                message="Asset not found for export selection",
+                details={"asset_id": asset_id},
+                status_code=404,
+            )
 
 
 @router.get(
@@ -417,6 +456,37 @@ async def analytics_runs_diff(
                 }
             }
         },
+        404: {
+            "description": "Requested export city or asset not found",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "city_not_found": {
+                            "summary": "Unknown city",
+                            "value": {
+                                "error": {
+                                    "code": "CITY_NOT_FOUND",
+                                    "message": "City not found",
+                                    "details": {"city_id": "city_missing"},
+                                    "request_id": "req_example",
+                                }
+                            },
+                        },
+                        "asset_not_found": {
+                            "summary": "Unknown or mismatched export asset",
+                            "value": {
+                                "error": {
+                                    "code": "ASSET_NOT_FOUND",
+                                    "message": "Asset not found for export selection",
+                                    "details": {"asset_id": "asset_missing"},
+                                    "request_id": "req_example",
+                                }
+                            },
+                        },
+                    }
+                }
+            },
+        },
     },
 )
 async def create_job(
@@ -437,11 +507,15 @@ async def create_job(
             raise AppError(code="INVALID_ARGUMENT", message=str(exc)) from exc
         if not payload.query.asset_ids and not payload.query.city_id:
             raise AppError(code="INVALID_ARGUMENT", message="asset_ids or city_id must be provided")
+        if payload.query.city_id:
+            await _require_export_city(session, payload.query.city_id)
+        await _validate_export_assets(session, payload.query)
     elif payload.type == "report_csv":
         if payload.query.from_ts >= payload.query.to_ts:
             raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
         if payload.query.top_hotspots < 0 or payload.query.top_hotspots > 200:
             raise AppError(code="INVALID_ARGUMENT", message="top_hotspots must be between 0 and 200")
+        await _require_export_city(session, payload.query.city_id)
     else:
         raise AppError(code="INVALID_ARGUMENT", message="type must be one of ['export_csv','report_csv']")
 

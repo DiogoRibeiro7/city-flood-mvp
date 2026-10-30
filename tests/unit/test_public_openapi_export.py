@@ -55,6 +55,8 @@ def test_public_openapi_snapshot_matches_live_routes_and_responses() -> None:
             "SCENARIO_NOT_FOUND",
         ),
         ("post", "/v1/telemetry/events:batch", "404", "ASSET_NOT_FOUND"),
+        ("post", "/v1/analytics/jobs", "404", "CITY_NOT_FOUND"),
+        ("post", "/v1/analytics/jobs", "404", "ASSET_NOT_FOUND"),
         ("get", "/v1/analytics/jobs/{job_id}", "404", "JOB_NOT_FOUND"),
         ("get", "/v1/analytics/jobs/{job_id}/download", "400", "JOB_NOT_READY"),
         ("get", "/v1/analytics/jobs/{job_id}/download", "404", "JOB_NOT_FOUND"),

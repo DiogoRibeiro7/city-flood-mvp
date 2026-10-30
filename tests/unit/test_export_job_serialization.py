@@ -51,6 +51,58 @@ class _SessionStub:
         return None
 
 
+class _AssetRowsStub:
+    def all(self) -> list[tuple[str, str, str]]:
+        return [("pipe_1", "city_a", "pipe")]
+
+
+class _AssetsSessionStub:
+    async def execute(self, statement: Any) -> _AssetRowsStub:
+        return _AssetRowsStub()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("asset_ids", "city_id", "asset_type"),
+    [
+        (["missing_asset"], None, None),
+        (["pipe_1"], "city_b", None),
+        (["pipe_1"], "city_a", "pump"),
+    ],
+)
+async def test_export_asset_selection_rejects_missing_or_mismatched_references(
+    asset_ids: list[str], city_id: str | None, asset_type: str | None
+) -> None:
+    query = ExportJobQuery.model_validate(
+        {
+            "asset_ids": asset_ids,
+            "city_id": city_id,
+            "asset_type": asset_type,
+            "metric": "fill_ratio",
+            "from": NOW.isoformat(),
+            "to": (NOW + dt.timedelta(days=1)).isoformat(),
+        }
+    )
+    with pytest.raises(AppError) as exc_info:
+        await analytics._validate_export_assets(cast(AsyncSession, _AssetsSessionStub()), query)
+
+    assert exc_info.value.code == "ASSET_NOT_FOUND"
+    assert exc_info.value.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_export_asset_selection_accepts_matching_references() -> None:
+    query = ExportJobQuery(
+        asset_ids=["pipe_1"],
+        city_id="city_a",
+        asset_type="pipe",
+        metric="fill_ratio",
+        **{"from": NOW, "to": NOW + dt.timedelta(days=1)},
+    )
+
+    await analytics._validate_export_assets(cast(AsyncSession, _AssetsSessionStub()), query)
+
+
 @pytest.mark.asyncio
 async def test_create_job_rejects_invalid_granularity(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "jwt_secret", None)
@@ -131,11 +183,19 @@ async def test_job_creation_stores_json_serializable_query(
     async def fake_list_logs(session: AsyncSession, job_id: str) -> list[Any]:
         return []
 
+    async def fake_require_city(session: AsyncSession, city_id: str) -> None:
+        return None
+
+    async def fake_validate_assets(session: AsyncSession, query: ExportJobQuery) -> None:
+        return None
+
     monkeypatch.setattr(analytics, "create_export_job", fake_create_export_job)
     monkeypatch.setattr(analytics, "enqueue_job", fake_enqueue_job)
     monkeypatch.setattr(analytics, "add_export_job_log", fake_add_log)
     monkeypatch.setattr(analytics, "get_export_job", fake_get_export_job)
     monkeypatch.setattr(analytics, "list_export_job_logs", fake_list_logs)
+    monkeypatch.setattr(analytics, "_require_export_city", fake_require_city)
+    monkeypatch.setattr(analytics, "_validate_export_assets", fake_validate_assets)
 
     if job_type == "export_csv":
         payload = ExportCsvRequest(
