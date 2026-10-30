@@ -1,0 +1,53 @@
+name: Disposable full-stack smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      check_failure_path:
+        description: Also stop the worker and verify failure diagnostics and cleanup
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Exercise the disposable stack
+        run: python -m scripts.smoke_stack
+      - name: Verify the stopped-worker failure path
+        if: ${{ inputs.check_failure_path }}
+        shell: python
+        run: |
+          import json
+          import pathlib
+          import subprocess
+          import sys
+
+          result = subprocess.run([
+              sys.executable, "-m", "scripts.smoke_stack",
+              "--inject-failure", "worker", "--job-timeout", "5",
+              "--artifacts", "test-results/smoke-negative",
+          ], check=False)
+          reports = list(pathlib.Path("test-results/smoke-negative").glob("*/result.json"))
+          assert len(reports) == 1, "Expected exactly one negative-run report"
+          report = json.loads(reports[0].read_text())
+          assert result.returncode == 1, report
+          assert report["status"] == "failed" and report["phase"] == "export", report
+          assert "Timed out waiting for export job completion" in report.get("error", ""), report
+          assert report["cleanup"] == "completed", report
+      - name: Upload command logs, service logs, CSV and summaries
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: disposable-stack-smoke
+          path: |
+            test-results/smoke/
+            test-results/smoke-negative/

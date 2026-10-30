@@ -21,6 +21,8 @@ not satisfy an end-to-end release gate.
    and export smoke scripts into an isolated, rerunnable workflow with bounded
    readiness checks, deterministic data, worker/scheduler prerequisites, useful
    failure output, and cleanup. Verify both success and intentional failure.
+   The [disposable smoke entry point and local evidence](docs/runbooks/smoke.md)
+   now cover this workflow; repeat its checks on the reviewed candidate.
 3. **Audit the public contract (prompt 3).** Start with the existing live OpenAPI
    snapshot test and timestamp, spatial, scenario, and error regression tests.
    Resolve demonstrated status, pagination, filter, and schema discrepancies;
