@@ -88,8 +88,16 @@ an empty result with HTTP 200.
 - `GET /analytics/jobs/{job_id}/download`
 
 CSV exports and reports run asynchronously. `POST /analytics/jobs` returns a
-job with `status: "queued"` and no download path. Start the background worker
-with `python -m floodmvp.jobs.queue_worker`, then poll the job endpoint until
+job with `status: "queued"` and no download path. Before enqueueing, the API
+checks that the report or export city exists, and that every explicitly listed
+asset exists. When `city_id` or `asset_type` is supplied for a CSV export, all
+explicit asset IDs must satisfy those filters; mismatches return HTTP 404
+`ASSET_NOT_FOUND`, while unknown cities return HTTP 404 `CITY_NOT_FOUND`.
+City-based exports with no matching assets remain valid and produce an empty
+CSV.
+
+Start the background worker with `python -m floodmvp.jobs.queue_worker`, then
+poll the job endpoint until
 its status is `completed` or `failed`. Download is available only after the job
 has completed (HTTP 400 `JOB_NOT_READY` otherwise). If a completed job's CSV
 has been deleted or is no longer accessible on disk, the download endpoint
