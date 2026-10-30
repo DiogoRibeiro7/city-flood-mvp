@@ -185,6 +185,7 @@ Locked input SHA-256 values:
 | `corepack yarn build --outDir ../test-results/readiness-web-dist` | Exit 0; 616 modules transformed. Warnings: output outside web root is not emptied, plugin timings, and JS chunk over 500 kB (721.20 kB). |
 | Documentation review | `git diff --check` passed; checked eight edited Markdown files, all 16 relative links/anchors and reconciliation of all 20 historical roadmap items. |
 | Disposable resource cleanup | Verified the audit label and exact created container ID before stopping it. Docker removed the container; no application containers/volumes were changed. |
+| GitHub dependency alert summary on branch push | GitHub reported 99 vulnerabilities on the default branch: 4 critical, 39 high, 47 moderate and 9 low. This is the remote push summary, not an independently executed scan or triaged finding set; review the repository's dependency alerts before closing G6. |
 | Full Compose build/seed/smokes, UI interactions/screenshots, real source access, dependency security scan, recovery drill | Not run in this documentation audit. Their component code/configuration was inspected; no passing result, screenshot, benchmark or observed dataset metric is asserted. |
 
 ## Outstanding release decision
