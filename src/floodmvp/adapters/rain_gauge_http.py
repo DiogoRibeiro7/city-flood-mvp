@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import datetime as dt
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -75,14 +76,27 @@ def normalize_rain_gauge_rows(
 
 
 def convert_units(value: float, units: str, interval_minutes: int | None = None) -> float:
+    """Convert rainfall rates or interval totals to millimetres per hour.
+
+    ``mm`` and ``in`` represent accumulated depth over ``interval_minutes``;
+    ``mmph`` and ``inph`` are already hourly rates.
+    """
+    if not math.isfinite(value) or value < 0:
+        raise ValueError("rainfall value must be finite and nonnegative")
+    if units in {"mm", "in"} and (
+        isinstance(interval_minutes, bool)
+        or not isinstance(interval_minutes, int)
+        or interval_minutes <= 0
+    ):
+        raise ValueError("positive interval_minutes is required for accumulated rainfall")
     if units == "mmph":
         return value
     if units == "mm":
-        if not interval_minutes:
-            raise ValueError("interval_minutes is required when units=mm")
+        assert interval_minutes is not None
         return value * (60.0 / float(interval_minutes))
     if units == "in":
-        return value * 25.4
+        assert interval_minutes is not None
+        return value * 25.4 * (60.0 / float(interval_minutes))
     if units == "inph":
         return value * 25.4
     raise ValueError("units must be one of mmph, mm, in, inph")
