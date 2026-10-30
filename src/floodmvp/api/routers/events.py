@@ -33,8 +33,7 @@ router = APIRouter(tags=["events"])
                     ]
                 }
             }
-        }
-        ,
+        },
         400: error_response(
             code="INVALID_ARGUMENT",
             message="'to' must be after 'from'",

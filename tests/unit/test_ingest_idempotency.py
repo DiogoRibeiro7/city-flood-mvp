@@ -37,9 +37,7 @@ def _stored_response(payload: IngestRequest) -> dict[str, object]:
         received=1,
         accepted=1,
         rejected=0,
-        results=[
-            IngestEventResult(ts=payload.events[0].ts, type="fill_ratio", status="accepted")
-        ],
+        results=[IngestEventResult(ts=payload.events[0].ts, type="fill_ratio", status="accepted")],
     )
     return {**response.model_dump(mode="json"), "_request_digest": _request_digest(payload)}
 
@@ -85,9 +83,12 @@ def test_legacy_response_still_supports_retry_for_same_device() -> None:
     prior_response = _stored_response(payload)
     del prior_response["_request_digest"]
 
-    assert _replay_idempotent_response(
-        payload.device_id, prior_response, payload, _request_digest(payload)
-    ).accepted == 1
+    assert (
+        _replay_idempotent_response(
+            payload.device_id, prior_response, payload, _request_digest(payload)
+        ).accepted
+        == 1
+    )
 
 
 @pytest.mark.parametrize("key", ["  ", "x" * 129])

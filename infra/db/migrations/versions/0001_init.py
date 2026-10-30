@@ -16,6 +16,7 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
+
 def upgrade() -> None:
     # --- core tables ---
     op.create_table(
@@ -30,7 +31,13 @@ def upgrade() -> None:
     op.create_table(
         "asset",
         sa.Column("asset_id", sa.String(length=64), primary_key=True),
-        sa.Column("city_id", sa.String(length=64), sa.ForeignKey("city.city_id"), nullable=False, index=True),
+        sa.Column(
+            "city_id",
+            sa.String(length=64),
+            sa.ForeignKey("city.city_id"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("asset_type", sa.String(length=40), nullable=False, index=True),
         sa.Column("name", sa.String(length=200), nullable=False),
         sa.Column("geom", Geometry(geometry_type="GEOMETRY", srid=4326), nullable=True),
@@ -42,7 +49,9 @@ def upgrade() -> None:
 
     op.create_table(
         "telemetry_observation",
-        sa.Column("asset_id", sa.String(length=64), sa.ForeignKey("asset.asset_id"), nullable=False),
+        sa.Column(
+            "asset_id", sa.String(length=64), sa.ForeignKey("asset.asset_id"), nullable=False
+        ),
         sa.Column("metric", sa.String(length=64), nullable=False),
         sa.Column("ts", sa.DateTime(timezone=True), nullable=False),
         sa.Column("value", sa.Float(), nullable=False),
@@ -66,7 +75,13 @@ def upgrade() -> None:
     op.create_table(
         "analytics_event",
         sa.Column("event_id", sa.String(length=64), primary_key=True),
-        sa.Column("city_id", sa.String(length=64), sa.ForeignKey("city.city_id"), nullable=False, index=True),
+        sa.Column(
+            "city_id",
+            sa.String(length=64),
+            sa.ForeignKey("city.city_id"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("event_type", sa.String(length=40), nullable=False, index=True),
         sa.Column("severity", sa.Integer(), nullable=False),
         sa.Column("start_ts", sa.DateTime(timezone=True), nullable=False),
@@ -78,10 +93,18 @@ def upgrade() -> None:
 
     op.create_table(
         "analytics_hotspot_daily",
-        sa.Column("city_id", sa.String(length=64), sa.ForeignKey("city.city_id"), nullable=False, index=True),
+        sa.Column(
+            "city_id",
+            sa.String(length=64),
+            sa.ForeignKey("city.city_id"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("day", sa.Date(), nullable=False),
         sa.Column("metric", sa.String(length=64), nullable=False),
-        sa.Column("asset_id", sa.String(length=64), sa.ForeignKey("asset.asset_id"), nullable=False),
+        sa.Column(
+            "asset_id", sa.String(length=64), sa.ForeignKey("asset.asset_id"), nullable=False
+        ),
         sa.Column("score", sa.Float(), nullable=False),
         sa.Column("details", sa.JSON(), nullable=False, server_default=sa.text("'{}'::jsonb")),
         sa.PrimaryKeyConstraint("city_id", "day", "metric", "asset_id"),
@@ -89,13 +112,22 @@ def upgrade() -> None:
 
     op.create_table(
         "asset_status_latest",
-        sa.Column("asset_id", sa.String(length=64), sa.ForeignKey("asset.asset_id"), primary_key=True),
-        sa.Column("city_id", sa.String(length=64), sa.ForeignKey("city.city_id"), nullable=False, index=True),
+        sa.Column(
+            "asset_id", sa.String(length=64), sa.ForeignKey("asset.asset_id"), primary_key=True
+        ),
+        sa.Column(
+            "city_id",
+            sa.String(length=64),
+            sa.ForeignKey("city.city_id"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("status", sa.String(length=20), nullable=False),
         sa.Column("risk_score", sa.Float(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()")),
         sa.Column("details", sa.JSON(), nullable=False, server_default=sa.text("'{}'::jsonb")),
     )
+
 
 def downgrade() -> None:
     op.execute("DROP INDEX IF EXISTS ix_telemetry_observation_ts_brin;")

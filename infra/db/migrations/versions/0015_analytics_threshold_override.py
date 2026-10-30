@@ -21,7 +21,13 @@ def upgrade() -> None:
     op.create_table(
         "analytics_threshold_override",
         sa.Column("override_id", sa.String(length=64), primary_key=True),
-        sa.Column("city_id", sa.String(length=64), sa.ForeignKey("city.city_id"), nullable=False, index=True),
+        sa.Column(
+            "city_id",
+            sa.String(length=64),
+            sa.ForeignKey("city.city_id"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("season", sa.String(length=16), nullable=False, server_default="all"),
         sa.Column("thresholds", sa.JSON(), nullable=False, server_default=sa.text("'{}'::jsonb")),
         sa.Column("notes", sa.Text(), nullable=True),
@@ -36,6 +42,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_threshold_override_city_season_created", table_name="analytics_threshold_override")
+    op.drop_index(
+        "ix_threshold_override_city_season_created", table_name="analytics_threshold_override"
+    )
     op.drop_table("analytics_threshold_override")
     op.alter_column("alembic_version", "version_num", type_=sa.String(length=32))

@@ -31,6 +31,7 @@ async def run(name: str, days: int) -> None:
         await session.commit()
 
     import os
+
     os.environ["TELEMETRY_SCENARIO"] = name
     await seed_telemetry(scenario_id=scenario_id)
 

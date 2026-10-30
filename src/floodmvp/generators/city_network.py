@@ -125,6 +125,7 @@ def generate_city_network(
 
     # elevation field for flow direction + slopes
     river_cache: dict[int, tuple[float, float, float]] = {}
+
     def node_elevation(idx: int) -> float:
         if idx in river_cache:
             return river_cache[idx][2]
@@ -144,6 +145,7 @@ def generate_city_network(
 
     # pipes connect to right and up (grid edges), with directed flow
     pipes: list[PipeSegment] = []
+
     def idx(i: int, j: int) -> int:
         return i * grid_n + j
 
@@ -170,7 +172,9 @@ def generate_city_network(
                 near = river.interpolate(proj)
                 dist_mid = _haversine_m(mid.x, mid.y, near.x, near.y)
                 diameter_m = float(
-                    np.clip(0.35 + 0.9 * math.exp(-dist_mid / 700.0) + rng.uniform(0.0, 0.1), 0.3, 1.6)
+                    np.clip(
+                        0.35 + 0.9 * math.exp(-dist_mid / 700.0) + rng.uniform(0.0, 0.1), 0.3, 1.6
+                    )
                 )
                 capacity = _pipe_capacity_m3s(diameter_m, slope)
                 pipes.append(
@@ -205,7 +209,9 @@ def generate_city_network(
                 near = river.interpolate(proj)
                 dist_mid = _haversine_m(mid.x, mid.y, near.x, near.y)
                 diameter_m = float(
-                    np.clip(0.35 + 0.9 * math.exp(-dist_mid / 700.0) + rng.uniform(0.0, 0.1), 0.3, 1.6)
+                    np.clip(
+                        0.35 + 0.9 * math.exp(-dist_mid / 700.0) + rng.uniform(0.0, 0.1), 0.3, 1.6
+                    )
                 )
                 capacity = _pipe_capacity_m3s(diameter_m, slope)
                 pipes.append(

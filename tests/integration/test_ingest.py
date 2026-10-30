@@ -134,7 +134,13 @@ async def test_expired_key_can_be_reused_without_pruning_unrelated_keys(
             IngestIdempotency(
                 idempotency_key=key,
                 device_id="asset_1",
-                response={"device_id": "asset_1", "received": 0, "accepted": 0, "rejected": 0, "results": []},
+                response={
+                    "device_id": "asset_1",
+                    "received": 0,
+                    "accepted": 0,
+                    "rejected": 0,
+                    "results": [],
+                },
                 created_at=old_timestamp,
             )
             for key in ("key-expired", "key-unrelated-expired")

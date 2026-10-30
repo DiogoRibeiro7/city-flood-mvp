@@ -18,13 +18,21 @@ depends_on = None
 
 def upgrade() -> None:
     op.add_column("export_job", sa.Column("started_at", sa.DateTime(timezone=True), nullable=True))
-    op.add_column("export_job", sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True))
+    op.add_column(
+        "export_job", sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True)
+    )
     op.add_column("export_job", sa.Column("row_count", sa.Integer(), nullable=True))
 
     op.create_table(
         "analytics_run",
         sa.Column("run_id", sa.String(length=64), primary_key=True),
-        sa.Column("city_id", sa.String(length=64), sa.ForeignKey("city.city_id"), nullable=False, index=True),
+        sa.Column(
+            "city_id",
+            sa.String(length=64),
+            sa.ForeignKey("city.city_id"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("start_ts", sa.DateTime(timezone=True), nullable=False),
         sa.Column("end_ts", sa.DateTime(timezone=True), nullable=False),
         sa.Column("status", sa.String(length=20), nullable=False, index=True),

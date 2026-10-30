@@ -47,9 +47,7 @@ def detect_threshold_events(
     gaps = df["ts"].diff()
     observed_cadence = gaps[(gaps > pd.Timedelta(0)) & (gaps <= max_gap)]
     sample_period = (
-        observed_cadence.median()
-        if not observed_cadence.empty
-        else pd.Timedelta(minutes=1)
+        observed_cadence.median() if not observed_cadence.empty else pd.Timedelta(minutes=1)
     )
 
     above = df["value"] >= threshold

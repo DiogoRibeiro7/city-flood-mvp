@@ -24,7 +24,9 @@ async def app_client(db_session: AsyncSession) -> AsyncClient:
 
 
 @pytest.mark.asyncio
-async def test_city_summary_latest_aggregates(app_client: AsyncClient, db_session: AsyncSession) -> None:
+async def test_city_summary_latest_aggregates(
+    app_client: AsyncClient, db_session: AsyncSession
+) -> None:
     city_id = "city_summary"
     db_session.add(City(city_id=city_id, name="Summary City", country="US"))
     await db_session.flush()

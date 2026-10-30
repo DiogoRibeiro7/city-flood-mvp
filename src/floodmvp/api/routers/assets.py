@@ -91,8 +91,7 @@ def _parse_tags(tags: list[str] | None) -> list[tuple[str, str]] | None:
                     ]
                 }
             }
-        }
-        ,
+        },
         400: error_response(
             code="INVALID_ARGUMENT",
             message="bbox must be 'minLon,minLat,maxLon,maxLat'",
@@ -155,8 +154,7 @@ async def city_assets(
                     }
                 }
             }
-        }
-        ,
+        },
         404: error_response(
             code="ASSET_NOT_FOUND",
             message="Asset not found",

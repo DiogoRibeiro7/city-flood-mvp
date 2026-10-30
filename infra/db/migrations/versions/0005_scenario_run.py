@@ -28,9 +28,16 @@ def upgrade() -> None:
 
     op.add_column(
         "telemetry_observation",
-        sa.Column("scenario_id", sa.String(length=64), sa.ForeignKey("scenario_run.scenario_id"), nullable=True),
+        sa.Column(
+            "scenario_id",
+            sa.String(length=64),
+            sa.ForeignKey("scenario_run.scenario_id"),
+            nullable=True,
+        ),
     )
-    op.create_index("ix_telemetry_observation_scenario_id", "telemetry_observation", ["scenario_id"])
+    op.create_index(
+        "ix_telemetry_observation_scenario_id", "telemetry_observation", ["scenario_id"]
+    )
 
 
 def downgrade() -> None:

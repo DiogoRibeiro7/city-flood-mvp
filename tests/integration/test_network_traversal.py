@@ -22,7 +22,9 @@ async def app_client(db_session: AsyncSession) -> AsyncClient:
 
 
 @pytest.mark.asyncio
-async def test_upstream_downstream_traversal(app_client: AsyncClient, db_session: AsyncSession) -> None:
+async def test_upstream_downstream_traversal(
+    app_client: AsyncClient, db_session: AsyncSession
+) -> None:
     city_id = "city_graph"
     db_session.add(City(city_id=city_id, name="Graph City", country="US"))
     await db_session.flush()
@@ -207,8 +209,14 @@ async def test_branching_network_returns_stable_layers_without_cycle_duplicates(
     await db_session.commit()
 
     expected_ids = [
-        "branch_pa", "branch_pz", "branch_n1", "branch_n2",
-        "branch_pb", "branch_pc", "branch_n3", "branch_pd",
+        "branch_pa",
+        "branch_pz",
+        "branch_n1",
+        "branch_n2",
+        "branch_pb",
+        "branch_pc",
+        "branch_n3",
+        "branch_pd",
     ]
     for _ in range(2):
         response = await app_client.get("/v1/assets/branch_n0/downstream?depth=3")

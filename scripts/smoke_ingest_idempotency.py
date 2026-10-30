@@ -40,9 +40,7 @@ def _json_list(response: httpx.Response, expected: int) -> list[dict[str, Any]]:
     return cast(list[dict[str, Any]], body)
 
 
-def _send(
-    client: httpx.Client, payload: dict[str, Any], headers: dict[str, str]
-) -> httpx.Response:
+def _send(client: httpx.Client, payload: dict[str, Any], headers: dict[str, str]) -> httpx.Response:
     """Send one batch, including from concurrent smoke-test workers."""
     return client.post("/v1/telemetry/events:batch", json=payload, headers=headers)
 
@@ -113,14 +111,11 @@ def main() -> None:
         }
         concurrent_payload = {
             **payload,
-            "events": [
-                {**payload["events"][0], "ts": (now + dt.timedelta(seconds=1)).isoformat()}
-            ],
+            "events": [{**payload["events"][0], "ts": (now + dt.timedelta(seconds=1)).isoformat()}],
         }
         with ThreadPoolExecutor(max_workers=2) as pool:
             pending = [
-                pool.submit(_send, client, concurrent_payload, concurrent_headers)
-                for _ in range(2)
+                pool.submit(_send, client, concurrent_payload, concurrent_headers) for _ in range(2)
             ]
             concurrent_results = [_json_object(future.result(), 200) for future in pending]
         if concurrent_results[0] != concurrent_results[1]:

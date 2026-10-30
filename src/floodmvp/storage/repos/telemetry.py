@@ -50,13 +50,11 @@ async def resolve_scenario_id(session: AsyncSession, scenario_id: str) -> str | 
 async def list_scenarios(session: AsyncSession) -> list[dict[str, Any]]:
     res = await session.execute(
         text(
-            "SELECT scenario_id, name, start_ts, end_ts "
-            "FROM scenario_run ORDER BY created_at DESC"
+            "SELECT scenario_id, name, start_ts, end_ts FROM scenario_run ORDER BY created_at DESC"
         )
     )
     return [
-        {"scenario_id": r[0], "name": r[1], "start_ts": r[2], "end_ts": r[3]}
-        for r in res.all()
+        {"scenario_id": r[0], "name": r[1], "start_ts": r[2], "end_ts": r[3]} for r in res.all()
     ]
 
 

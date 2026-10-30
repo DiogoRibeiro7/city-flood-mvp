@@ -27,7 +27,9 @@ def main() -> int:
     parser.add_argument("--out", required=True)
     parser.add_argument("--start", required=True)
     parser.add_argument("--end", required=True)
-    parser.add_argument("--pattern", choices=["steady", "storm_bursts", "seasonal", "random_walk"], required=True)
+    parser.add_argument(
+        "--pattern", choices=["steady", "storm_bursts", "seasonal", "random_walk"], required=True
+    )
     parser.add_argument("--rain-count", type=int, default=1)
     parser.add_argument("--river-count", type=int, default=1)
     parser.add_argument("--rain-prefix", default="rain_gauge_")

@@ -23,9 +23,7 @@ from floodmvp.storage.repos.jobs import enqueue_job
 def _json_object(response: httpx.Response, status: int = 200) -> dict[str, Any]:
     """Check the status and JSON object shape of an API response."""
     if response.status_code != status:
-        raise AssertionError(
-            f"Expected HTTP {status}, got {response.status_code}: {response.text}"
-        )
+        raise AssertionError(f"Expected HTTP {status}, got {response.status_code}: {response.text}")
     body: object = response.json()
     if not isinstance(body, dict):
         raise AssertionError("Expected a JSON object")
@@ -57,10 +55,14 @@ async def _process_and_test_sql_failure(query: dict[str, Any]) -> None:
 
     async with SessionLocal() as session:
         queued_jobs = (
-            await session.execute(
-                select(JobQueue).where(JobQueue.job_type.in_(["export_csv", "report_csv"]))
+            (
+                await session.execute(
+                    select(JobQueue).where(JobQueue.job_type.in_(["export_csv", "report_csv"]))
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
     unfinished = [
         {
             "type": job.job_type,

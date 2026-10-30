@@ -33,7 +33,10 @@ async def _fetch_asset_lookup(session: AsyncSession) -> tuple[set[str], dict[str
 
 
 async def _insert_records(
-    session: AsyncSession, records: list[IngestRecord], import_id: str | None, chunk_size: int = 2000
+    session: AsyncSession,
+    records: list[IngestRecord],
+    import_id: str | None,
+    chunk_size: int = 2000,
 ) -> int:
     inserted = 0
     rows = [

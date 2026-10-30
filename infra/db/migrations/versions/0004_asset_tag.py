@@ -19,7 +19,9 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "asset_tag",
-        sa.Column("asset_id", sa.String(length=64), sa.ForeignKey("asset.asset_id"), nullable=False),
+        sa.Column(
+            "asset_id", sa.String(length=64), sa.ForeignKey("asset.asset_id"), nullable=False
+        ),
         sa.Column("key", sa.String(length=64), nullable=False),
         sa.Column("value", sa.String(length=128), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()")),

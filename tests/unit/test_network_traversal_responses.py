@@ -61,9 +61,9 @@ async def test_unknown_asset_network_endpoint_returns_structured_404(
     assert error["details"] == {"asset_id": "missing_asset"}
     assert error["request_id"]
     traverse.assert_awaited_once_with(None, "missing_asset", direction, 3)
-    assert "404" in app.openapi()["paths"][f"/v1/assets/{{asset_id}}/{direction}"]["get"][
-        "responses"
-    ]
+    assert (
+        "404" in app.openapi()["paths"][f"/v1/assets/{{asset_id}}/{direction}"]["get"]["responses"]
+    )
 
 
 @pytest.mark.parametrize("direction", ["upstream", "downstream"])

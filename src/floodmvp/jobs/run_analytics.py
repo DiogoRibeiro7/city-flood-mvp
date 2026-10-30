@@ -96,12 +96,19 @@ async def run_city_analytics(
     await session.flush()
 
     # reset latest asset status for idempotent runs
-    await session.execute(delete(AssetStatusLatest).where(AssetStatusLatest.city_id == city.city_id))
+    await session.execute(
+        delete(AssetStatusLatest).where(AssetStatusLatest.city_id == city.city_id)
+    )
 
     # Rain events from first rain gauge
-    rain_gauge = (await session.execute(
-        select(Asset).where(Asset.city_id == city.city_id).where(Asset.asset_type == "rain_gauge").limit(1)
-    )).scalar_one()
+    rain_gauge = (
+        await session.execute(
+            select(Asset)
+            .where(Asset.city_id == city.city_id)
+            .where(Asset.asset_type == "rain_gauge")
+            .limit(1)
+        )
+    ).scalar_one()
     rain_df = await _load_metric_df(session, rain_gauge.asset_id, "rain_mmph", start, now)
     rain_events = detect_rain_events(
         rain_df,
@@ -111,12 +118,8 @@ async def run_city_analytics(
     )
     for s, e, peak in rain_events:
         event_df = rain_df[(rain_df["ts"] >= s) & (rain_df["ts"] < e)]
-        coverage = _coverage_ratio(
-            event_df, s, e, settings.telemetry_gap_granularity_minutes
-        )
-        signal = _signal_confidence(
-            float(peak), thresholds["rain_event_threshold_mmph"] * 2
-        )
+        coverage = _coverage_ratio(event_df, s, e, settings.telemetry_gap_granularity_minutes)
+        signal = _signal_confidence(float(peak), thresholds["rain_event_threshold_mmph"] * 2)
         conf = _confidence(coverage, signal)
         session.add(
             AnalyticsEvent(
@@ -135,12 +138,18 @@ async def run_city_analytics(
 
     # Overflows from subset of pipes
     pipe_limit = int(os.environ.get("ANALYTICS_PIPE_LIMIT", "250"))
-    pipes = (await session.execute(
-        select(Asset)
-        .where(Asset.city_id == city.city_id)
-        .where(Asset.asset_type == "pipe")
-        .limit(pipe_limit)
-    )).scalars().all()
+    pipes = (
+        (
+            await session.execute(
+                select(Asset)
+                .where(Asset.city_id == city.city_id)
+                .where(Asset.asset_type == "pipe")
+                .limit(pipe_limit)
+            )
+        )
+        .scalars()
+        .all()
+    )
 
     day = now.date()
     overflow_event_count = 0

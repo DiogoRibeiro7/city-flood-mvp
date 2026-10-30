@@ -20,7 +20,13 @@ def upgrade() -> None:
     op.create_table(
         "export_job_log",
         sa.Column("log_id", sa.String(length=64), primary_key=True),
-        sa.Column("job_id", sa.String(length=64), sa.ForeignKey("export_job.job_id"), nullable=False, index=True),
+        sa.Column(
+            "job_id",
+            sa.String(length=64),
+            sa.ForeignKey("export_job.job_id"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("level", sa.String(length=16), nullable=False),
         sa.Column("message", sa.Text(), nullable=False),
         sa.Column("details", sa.JSON(), nullable=False, server_default=sa.text("'{}'::jsonb")),

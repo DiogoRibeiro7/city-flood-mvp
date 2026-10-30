@@ -22,9 +22,7 @@ METRIC_RULES = {
 DRIFT_WINDOW_HOURS = 6
 
 
-async def mark_outliers(
-    session: AsyncSession, lookback_days: int
-) -> dict[tuple[str, str], int]:
+async def mark_outliers(session: AsyncSession, lookback_days: int) -> dict[tuple[str, str], int]:
     counts: dict[tuple[str, str], int] = {}
     for metric, rules in METRIC_RULES.items():
         res = await session.execute(
@@ -83,9 +81,7 @@ async def mark_outliers(
     return counts
 
 
-async def mark_drift(
-    session: AsyncSession, window_hours: int
-) -> dict[tuple[str, str], int]:
+async def mark_drift(session: AsyncSession, window_hours: int) -> dict[tuple[str, str], int]:
     counts: dict[tuple[str, str], int] = {}
     now = dt.datetime.now(dt.UTC)
     mid = now - dt.timedelta(hours=window_hours)
@@ -268,7 +264,9 @@ async def main() -> None:
     now = dt.datetime.now(dt.UTC).replace(second=0, microsecond=0)
     start = now - dt.timedelta(days=settings.telemetry_gap_window_days)
     async with SessionLocal() as session:
-        outlier_counts = await mark_outliers(session, lookback_days=settings.telemetry_gap_window_days)
+        outlier_counts = await mark_outliers(
+            session, lookback_days=settings.telemetry_gap_window_days
+        )
         drift_counts = await mark_drift(session, window_hours=DRIFT_WINDOW_HOURS)
         for city in cities:
             await _qa_gaps(

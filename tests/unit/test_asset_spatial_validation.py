@@ -78,9 +78,7 @@ async def test_invalid_spatial_coordinates_return_structured_400(
 
 @pytest.mark.parametrize("radius", ["NaN", "Infinity", "-Infinity"])
 @pytest.mark.asyncio
-async def test_nonfinite_radius_returns_structured_400(
-    client: AsyncClient, radius: str
-) -> None:
+async def test_nonfinite_radius_returns_structured_400(client: AsyncClient, radius: str) -> None:
     response = await client.get(
         "/v1/cities/city_test/assets",
         params={"near": "-8.61,41.15", "radius_m": radius},

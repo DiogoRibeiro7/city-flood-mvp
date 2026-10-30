@@ -95,7 +95,9 @@ def _apply_outages(
     cadence_minutes = max(1, int((ts_list[1] - ts_list[0]).total_seconds() / 60)) if n > 1 else 1
     mask = np.ones(n, dtype=bool)
     for _ in range(outage_count):
-        length_min = int(rng.integers(outage_min_minutes, max(outage_min_minutes + 1, outage_max_minutes + 1)))
+        length_min = int(
+            rng.integers(outage_min_minutes, max(outage_min_minutes + 1, outage_max_minutes + 1))
+        )
         length_steps = max(1, length_min // cadence_minutes)
         start_idx = int(rng.integers(0, max(1, n - length_steps)))
         end_idx = min(n, start_idx + length_steps)
@@ -129,7 +131,11 @@ def generate_rain_gauge(config: RainGaugeGenConfig) -> list[dict[str, object]]:
         return []
 
     base, peak, noise_sigma, params = _pattern_params(
-        config.pattern, config.base_mmph, config.peak_mmph, config.noise_sigma, config.pattern_overrides
+        config.pattern,
+        config.base_mmph,
+        config.peak_mmph,
+        config.noise_sigma,
+        config.pattern_overrides,
     )
 
     if config.pattern == "steady":
