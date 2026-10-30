@@ -92,7 +92,12 @@ TEST_DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/floodmvp
   poetry run pytest -q tests/integration
 ```
 
-GitHub Actions provisions an isolated database for the integration suite as
+The separate migration suite runs `poetry run pytest -q tests/migrations` with
+the same test URL. It creates fresh child databases and needs `CREATEDB` and
+extension privileges. See the [migration runbook](docs/runbooks/migrations.md)
+for schema checks, seeded upgrades, known differences and deployment steps.
+
+GitHub Actions provisions an isolated database for both database suites as
 part of the backend job. Never point `TEST_DATABASE_URL` at a database
 containing data that you need to preserve.
 

@@ -24,6 +24,8 @@ Commands and actual results are recorded in
 [v1-acceptance.md](v1-acceptance.md#baseline-verification-record).
 The subsequent [API contract audit](api-contract-audit.md) records prompt 3
 findings and fixes against the merged prompt 2 baseline.
+The [migration verification follow-up](../runbooks/migrations.md) records prompt 4
+schema comparisons, seeded upgrade evidence and the ORM timestamp-default fix.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
 

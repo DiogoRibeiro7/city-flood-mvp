@@ -46,10 +46,10 @@ jobs:
       - name: Tests
         run: poetry run pytest -q tests/unit
 
-      - name: PostgreSQL integration tests
+      - name: PostgreSQL integration and migration tests
         env:
           TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/floodmvp_test
-        run: poetry run pytest -q tests/integration
+        run: poetry run pytest -q tests/integration tests/migrations
 
   web:
     runs-on: ubuntu-latest

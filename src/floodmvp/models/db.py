@@ -4,7 +4,19 @@ import datetime as dt
 from typing import Any
 
 from geoalchemy2 import Geometry
-from sqlalchemy import ARRAY, JSON, Date, DateTime, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    ARRAY,
+    JSON,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    text,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -22,7 +34,9 @@ class City(Base):
     telemetry_retention_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
     compliance_tags: Mapped[list[str] | None] = mapped_column(ARRAY(String(64)), nullable=True)
     retention_policy: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
 
 class Asset(Base):
@@ -34,22 +48,30 @@ class Asset(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     geom = mapped_column(Geometry(geometry_type="GEOMETRY", srid=4326), nullable=True)
     props: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
 
 class AssetTag(Base):
     __tablename__ = "asset_tag"
 
-    asset_id: Mapped[str] = mapped_column(String(64), ForeignKey("asset.asset_id"), primary_key=True)
+    asset_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("asset.asset_id"), primary_key=True
+    )
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     value: Mapped[str] = mapped_column(String(128), primary_key=True)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
 
 class TelemetryObservation(Base):
     __tablename__ = "telemetry_observation"
 
-    asset_id: Mapped[str] = mapped_column(String(64), ForeignKey("asset.asset_id"), primary_key=True)
+    asset_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("asset.asset_id"), primary_key=True
+    )
     metric: Mapped[str] = mapped_column(String(64), primary_key=True)
     ts: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     value: Mapped[float] = mapped_column(Float, nullable=False)
@@ -61,8 +83,12 @@ class TelemetryObservation(Base):
         String(64), ForeignKey("dataset_import.import_id"), nullable=True, index=True
     )
     lineage: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
-    ingested_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
-    scenario_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("scenario_run.scenario_id"), nullable=True, index=True)
+    ingested_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+    scenario_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("scenario_run.scenario_id"), nullable=True, index=True
+    )
 
 
 class IngestIdempotency(Base):
@@ -74,7 +100,9 @@ class IngestIdempotency(Base):
     idempotency_key: Mapped[str] = mapped_column(String(128), primary_key=True)
     device_id: Mapped[str] = mapped_column(String(64), ForeignKey("asset.asset_id"), index=True)
     response: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
 
 class ScenarioRun(Base):
@@ -84,7 +112,9 @@ class ScenarioRun(Base):
     name: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
     start_ts: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     end_ts: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
 
 class ExportJob(Base):
@@ -100,9 +130,11 @@ class ExportJob(Base):
     started_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     row_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
     updated_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), server_default="now()", server_onupdate="now()"
+        DateTime(timezone=True), server_default=text("now()"), server_onupdate="now()"
     )
 
 
@@ -114,7 +146,9 @@ class ExportJobLog(Base):
     level: Mapped[str] = mapped_column(String(16), nullable=False)
     message: Mapped[str] = mapped_column(Text, nullable=False)
     details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
 
 class DatasetImport(Base):
@@ -132,7 +166,9 @@ class DatasetImport(Base):
     records_rejected: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     inserted_rows: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     validation_report: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
     completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
@@ -141,14 +177,18 @@ class Note(Base):
 
     note_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), index=True)
-    asset_id: Mapped[str | None] = mapped_column(String(64), ForeignKey("asset.asset_id"), nullable=True)
+    asset_id: Mapped[str | None] = mapped_column(
+        String(64), ForeignKey("asset.asset_id"), nullable=True
+    )
     event_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
     author: Mapped[str] = mapped_column(String(120), nullable=False, default="Ops")
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
     updated_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), server_default="now()", server_onupdate="now()"
+        DateTime(timezone=True), server_default=text("now()"), server_onupdate="now()"
     )
 
 
@@ -165,9 +205,11 @@ class JobQueue(Base):
     locked_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     locked_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
     updated_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), server_default="now()", server_onupdate="now()"
+        DateTime(timezone=True), server_default=text("now()"), server_onupdate="now()"
     )
 
 
@@ -184,7 +226,9 @@ class AnalyticsEvent(Base):
     end_ts: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     asset_ids: Mapped[list[str]] = mapped_column(ARRAY(String(64)), nullable=False)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
 
 class AnalyticsHotspotDaily(Base):
@@ -196,7 +240,9 @@ class AnalyticsHotspotDaily(Base):
     city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), primary_key=True)
     day: Mapped[dt.date] = mapped_column(Date, primary_key=True)
     metric: Mapped[str] = mapped_column(String(64), primary_key=True)
-    asset_id: Mapped[str] = mapped_column(String(64), ForeignKey("asset.asset_id"), primary_key=True)
+    asset_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("asset.asset_id"), primary_key=True
+    )
     score: Mapped[float] = mapped_column(Float, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
     details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
@@ -205,11 +251,15 @@ class AnalyticsHotspotDaily(Base):
 class AssetStatusLatest(Base):
     __tablename__ = "asset_status_latest"
 
-    asset_id: Mapped[str] = mapped_column(String(64), ForeignKey("asset.asset_id"), primary_key=True)
+    asset_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("asset.asset_id"), primary_key=True
+    )
     city_id: Mapped[str] = mapped_column(String(64), ForeignKey("city.city_id"), index=True)
     status: Mapped[str] = mapped_column(String(20), nullable=False)
     risk_score: Mapped[float] = mapped_column(Float, nullable=False)
-    updated_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
     details: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
 
 
@@ -224,9 +274,11 @@ class AnalyticsRun(Base):
     version: Mapped[str] = mapped_column(String(32), nullable=False)
     params: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     metrics: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
     updated_at: Mapped[dt.datetime] = mapped_column(
-        DateTime(timezone=True), server_default="now()", server_onupdate="now()"
+        DateTime(timezone=True), server_default=text("now()"), server_onupdate="now()"
     )
 
 
@@ -243,7 +295,9 @@ class TelemetryQaDaily(Base):
     suspect_count: Mapped[int] = mapped_column(Integer, nullable=False)
     outlier_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     drift_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
 
 class AnalyticsThresholdOverride(Base):
@@ -254,4 +308,6 @@ class AnalyticsThresholdOverride(Base):
     season: Mapped[str] = mapped_column(String(16), nullable=False, default="all")
     thresholds: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )

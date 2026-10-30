@@ -34,6 +34,9 @@ not satisfy an end-to-end release gate.
    Exercise Alembic from zero and over representative data on a disposable DB;
    compare constraints, indexes, timestamps, extensions, and ORM expectations.
    Table recreation in integration tests is not migration verification.
+   The [migration suite and runbook](docs/runbooks/migrations.md) now verify
+   fresh and seeded upgrades, integrity, repeat runs, and lock failure/retry.
+   Legacy timestamp nullability and deployment-specific policy review remain open.
 5. **Make candidate checks auditable (prompt 5).** Address baseline check
    failures; reconcile CI's Python 3.12 environment with the Python 3.14 backend
    image; cover format and OpenAPI-export typing, failure artifacts, and action
