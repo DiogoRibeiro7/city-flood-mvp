@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from floodmvp.api.main import app
 from floodmvp.config.settings import settings
 from floodmvp.jobs import queue_worker
-from floodmvp.models.db import Asset, City, TelemetryObservation
+from floodmvp.models.db import Asset, City, ExportJob, TelemetryObservation
 from floodmvp.storage.db import get_session
 
 
@@ -31,8 +31,20 @@ async def app_client(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("start_text", "end_text"),
+    [
+        ("2026-01-01T00:00:00Z", "2026-01-01T00:15:00Z"),
+        ("2026-01-01T00:00:00", "2026-01-01T01:15:00+01:00"),
+        ("2025-12-31T23:00:00-01:00", "2026-01-01T00:15:00"),
+    ],
+)
 async def test_export_job_csv(
-    app_client: AsyncClient, db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+    app_client: AsyncClient,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+    start_text: str,
+    end_text: str,
 ) -> None:
     city_id = "city_export"
     asset_id = "pipe_export"
@@ -77,8 +89,8 @@ async def test_export_job_csv(
         "query": {
             "asset_ids": [asset_id],
             "metric": "fill_ratio",
-            "from": start.isoformat(),
-            "to": (start + dt.timedelta(minutes=15)).isoformat(),
+            "from": start_text,
+            "to": end_text,
             "granularity": "5m",
             "agg": "avg",
         },
@@ -88,6 +100,10 @@ async def test_export_job_csv(
     body = res.json()
     assert body["status"] == "queued"
     assert body["file_path"] is None
+    saved = await db_session.get(ExportJob, body["job_id"])
+    assert saved is not None
+    assert saved.query["from"] == "2026-01-01T00:00:00Z"
+    assert saved.query["to"] == "2026-01-01T00:15:00Z"
 
     pending_download = await app_client.get(f"/v1/analytics/jobs/{body['job_id']}/download")
     assert pending_download.status_code == 400

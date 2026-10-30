@@ -88,8 +88,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
   /v1/cities/{city_id}/assets:
     get:
       tags:
@@ -208,8 +208,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Bad Request
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/assets/{asset_id}:
     get:
       tags:
@@ -258,8 +256,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
   /v1/assets/{asset_id}/upstream:
     get:
       tags:
@@ -305,8 +303,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
   /v1/assets/{asset_id}/downstream:
     get:
       tags:
@@ -352,8 +350,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
   /v1/telemetry/scenarios:
     get:
       tags:
@@ -412,8 +410,6 @@ paths:
                 title: Response Telemetry Qa V1 Telemetry Qa Get
         '400':
           $ref: '#/components/responses/InvalidArgument'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/assets/{asset_id}/metrics:
     get:
       tags:
@@ -462,8 +458,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
   /v1/assets/{asset_id}/observations:
     get:
       tags:
@@ -571,8 +567,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/assets/{asset_id}/observations:compare:
     get:
       tags:
@@ -679,8 +673,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/telemetry/events:batch:
     post:
       tags:
@@ -756,8 +748,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Conflict
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
       security:
       - BearerAuth: []
   /v1/jobs/queue:
@@ -818,8 +808,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/JobQueueOut'
                 title: Response Queue List V1 Jobs Queue Get
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
   /v1/jobs/queue/{job_id}:
@@ -858,8 +848,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobQueueOut'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
   /v1/jobs/queue/{job_id}/retry:
@@ -898,8 +888,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobQueueOut'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
   /v1/jobs/queue/{job_id}/cancel:
@@ -938,8 +928,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobQueueOut'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
   /v1/cities/{city_id}/status:
@@ -971,8 +961,6 @@ paths:
                 request_id: req_example
         '400':
           $ref: '#/components/responses/InvalidArgument'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/cities/{city_id}/summary:
     get:
       tags:
@@ -1013,8 +1001,6 @@ paths:
                   warning: 1
         '400':
           $ref: '#/components/responses/InvalidArgument'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/hotspots:
     get:
       tags:
@@ -1068,8 +1054,6 @@ paths:
                 details: {}
         '400':
           $ref: '#/components/responses/InvalidArgument'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/analytics/runs:
     get:
       tags:
@@ -1104,8 +1088,6 @@ paths:
                 title: Response Analytics Runs V1 Analytics Runs Get
         '400':
           $ref: '#/components/responses/InvalidArgument'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/analytics/calibration/recommendations:
     get:
       tags:
@@ -1153,8 +1135,6 @@ paths:
                 $ref: '#/components/schemas/CalibrationRecommendationOut'
         '400':
           $ref: '#/components/responses/InvalidArgument'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/analytics/calibration/overrides:
     get:
       tags:
@@ -1230,8 +1210,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Forbidden
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
       security:
       - BearerAuth: []
     post:
@@ -1283,8 +1261,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
       security:
       - BearerAuth: []
   /v1/analytics/runs/diff:
@@ -1330,8 +1306,6 @@ paths:
                 $ref: '#/components/schemas/AnalyticsRunDiffOut'
         '400':
           $ref: '#/components/responses/InvalidArgument'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/analytics/jobs:
     post:
       tags:
@@ -1432,8 +1406,6 @@ paths:
                       request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
       security:
       - BearerAuth: []
   /v1/analytics/jobs/{job_id}:
@@ -1509,8 +1481,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
   /v1/analytics/jobs/{job_id}/download:
@@ -1609,8 +1581,6 @@ paths:
                       request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
       security:
       - BearerAuth: []
   /v1/events:
@@ -1707,8 +1677,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Bad Request
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
   /v1/notes:
     get:
       tags:
@@ -1781,8 +1749,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/NoteOut'
                 title: Response Notes V1 Notes Get
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
     post:
@@ -1832,8 +1800,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: City, asset or event does not exist in the requested city
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
   /v1/notes/{note_id}:
@@ -1872,8 +1840,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NoteOut'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
     delete:
@@ -1914,8 +1882,8 @@ paths:
                 additionalProperties:
                   type: string
                 title: Response Remove V1 Notes  Note Id  Delete
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
 components:
@@ -2507,10 +2475,14 @@ components:
           type: string
           format: date-time
           title: From
+          description: Normalized to UTC; timestamps without an offset are interpreted
+            as UTC.
         to:
           type: string
           format: date-time
           title: To
+          description: Normalized to UTC; timestamps without an offset are interpreted
+            as UTC.
         granularity:
           type: string
           title: Granularity
@@ -2906,10 +2878,14 @@ components:
           type: string
           format: date-time
           title: From
+          description: Normalized to UTC; timestamps without an offset are interpreted
+            as UTC.
         to:
           type: string
           format: date-time
           title: To
+          description: Normalized to UTC; timestamps without an offset are interpreted
+            as UTC.
         event_type:
           anyOf:
           - type: string
@@ -3059,27 +3035,36 @@ components:
       - msg
       - type
       title: ValidationError
-    ErrorResponse:
+    ErrorDetail:
+      properties:
+        code:
+          title: Code
+          type: string
+        message:
+          title: Message
+          type: string
+        details:
+          additionalProperties: true
+          title: Details
+          type: object
+        request_id:
+          title: Request Id
+          type: string
+      required:
+      - code
+      - message
+      - details
+      - request_id
+      title: ErrorDetail
       type: object
+    ErrorResponse:
       properties:
         error:
-          type: object
-          properties:
-            code:
-              type: string
-            message:
-              type: string
-            details:
-              type: object
-            request_id:
-              type: string
-          required:
-          - code
-          - message
-          - details
-          - request_id
+          $ref: '#/components/schemas/ErrorDetail'
       required:
       - error
+      title: ErrorResponse
+      type: object
   responses:
     InvalidArgument:
       description: 'INVALID_ARGUMENT: Validation error'
@@ -3163,18 +3148,6 @@ components:
             error:
               code: CONFLICT
               message: Conflict
-              details: {}
-              request_id: req_example
-    UnprocessableEntity:
-      description: 'UNPROCESSABLE_ENTITY: Unprocessable entity'
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error:
-              code: UNPROCESSABLE_ENTITY
-              message: Unprocessable entity
               details: {}
               request_id: req_example
   securitySchemes:

@@ -31,28 +31,7 @@ def main() -> None:
 
 def _add_error_components(spec: dict[str, Any]) -> None:
     components = spec.setdefault("components", {})
-    schemas = components.setdefault("schemas", {})
     responses = components.setdefault("responses", {})
-
-    schemas.setdefault(
-        "ErrorResponse",
-        {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "object",
-                    "properties": {
-                        "code": {"type": "string"},
-                        "message": {"type": "string"},
-                        "details": {"type": "object"},
-                        "request_id": {"type": "string"},
-                    },
-                    "required": ["code", "message", "details", "request_id"],
-                }
-            },
-            "required": ["error"],
-        },
-    )
 
     def _resp(name: str, code: str, message: str) -> None:
         responses.setdefault(
@@ -82,7 +61,6 @@ def _add_error_components(spec: dict[str, Any]) -> None:
     _resp("ForbiddenBearer", "FORBIDDEN", "Forbidden")
     _resp("NotFound", "NOT_FOUND", "Resource not found")
     _resp("Conflict", "CONFLICT", "Conflict")
-    _resp("UnprocessableEntity", "UNPROCESSABLE_ENTITY", "Unprocessable entity")
 
     for path_item in spec.get("paths", {}).values():
         if not isinstance(path_item, dict):
@@ -106,7 +84,6 @@ def _add_error_components(spec: dict[str, Any]) -> None:
             )
             _replace_response_ref(resp, "404", "NotFound")
             _replace_response_ref(resp, "409", "Conflict")
-            _replace_response_ref(resp, "422", "UnprocessableEntity")
 
     _add_security_schemes(spec)
 
@@ -132,7 +109,6 @@ def _replace_response_ref(responses: dict[str, Any], status: str, ref_name: str)
         "ForbiddenBearer": ("FORBIDDEN", "Forbidden"),
         "NotFound": ("NOT_FOUND", "Resource not found"),
         "Conflict": ("CONFLICT", "Conflict"),
-        "UnprocessableEntity": ("UNPROCESSABLE_ENTITY", "Unprocessable entity"),
     }[ref_name]
     # Named examples can document multiple endpoint-specific error codes for
     # one HTTP status. Never replace them with the generic response component.

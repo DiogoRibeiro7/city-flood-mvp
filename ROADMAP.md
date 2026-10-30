@@ -27,6 +27,9 @@ not satisfy an end-to-end release gate.
    snapshot test and timestamp, spatial, scenario, and error regression tests.
    Resolve demonstrated status, pagination, filter, and schema discrepancies;
    preserve compatibility and regenerate the snapshot only when needed.
+   The [contract audit](docs/releases/api-contract-audit.md) fixes validation
+   status/error serialization and job UTC handling, with passing regression
+   evidence. CSV media types, auth declarations, and pagination ties remain open.
 4. **Verify database upgrades (prompt 4).** Retain the existing test-name guard.
    Exercise Alembic from zero and over representative data on a disposable DB;
    compare constraints, indexes, timestamps, extensions, and ORM expectations.

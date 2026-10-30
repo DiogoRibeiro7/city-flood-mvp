@@ -2,6 +2,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pydantic import BaseModel
+
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+    details: dict[str, object]
+    request_id: str
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail
+
 
 @dataclass
 class AppError(Exception):

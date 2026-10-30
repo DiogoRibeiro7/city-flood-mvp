@@ -37,10 +37,17 @@ def utc_now() -> dt.datetime:
 
 def parse_iso8601(ts: str) -> dt.datetime:
     """Parse ISO8601 timestamp to tz-aware datetime (UTC if missing tz)."""
-    out = dt.datetime.fromisoformat(ts.replace("Z", "+00:00"))
-    if out.tzinfo is None:
-        out = out.replace(tzinfo=dt.UTC)
-    return out.astimezone(dt.UTC)
+    return normalize_utc(dt.datetime.fromisoformat(ts.replace("Z", "+00:00")))
+
+
+def normalize_utc(value: dt.datetime) -> dt.datetime:
+    """Use UTC for missing offsets and normalize explicit offsets to UTC."""
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=dt.UTC)
+    try:
+        return value.astimezone(dt.UTC)
+    except OverflowError as exc:
+        raise ValueError("timestamp is outside the supported UTC range") from exc
 
 
 def parse_bucket_interval(value: str) -> dt.timedelta:

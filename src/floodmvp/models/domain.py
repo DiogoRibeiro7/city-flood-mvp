@@ -1,9 +1,17 @@
 from __future__ import annotations
 
 import datetime as dt
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
+
+from floodmvp.common.time import normalize_utc
+
+JobTimestamp = Annotated[
+    dt.datetime,
+    AfterValidator(normalize_utc),
+    Field(description="Normalized to UTC; timestamps without an offset are interpreted as UTC."),
+]
 
 AssetType = Literal[
     "river_segment",
@@ -78,16 +86,16 @@ class ExportJobQuery(BaseModel):
     city_id: str | None = None
     asset_type: AssetType | None = None
     metric: str
-    from_ts: dt.datetime = Field(..., alias="from")
-    to_ts: dt.datetime = Field(..., alias="to")
+    from_ts: JobTimestamp = Field(..., alias="from")
+    to_ts: JobTimestamp = Field(..., alias="to")
     granularity: str = "5m"
     agg: str = "avg"
 
 
 class ReportJobQuery(BaseModel):
     city_id: str
-    from_ts: dt.datetime = Field(..., alias="from")
-    to_ts: dt.datetime = Field(..., alias="to")
+    from_ts: JobTimestamp = Field(..., alias="from")
+    to_ts: JobTimestamp = Field(..., alias="to")
     event_type: str | None = None
     top_hotspots: int = 10
     include_summary: bool = True
