@@ -8,13 +8,18 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.api import main as api_main
 from floodmvp.api.main import app
-from floodmvp.models.db import Asset, City, TelemetryObservation
+from floodmvp.models.db import Asset, City, IngestIdempotency, TelemetryObservation
 from floodmvp.storage.db import get_session
+from floodmvp.storage.repos.ingest import prune_expired_idempotency
 
 
 @pytest.fixture()
 async def app_client(db_session: AsyncSession) -> AsyncClient:
+    api_main._RATE_LIMITS.clear()
+    api_main._TENANT_LIMITS.clear()
+
     async def _override_session():
         yield db_session
 
@@ -22,6 +27,8 @@ async def app_client(db_session: AsyncSession) -> AsyncClient:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
     app.dependency_overrides.clear()
+    api_main._RATE_LIMITS.clear()
+    api_main._TENANT_LIMITS.clear()
 
 
 async def _seed_asset(session: AsyncSession, asset_id: str = "asset_1") -> None:
@@ -114,3 +121,84 @@ async def test_ingest_partial_failure(app_client: AsyncClient, db_session: Async
 
     count = await db_session.scalar(select(func.count()).select_from(TelemetryObservation))
     assert count == 1
+
+
+@pytest.mark.asyncio
+async def test_expired_key_can_be_reused_without_pruning_unrelated_keys(
+    app_client: AsyncClient, db_session: AsyncSession
+) -> None:
+    await _seed_asset(db_session)
+    old_timestamp = dt.datetime.now(dt.UTC) - dt.timedelta(days=8)
+    db_session.add_all(
+        [
+            IngestIdempotency(
+                idempotency_key=key,
+                device_id="asset_1",
+                response={"device_id": "asset_1", "received": 0, "accepted": 0, "rejected": 0, "results": []},
+                created_at=old_timestamp,
+            )
+            for key in ("key-expired", "key-unrelated-expired")
+        ]
+    )
+    await db_session.commit()
+
+    payload = {
+        "device_id": "asset_1",
+        "sent_at": dt.datetime.now(dt.UTC).isoformat(),
+        "events": [
+            {
+                "ts": dt.datetime.now(dt.UTC).isoformat(),
+                "type": "fill_ratio",
+                "value": 0.7,
+            }
+        ],
+    }
+    headers = {"Authorization": "Bearer dev-ingest-token", "Idempotency-Key": "key-expired"}
+    response = await app_client.post("/v1/telemetry/events:batch", json=payload, headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["accepted"] == 1
+    # The HTTP fixture shares a session; real requests use fresh sessions.
+    db_session.expire_all()
+    renewed = await db_session.get(IngestIdempotency, "key-expired")
+    assert renewed is not None
+    assert renewed.created_at > old_timestamp
+    # An ordinary telemetry request must never sweep other callers' keys.
+    assert await db_session.get(IngestIdempotency, "key-unrelated-expired") is not None
+
+
+@pytest.mark.asyncio
+async def test_idempotency_maintenance_deletes_only_bounded_expired_rows(
+    db_session: AsyncSession,
+) -> None:
+    await _seed_asset(db_session)
+    now = dt.datetime.now(dt.UTC)
+    db_session.add_all(
+        [
+            IngestIdempotency(
+                idempotency_key=f"expired-{i}",
+                device_id="asset_1",
+                response={},
+                created_at=now - dt.timedelta(days=8),
+            )
+            for i in range(3)
+        ]
+    )
+    db_session.add(
+        IngestIdempotency(
+            idempotency_key="new-key",
+            device_id="asset_1",
+            response={},
+            created_at=now - dt.timedelta(days=1),
+        )
+    )
+    await db_session.commit()
+
+    assert await prune_expired_idempotency(db_session, batch_size=2) == 2
+    await db_session.commit()
+    assert await db_session.scalar(select(func.count()).select_from(IngestIdempotency)) == 2
+
+    assert await prune_expired_idempotency(db_session, batch_size=2) == 1
+    await db_session.commit()
+    assert await db_session.scalar(select(func.count()).select_from(IngestIdempotency)) == 1
+    assert await db_session.get(IngestIdempotency, "new-key") is not None

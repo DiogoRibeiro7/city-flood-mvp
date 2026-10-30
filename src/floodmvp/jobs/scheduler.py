@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from floodmvp.config.cities import get_city_configs
 from floodmvp.models.db import AnalyticsRun, JobQueue
 from floodmvp.storage.db import SessionLocal
+from floodmvp.storage.repos.ingest import prune_expired_idempotency
 from floodmvp.storage.repos.jobs import enqueue_job
 
 
@@ -41,6 +42,9 @@ async def run(interval_minutes: int, poll_seconds: int) -> None:
     while True:
         cities = get_city_configs()
         async with SessionLocal() as session:
+            # Keep ingestion writes free of table-wide retention sweeps. Each
+            # scheduler pass removes a bounded number of expired keys instead.
+            await prune_expired_idempotency(session)
             for city in cities:
                 if await _should_enqueue(session, city.city_id, interval_minutes):
                     await enqueue_job(

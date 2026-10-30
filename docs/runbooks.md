@@ -32,6 +32,9 @@
 ### Data pruning
 - Use Timescale retention policies where possible.
 - For ad-hoc cleanup, remove old telemetry with a `DELETE` scoped by timestamp and city.
+- Run the analytics scheduler for bounded seven-day ingestion idempotency
+  cleanup. Requests only expire their own keyed records; see the
+  [ingestion runbook](runbooks/ingest.md) for maintenance and index details.
 
 ## Scaling
 
