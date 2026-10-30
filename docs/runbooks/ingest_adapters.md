@@ -151,6 +151,8 @@ Notes:
   collected in 15 minutes is 10.16 mmph.
 - `units=mmph` and `units=inph` are hourly rates and need no interval; `inph`
   is multiplied by 25.4. Negative or non-finite readings are rejected.
+- Each batch is fully converted before updating any row. An invalid reading or
+  unsupported unit aborts conversion without leaving mixed-unit rows.
 - `--header "Authorization: Bearer ..."` supports auth.
 
 ## River level HTTP adapter (real data source)
@@ -183,6 +185,8 @@ poetry run python -m floodmvp.jobs.ingest_river_level_http \
 
 Notes:
 - `units` converts to meters. Supported: `m`, `cm`, `mm`, `ft`, `in`.
+- River levels must be finite, but negative levels are permitted for gauges
+  measured relative to a datum. Invalid readings abort conversion of the batch.
 - `--header "Authorization: Bearer ..."` supports auth.
 
 ## Synthetic generators (JSON output)
