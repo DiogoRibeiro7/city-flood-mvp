@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy import Interval, and_, bindparam, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.common.errors import AppError
 from floodmvp.common.ids import new_id
 from floodmvp.common.time import parse_bucket_interval
 from floodmvp.config.settings import settings
@@ -18,6 +19,7 @@ from floodmvp.models.db import (
     AnalyticsThresholdOverride,
     Asset,
     AssetStatusLatest,
+    City,
     ExportJob,
     ExportJobLog,
     TelemetryObservation,
@@ -270,6 +272,10 @@ async def create_threshold_override(
     thresholds: dict[str, Any],
     notes: str | None,
 ) -> AnalyticsThresholdOverride:
+    # Report a clear API error instead of letting the city FK fail on flush.
+    if await session.scalar(select(City.city_id).where(City.city_id == city_id)) is None:
+        raise AppError(code="CITY_NOT_FOUND", message="City not found", status_code=404)
+
     row = AnalyticsThresholdOverride(
         override_id=new_id("cal"),
         city_id=city_id,

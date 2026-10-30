@@ -1271,6 +1271,18 @@ paths:
                 $ref: '#/components/schemas/CalibrationOverrideOut'
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '404':
+          content:
+            application/json:
+              example:
+                error:
+                  code: CITY_NOT_FOUND
+                  message: City not found
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
       security:
@@ -2059,7 +2071,7 @@ components:
           title: Season
           default: all
         thresholds:
-          $ref: '#/components/schemas/CalibrationThresholds'
+          $ref: '#/components/schemas/CalibrationOverrideThresholds'
         notes:
           anyOf:
           - type: string
@@ -2100,6 +2112,54 @@ components:
       - thresholds
       - created_at
       title: CalibrationOverrideOut
+    CalibrationOverrideThresholds:
+      properties:
+        rain_event_threshold_mmph:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Rain Event Threshold Mmph
+        rain_event_min_duration_minutes:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Rain Event Min Duration Minutes
+        overflow_fill_threshold:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Overflow Fill Threshold
+        overflow_min_duration_minutes:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Overflow Min Duration Minutes
+        risk_fill_watch:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Risk Fill Watch
+        risk_fill_warning:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+          title: Risk Fill Warning
+      additionalProperties: false
+      type: object
+      title: CalibrationOverrideThresholds
+      description: 'Validate user-supplied thresholds without constraining historical
+        outputs.
+
+
+        Flood-risk values can exceed 1.0 (some city defaults do), so only enforce
+
+        finite, nonnegative quantities and positive duration windows here.'
     CalibrationRecommendationOut:
       properties:
         city_id:
