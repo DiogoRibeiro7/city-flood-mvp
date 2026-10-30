@@ -1560,18 +1560,30 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Bad Request
         '404':
+          description: Job not found or completed export file unavailable
           content:
             application/json:
-              example:
-                error:
-                  code: JOB_NOT_FOUND
-                  message: Job not found
-                  details:
-                    job_id: job_missing
-                  request_id: req_example
+              examples:
+                job_not_found:
+                  summary: Unknown job
+                  value:
+                    error:
+                      code: JOB_NOT_FOUND
+                      message: Job not found
+                      details:
+                        job_id: job_missing
+                      request_id: req_example
+                job_file_not_found:
+                  summary: Completed export file unavailable
+                  value:
+                    error:
+                      code: JOB_FILE_NOT_FOUND
+                      message: Export file is no longer available
+                      details:
+                        job_id: job_example
+                      request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Not Found
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
       security:

@@ -134,6 +134,11 @@ def _replace_response_ref(responses: dict[str, Any], status: str, ref_name: str)
         "Conflict": ("CONFLICT", "Conflict"),
         "UnprocessableEntity": ("UNPROCESSABLE_ENTITY", "Unprocessable entity"),
     }[ref_name]
+    # Named examples can document multiple endpoint-specific error codes for
+    # one HTTP status. Never replace them with the generic response component.
+    if "examples" in media:
+        media.setdefault("schema", {"$ref": "#/components/schemas/ErrorResponse"})
+        return
     example = media.get("example")
     error = example.get("error") if isinstance(example, dict) else None
     if isinstance(error, dict) and (

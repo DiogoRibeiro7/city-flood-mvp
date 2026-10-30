@@ -547,15 +547,32 @@ async def get_job(
             }
         },
         404: {
+            "description": "Job not found or completed export file unavailable",
             "content": {
                 "application/json": {
-                    "example": {
-                        "error": {
-                            "code": "JOB_NOT_FOUND",
-                            "message": "Job not found",
-                            "details": {"job_id": "job_missing"},
-                            "request_id": "req_example",
-                        }
+                    "examples": {
+                        "job_not_found": {
+                            "summary": "Unknown job",
+                            "value": {
+                                "error": {
+                                    "code": "JOB_NOT_FOUND",
+                                    "message": "Job not found",
+                                    "details": {"job_id": "job_missing"},
+                                    "request_id": "req_example",
+                                }
+                            },
+                        },
+                        "job_file_not_found": {
+                            "summary": "Completed export file unavailable",
+                            "value": {
+                                "error": {
+                                    "code": "JOB_FILE_NOT_FOUND",
+                                    "message": "Export file is no longer available",
+                                    "details": {"job_id": "job_example"},
+                                    "request_id": "req_example",
+                                }
+                            },
+                        },
                     }
                 }
             }
@@ -574,5 +591,12 @@ async def download_job(
         raise AppError(code="JOB_NOT_FOUND", message="Job not found", status_code=404)
     if job.status != "completed" or not job.file_path:
         raise AppError(code="JOB_NOT_READY", message="Job not completed", status_code=400)
-    filename = pathlib.Path(job.file_path).name
-    return FileResponse(job.file_path, filename=filename)
+    file_path = pathlib.Path(job.file_path)
+    if not file_path.is_file():
+        raise AppError(
+            code="JOB_FILE_NOT_FOUND",
+            message="Export file is no longer available",
+            details={"job_id": job_id},
+            status_code=404,
+        )
+    return FileResponse(file_path, filename=file_path.name)

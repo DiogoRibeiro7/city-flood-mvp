@@ -91,8 +91,13 @@ CSV exports and reports run asynchronously. `POST /analytics/jobs` returns a
 job with `status: "queued"` and no download path. Start the background worker
 with `python -m floodmvp.jobs.queue_worker`, then poll the job endpoint until
 its status is `completed` or `failed`. Download is available only after the job
-has completed. Failed tasks are retried with backoff up to their configured
-attempt limit; the worker records the final error in the job status and logs.
+has completed (HTTP 400 `JOB_NOT_READY` otherwise). If a completed job's CSV
+has been deleted or is no longer accessible on disk, the download endpoint
+returns HTTP 404 `JOB_FILE_NOT_FOUND` with the job ID; an unknown job instead
+returns HTTP 404 `JOB_NOT_FOUND`. The job status remains unchanged, so operators
+can distinguish expired artifacts from failed exports. Failed tasks are retried
+with backoff up to their configured attempt limit; the worker records the final
+error in the job status and logs.
 Export granularity accepts positive seconds, minutes, hours or days (for
 example `5m`, `1h`, `1d`), up to 30 days. The worker passes this value to
 PostgreSQL as a typed interval.
