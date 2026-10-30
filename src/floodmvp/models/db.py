@@ -4,7 +4,7 @@ import datetime as dt
 from typing import Any
 
 from geoalchemy2 import Geometry
-from sqlalchemy import ARRAY, JSON, Date, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import ARRAY, JSON, Date, DateTime, Float, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -67,6 +67,9 @@ class TelemetryObservation(Base):
 
 class IngestIdempotency(Base):
     __tablename__ = "ingest_idempotency"
+    __table_args__ = (
+        Index("ix_ingest_idempotency_created_at_key", "created_at", "idempotency_key"),
+    )
 
     idempotency_key: Mapped[str] = mapped_column(String(128), primary_key=True)
     device_id: Mapped[str] = mapped_column(String(64), ForeignKey("asset.asset_id"), index=True)

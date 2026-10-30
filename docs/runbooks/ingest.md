@@ -41,5 +41,13 @@ curl -X POST "$API_BASE/v1/telemetry/events:batch" \
   response without inserting events again. Simultaneous retries are serialized.
 - Reusing a key with a different request, including a changed sensor reading,
   returns HTTP 409 (`IDEMPOTENCY_CONFLICT`). Keys must be 1–128 characters.
-- The server cleans idempotency rows older than 7 days.
+- Idempotency keys expire after 7 days. A reused expired key is removed by its
+  primary key before ingestion proceeds; normal requests never scan or delete
+  unrelated keys.
+- The analytics scheduler performs bulk retention cleanup, removing at most 500
+  expired keys per pass using `SKIP LOCKED` to avoid competing with ingestion.
+  Keep `python -m floodmvp.jobs.scheduler --poll-seconds 60` running in deployed
+  environments, and apply migration `0018_ingest_expiry` to index
+  expiry-time scans. Without the scheduler, expired keys can still be reused,
+  but their unused records will remain until maintenance runs.
 - Invalid or missing bearer tokens return HTTP 401 with a Bearer challenge.

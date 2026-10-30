@@ -132,12 +132,6 @@ async def ingest_events_batch(
     _authorize(authorization)
     idempotency_key = _validate_idempotency_key(idempotency_key)
 
-    await session.execute(
-        delete(IngestIdempotency).where(
-            IngestIdempotency.created_at < func.now() - text("interval '7 days'")
-        )
-    )
-
     if idempotency_key:
         digest = _request_digest(payload)
         # Lock by key for the transaction to serialize simultaneous retries.
@@ -149,6 +143,14 @@ async def ingest_events_batch(
         # Explicit BIGINT prevents asyncpg from binding a 64-bit hash as INTEGER.
         await session.execute(
             select(func.pg_advisory_xact_lock(literal(lock_id, type_=BigInteger())))
+        )
+        # Expire only the supplied key in the ingestion hot path. Background
+        # maintenance prunes the remaining old keys in bounded batches.
+        await session.execute(
+            delete(IngestIdempotency).where(
+                IngestIdempotency.idempotency_key == idempotency_key,
+                IngestIdempotency.created_at < func.now() - text("interval '7 days'"),
+            )
         )
         existing = await session.execute(
             select(IngestIdempotency).where(IngestIdempotency.idempotency_key == idempotency_key)
