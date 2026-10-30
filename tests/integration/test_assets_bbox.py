@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import pytest
 from geoalchemy2.elements import WKTElement
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.api.main import app
 from floodmvp.models.db import Asset, AssetTag, City
+from floodmvp.storage.db import get_session
 from floodmvp.storage.repos.assets import asset_to_out, list_assets
 
 
@@ -129,6 +132,30 @@ async def test_bbox_filtering_and_geojson(db_session: AsyncSession) -> None:
         offset=0,
     )
     assert {a.asset_id for a in combined_tag_assets} == {"node_1"}
+
+    # The HTTP contract is a bare array; pagination happens after filtering.
+    async def override_session():
+        yield db_session
+
+    app.dependency_overrides[get_session] = override_session
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as api:
+            path = f"/v1/cities/{city_id}/assets"
+            cases = [
+                ({"limit": "1", "offset": "0"}, ["node_1"]),
+                ({"limit": "1", "offset": "1"}, ["node_2"]),
+                ({"limit": "1", "offset": "3"}, []),
+                ({"limit": "5000"}, ["node_1", "node_2", "pipe_1"]),
+                ({"type": "node", "limit": "1", "offset": "1"}, ["node_2"]),
+                ({"type": "unknown_type"}, []),
+                ({"tag": "basin:basin_ne", "limit": "1", "offset": "1"}, ["pipe_1"]),
+            ]
+            for params, expected in cases:
+                response = await api.get(path, params=params)
+                assert response.status_code == 200
+                assert [row["asset_id"] for row in response.json()] == expected
+    finally:
+        app.dependency_overrides.pop(get_session, None)
 
     geojson_point = asset_to_out(assets[0])["geom_geojson"]
     geojson_line = asset_to_out(assets[1])["geom_geojson"]

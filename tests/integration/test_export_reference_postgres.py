@@ -110,6 +110,31 @@ async def test_export_jobs_reject_unknown_or_mismatched_references(
     assert await db_session.scalar(select(func.count()).select_from(ExportJob)) == 0
 
 
+@pytest.mark.parametrize("job_type", ["export_csv", "report_csv"])
+async def test_mixed_timezone_job_bounds_are_persisted_as_utc(
+    client: AsyncClient, db_session: AsyncSession, job_type: str
+) -> None:
+    await _seed_assets(db_session)
+    response = await client.post(
+        "/v1/analytics/jobs",
+        json={
+            "type": job_type,
+            "query": {
+                "city_id": "city_export_a",
+                "asset_ids": ["pipe_export_a"],
+                "metric": "fill_ratio",
+                "from": "2026-01-01T00:00:00",
+                "to": "2026-01-01T02:00:00+01:00",
+            },
+        },
+    )
+    assert response.status_code == 200
+    saved = await db_session.get(ExportJob, response.json()["job_id"])
+    assert saved is not None
+    assert saved.query["from"] == "2026-01-01T00:00:00Z"
+    assert saved.query["to"] == "2026-01-01T01:00:00Z"
+
+
 @pytest.mark.asyncio
 async def test_export_jobs_queue_valid_city_and_asset_filters(
     client: AsyncClient, db_session: AsyncSession
