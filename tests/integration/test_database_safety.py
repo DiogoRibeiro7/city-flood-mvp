@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from conftest import _get_database_url
+
+from scripts.database_test_support import get_test_database_url as _get_database_url
 
 
 def test_integration_db_requires_explicit_test_url(
