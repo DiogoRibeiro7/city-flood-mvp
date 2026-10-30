@@ -89,6 +89,10 @@ async def test_export_job_csv(
     assert body["status"] == "queued"
     assert body["file_path"] is None
 
+    pending_download = await app_client.get(f"/v1/analytics/jobs/{body['job_id']}/download")
+    assert pending_download.status_code == 400
+    assert pending_download.json()["error"]["code"] == "JOB_NOT_READY"
+
     # The API enqueues work; the worker processes it in a separate session.
     assert db_session.bind is not None
     monkeypatch.setattr(
@@ -110,3 +114,11 @@ async def test_export_job_csv(
     content = res_dl.text
     assert "asset_id,metric,ts,value" in content
     assert asset_id in content
+
+    # Export files may be pruned independently of their completed job records.
+    Path(status.json()["file_path"]).unlink()
+    missing_download = await app_client.get(f"/v1/analytics/jobs/{body['job_id']}/download")
+    assert missing_download.status_code == 404
+    error = missing_download.json()["error"]
+    assert error["code"] == "JOB_FILE_NOT_FOUND"
+    assert error["details"] == {"job_id": body["job_id"]}

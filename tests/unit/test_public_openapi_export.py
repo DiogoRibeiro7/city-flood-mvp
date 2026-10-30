@@ -13,15 +13,18 @@ from scripts.export_openapi import build_public_spec
 PUBLIC_SPEC = Path(__file__).resolve().parents[2] / "docs/openapi/public.yaml"
 
 
-def _documented_error_code(
+def _documented_error_codes(
     spec: dict[str, Any], method: str, path: str, status: str
-) -> str:
-    """Follow a response reference and extract its advertised error code."""
+) -> set[str]:
+    """Resolve response references and collect all advertised error codes."""
     response = spec["paths"][path][method]["responses"][status]
     if "$ref" in response:
         component = response["$ref"].rsplit("/", 1)[-1]
         response = spec["components"]["responses"][component]
-    return str(response["content"]["application/json"]["example"]["error"]["code"])
+    media = response["content"]["application/json"]
+    if "examples" in media:
+        return {str(item["value"]["error"]["code"]) for item in media["examples"].values()}
+    return {str(media["example"]["error"]["code"])}
 
 
 def test_public_openapi_snapshot_matches_live_routes_and_responses() -> None:
@@ -55,6 +58,7 @@ def test_public_openapi_snapshot_matches_live_routes_and_responses() -> None:
         ("get", "/v1/analytics/jobs/{job_id}", "404", "JOB_NOT_FOUND"),
         ("get", "/v1/analytics/jobs/{job_id}/download", "400", "JOB_NOT_READY"),
         ("get", "/v1/analytics/jobs/{job_id}/download", "404", "JOB_NOT_FOUND"),
+        ("get", "/v1/analytics/jobs/{job_id}/download", "404", "JOB_FILE_NOT_FOUND"),
     ],
 )
 def test_public_openapi_keeps_specific_error_codes(
@@ -62,7 +66,7 @@ def test_public_openapi_keeps_specific_error_codes(
 ) -> None:
     spec = build_public_spec()
 
-    assert _documented_error_code(spec, method, path, status) == expected_code
+    assert expected_code in _documented_error_codes(spec, method, path, status)
 
 
 def test_export_does_not_modify_fastapi_cached_schema() -> None:
