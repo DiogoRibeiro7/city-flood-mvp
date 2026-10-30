@@ -103,10 +103,16 @@ def convert_units(value: float, units: str, interval_minutes: int | None = None)
 
 
 def apply_unit_conversion(rows: list[dict[str, Any]], units: str, interval_minutes: int | None) -> None:
-    if units == "mmph":
-        return
+    """Convert an entire batch without leaving partially converted rows on failure."""
+    if units not in {"mmph", "mm", "in", "inph"}:
+        raise ValueError("units must be one of mmph, mm, in, inph")
+    converted: list[float | None] = []
     for row in rows:
         raw = row.get("value")
         if raw is None:
+            converted.append(None)
             continue
-        row["value"] = convert_units(float(raw), units, interval_minutes=interval_minutes)
+        converted.append(convert_units(float(raw), units, interval_minutes=interval_minutes))
+    for row, value in zip(rows, converted, strict=True):
+        if value is not None:
+            row["value"] = value

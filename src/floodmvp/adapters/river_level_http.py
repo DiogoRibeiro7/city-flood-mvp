@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import datetime as dt
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -75,6 +76,9 @@ def normalize_river_level_rows(
 
 
 def convert_units(value: float, units: str) -> float:
+    """Convert a finite river level into metres; negative datums are valid."""
+    if not math.isfinite(value):
+        raise ValueError("river level must be finite")
     if units == "m":
         return value
     if units == "cm":
@@ -89,10 +93,16 @@ def convert_units(value: float, units: str) -> float:
 
 
 def apply_unit_conversion(rows: list[dict[str, Any]], units: str) -> None:
-    if units == "m":
-        return
+    """Validate and convert a complete batch before mutating its readings."""
+    if units not in {"m", "cm", "mm", "ft", "in"}:
+        raise ValueError("units must be one of m, cm, mm, ft, in")
+    converted: list[float | None] = []
     for row in rows:
         raw = row.get("value")
         if raw is None:
+            converted.append(None)
             continue
-        row["value"] = convert_units(float(raw), units)
+        converted.append(convert_units(float(raw), units))
+    for row, value in zip(rows, converted, strict=True):
+        if value is not None:
+            row["value"] = value
