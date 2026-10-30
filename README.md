@@ -9,7 +9,13 @@
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/downloads/release/python-3120/)
 [![Node](https://img.shields.io/badge/Node-20-green)](https://nodejs.org/en/blog/release/v20.0.0)
 
-City Flood MVP is an end-to-end, synthetic **city-scale flood monitoring** system that mirrors the workflow of a real municipal flood ops stack. It models multi-asset drainage networks (pipes, rivers, gauges), generates realistic telemetry, runs analytics to detect events and hotspots with confidence scores, and presents everything in a decision-ready web UI. The API is designed to remain source-agnostic so you can plug in real telemetry adapters later without changing the data model or analytics pipeline.
+City Flood MVP is a synthetic **city-scale flood monitoring demonstration**. It models drainage networks (pipes, rivers, gauges), generates telemetry, runs event and hotspot analytics, and presents the results in a web UI. Generic file and HTTP adapters already support external telemetry. Their presence does not establish a validated real-world data integration, and the analytics confidence scores are heuristic scores rather than calibrated flood probabilities.
+
+The next targets are `v0.9.0-rc1` and an evidence-backed `v1.0.0` demonstration.
+See the [versioned roadmap](ROADMAP.md), [implementation audit](docs/releases/implementation-audit.md),
+and [release acceptance gates](docs/releases/v1-acceptance.md) for observed checks
+and unresolved gaps. Municipal production readiness, tenant data isolation, and
+achieved operational service levels have not been demonstrated.
 
 ## What’s included
 

@@ -1,7 +1,13 @@
 # Deployment Reference
 
-This document provides a concrete cloud deployment reference for **single-tenant** and **multi-tenant** setups.
-It is infrastructure-agnostic and focuses on the minimum components, boundaries, and operational tradeoffs.
+This document describes proposed cloud topologies for **single-tenant** and
+**multi-tenant** setups. These are design options, not verified deployment
+capabilities. The [release audit](../releases/implementation-audit.md) records
+the current gaps: tenant attribution for quotas does not enforce tenant-owned
+row access, quotas are process-local, and worker metrics are not separately
+scraped. Do not treat the multi-tenant options below as an implemented security
+boundary. The target release is a demonstration; operational readiness requires
+the [acceptance evidence](../releases/v1-acceptance.md).
 
 ## Shared assumptions
 
@@ -39,7 +45,7 @@ It is infrastructure-agnostic and focuses on the minimum components, boundaries,
 
 ### Model
 
-Two supported models depending on scale and data isolation:
+Two possible future models, each requiring implementation and isolation tests:
 
 1. **Shared DB, tenant-scoped rows**
    - Single DB cluster

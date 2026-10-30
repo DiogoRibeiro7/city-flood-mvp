@@ -1,5 +1,10 @@
 # Pilot Readiness
 
+The city IDs below are synthetic demonstration configurations, not evidence of
+active municipal pilots. Onboarding steps and acceptance values are proposed
+targets; stakeholder sign-off and measured operational results remain unverified.
+See the [release audit and gates](releases/v1-acceptance.md).
+
 ## Pilot Cities (Initial)
 - `city_porto_mvp` — coastal, dense urban core, high rainfall variability
 - `city_oslo_mvp` — colder climate, snowmelt-driven events, mixed topo

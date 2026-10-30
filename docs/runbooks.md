@@ -39,8 +39,12 @@
 ## Scaling
 
 ### Backend
-- Horizontal scale the `backend` service and place it behind a load balancer.
-- Increase `uvicorn` workers and keep request timeout aligned with analytics jobs.
+- Request quotas are process-local. Adding API replicas or `uvicorn` workers
+  changes their effective limits; a shared-state strategy or an explicit
+  single-worker deployment constraint must be verified before scaling.
+- Tenant attribution in request metrics does not establish tenant data
+  isolation. See the [deployment limitations](deployment/reference.md) and
+  [release security gate](releases/v1-acceptance.md) before exposing shared data.
 
 ### Database
 - Increase Postgres resources (CPU/RAM/IOPS) first.

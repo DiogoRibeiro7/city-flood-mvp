@@ -1,15 +1,18 @@
 # Backup/Restore Drills + DR Targets
 
-This document defines backup/restore procedures and DR targets (RTO/RPO) for City Flood MVP.
+This document proposes backup/restore procedures and DR targets (RTO/RPO) for
+City Flood MVP. The repository does not automatically configure PITR, archival
+storage or the schedules below. No measured restore drill or achieved RTO/RPO
+is established by this checklist; see [release gate G7](../releases/v1-acceptance.md).
 
-## Targets
+## Proposed targets
 
 - **RTO (Recovery Time Objective):** 4 hours
 - **RPO (Recovery Point Objective):** 15 minutes
 
 Adjust based on tenant SLA and regulatory requirements.
 
-## Backup strategy
+## Proposed backup strategy
 
 ### Database
 
