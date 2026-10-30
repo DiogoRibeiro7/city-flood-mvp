@@ -146,7 +146,11 @@ poetry run python -m floodmvp.jobs.ingest_rain_gauge_http \
 ```
 
 Notes:
-- `units=mm` will be converted to `mmph` using `interval-minutes`.
+- `units=mm` and `units=in` are accumulated rainfall depths and require a positive
+  `--interval-minutes`; both are converted to `mmph`. For example, 0.1 inches
+  collected in 15 minutes is 10.16 mmph.
+- `units=mmph` and `units=inph` are hourly rates and need no interval; `inph`
+  is multiplied by 25.4. Negative or non-finite readings are rejected.
 - `--header "Authorization: Bearer ..."` supports auth.
 
 ## River level HTTP adapter (real data source)
