@@ -15,9 +15,9 @@ scope; carry the other gates forward as visible limitations.
 
 | Gate | Required observation and retained evidence | Current disposition / follow-up |
 | --- | --- | --- |
-| G1: clean installation and static checks | Fresh locked Python/web installs; identified supported Python/Node versions; successful container builds, `ruff check`, `ruff format --check`, mypy including the OpenAPI exporter, web typecheck and build. Record tool versions, lock hashes and logs. | Open: local installs/lint/types/web checks pass, but formatting fails in 53 existing Python files. CI uses Python 3.12 while the backend image uses 3.14; container builds were not verified here. Prompt 5. |
+| G1: clean installation and static checks | Fresh locked Python/web installs; identified supported Python/Node versions; successful container builds, `ruff check`, `ruff format --check`, mypy including the OpenAPI exporter, web typecheck and build. Record tool versions, lock hashes and logs. | Open: local installs/lint/types/web checks pass, and the smoke follow-up verifies container builds. Formatting still fails in 53 existing Python files. CI uses Python 3.12 while the backend image uses 3.14; supported runtime/CI versions still need reconciliation. Prompt 5. |
 | G2: isolated migrations and data integrity | Test harness rejects application/non-test names. Fresh PostGIS/Timescale DB reaches the single Alembic head; a second upgrade is a no-op. Assert expected extensions, hypertables, constraints/indexes, foreign keys and UTC timestamps against models. Upgrade representative seeded data without loss; document locking and manual steps. | Open: safety tests, manual migration from zero and repeat upgrade pass. Automated migration/model consistency and seeded-upgrade evidence are still missing; integration table recreation does not exercise the revision chain. Prompt 4. |
-| G3: seeded end-to-end workflow | A single documented command provisions or verifies isolated prerequisites, waits with bounded polls, migrates, seeds a fixed small dataset, checks API/web readiness and key endpoints, queues an export, observes a terminal success and validates its CSV. A rerun succeeds without duplicate data. An induced failure returns nonzero with useful logs; cleanup removes only that run's resources. | Open: seed and ingestion/export smoke components exist, but no complete isolated orchestrator. Compose omits the worker/scheduler; seed time is wall-clock based. Prompt 2. |
+| G3: seeded end-to-end workflow | A single documented command provisions or verifies isolated prerequisites, waits with bounded polls, migrates, seeds a fixed small dataset, checks API/web readiness and key endpoints, queues an export, observes a terminal success and validates its CSV. A rerun succeeds without duplicate data. An induced failure returns nonzero with useful logs; cleanup removes only that run's resources. | Local verification passed in prompt 2: `python -m scripts.smoke_stack` uses a separate Compose stack, fixed input, actual worker/scheduler containers, failure diagnostics and cleanup. Two successful runs produced identical CSV; stopped-worker failure behaved as expected. See the [smoke evidence](../runbooks/smoke.md#observed-local-verification-2026-10-30); repeat on the reviewed candidate. |
 | G4: API contract | Passing unit/integration suites and live public-schema comparison; error envelopes/status codes, malformed input, pagination/filter boundaries, timestamps and scenarios have documented assertions. Any changed contract has a regenerated snapshot and compatibility explanation. | Open: existing contract/regression assertions pass, but the systematic pagination/filter/status audit remains. Prompt 3. |
 | G5: validated real-data experiment | Primary-source evidence for reuse terms, source/station IDs, units, time zone, cadence, retrieval window and gaps; selected Portuguese source; reproducible ingestion with provenance/deduplication; measured quality report distinguishing missing values from observed zero. Independent labels and matching rules precede accuracy scores; otherwise explicitly descriptive results. | Open: source assessment, dataset, observed quality report and case study are absent. Generic HTTP adapters and ERA5-assisted synthetic generation are insufficient. Prompts 6-10. |
 | G6: security boundary | Passing privileged-role, unsafe-ingest-token, spoofed-header, CORS and request-limit tests; no secrets in source or web bundle; dependency review/scan results recorded. Prove cross-tenant denial for any tenant-hosting claim, or document a single-tenant boundary. Prove quota semantics across API processes or enforce/document a single-worker constraint. | Open: focused security regressions pass. Tenant attribution is not row authorization; quotas are process-local; no complete dependency scan or deployment security review was run. Prompts 5 and 13. |
@@ -143,9 +143,10 @@ docker compose exec -T backend python /app/scripts/smoke_export_jobs.py
 
 They require configured database/ingestion credentials, a ready API and seeded
 measurements; the export script runs the queue worker itself. They mutate data
-and do not yet provide deterministic isolation/cleanup. Do not run them against
-an application stack to fill an evidence gap. Prompt 2 must provide the complete
-entry point and failure-path checks before G3 can pass.
+and do not themselves provide deterministic isolation/cleanup. Do not run them
+against an application stack to fill an evidence gap. Prompt 2 adds the complete
+entry point `python -m scripts.smoke_stack`; see its [runbook](../runbooks/smoke.md)
+for actual success/failure-path results and cleanup instructions.
 
 No real-data reproduction, full browser acceptance, backup/restore drill, or
 release-publication command is claimed to exist here. Define and execute those
@@ -190,13 +191,14 @@ Locked input SHA-256 values:
 
 ## Outstanding release decision
 
-**No-go for either release at this audit baseline.** Formatting is a known
-failure and installation/runtime, migration, full-stack and security evidence
-remain incomplete. Real-data, operator-workflow and recovery evidence are
-additional v1 blockers. This documentation PR establishes the work and evidence
-requirements; it does not close those gates.
+**No-go for either release.** Formatting is a known failure and supported-runtime,
+migration/model-consistency and security evidence remain incomplete. The prompt
+2 smoke follow-up supplies local full-stack evidence, but real-data,
+operator-workflow and recovery evidence are additional v1 blockers. The baseline
+table above remains the original prompt 1 record; later smoke outcomes are
+recorded separately in the linked runbook.
 
-Prompt 2 is dependent on review and merge of this prompt 1 PR into the current
-integration branch. Do not merge automatically or continue from an assumed
-merge. After each predecessor is merged, fetch and re-evaluate changed code,
-tests, open PRs and these gate results before continuing.
+Prompt 3 depends on review and merge of the prompt 2 smoke-test PR into the
+current integration branch. Do not merge automatically or continue from an
+assumed merge. After each predecessor is merged, fetch and re-evaluate changed
+code, tests, open PRs and these gate results before continuing.

@@ -19,7 +19,7 @@ async def _should_enqueue(session: AsyncSession, city_id: str, interval_minutes:
         select(JobQueue.job_id)
         .where(JobQueue.job_type == "analytics_run")
         .where(JobQueue.status.in_(["queued", "running"]))
-        .where(JobQueue.payload["city_id"].astext == city_id)
+        .where(JobQueue.payload["city_id"].as_string() == city_id)
         .limit(1)
     )
     if queued.scalar_one_or_none() is not None:

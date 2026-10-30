@@ -67,6 +67,16 @@ bash ./scripts/seed_all.sh
 
 ## Tests
 
+To build, migrate, seed and verify the full stack in disposable resources:
+
+```bash
+python -m scripts.smoke_stack
+```
+
+Requires Python 3.12+ and Docker Compose; no application `.env` or pre-started
+services are needed. See the [smoke runbook](docs/runbooks/smoke.md) for isolation,
+failure injection, diagnostics, cleanup and the opt-in CI workflow.
+
 ```bash
 poetry run pytest -q tests/unit
 ```
