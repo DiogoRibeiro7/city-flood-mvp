@@ -17,6 +17,11 @@ and [release acceptance gates](docs/releases/v1-acceptance.md) for observed chec
 and unresolved gaps. Municipal production readiness, tenant data isolation, and
 achieved operational service levels have not been demonstrated.
 
+The [Portuguese source assessment](docs/data/real-source-assessment.md) selects
+a licensed historical Porto rainfall archive and records a small real fixture.
+Its 6/12-hour totals support descriptive ingestion work; a provider adapter,
+quality report and validated flood evaluation remain outstanding.
+
 ## What’s included
 
 - Multi-city synthetic assets + telemetry + analytics

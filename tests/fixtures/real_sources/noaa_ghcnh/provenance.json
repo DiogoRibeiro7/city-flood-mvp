@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "provider": "NOAA National Centers for Environmental Information",
+  "dataset": "Global Historical Climatology Network-hourly (GHCNh)",
+  "dataset_doi": "https://doi.org/10.25921/jp3d-3v19",
+  "documentation_version": "1.1.0 (2026-03-10)",
+  "license": {
+    "id": "CC0-1.0",
+    "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "evidence_url": "https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01688/xml",
+    "evidence_sha256": "6021c232eb6c5a0509ecb23677e98ed99d2c04142f24dc401eb113f1da5375b4",
+    "xml_section": "resourceConstraints with xlink:title Data License Statement"
+  },
+  "attribution": "Menne, Matthew J., et al. (2023). Global Historical Climatology Network-Hourly (GHCNh). NOAA NCEI. Subset: POMU0068545, six reports in January 2010; accessed 2026-10-31. https://doi.org/10.25921/jp3d-3v19. Selected rows; no NOAA endorsement.",
+  "source": {
+    "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+    "retrieved_at": "2026-10-31T10:26:51.355574+00:00",
+    "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+    "status": 200,
+    "bytes": 14325059,
+    "sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+    "last_modified": "Fri, 10 Jul 2026 16:15:47 GMT",
+    "etag": "\"067d4bd961a53bb36dbe46ff7fa81987\""
+  },
+  "station": {
+    "id": "POMU0068545",
+    "name": "PORTO PORTUGAL (PEDRAS RUBRAS)",
+    "latitude": 41.23,
+    "longitude": -8.68,
+    "elevation_m": 79.0,
+    "source": {
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-station-list.txt",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-station-list.txt",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:24:40.368778+00:00",
+      "bytes": 3459429,
+      "sha256": "ff451fafc8f251560029e9ed31ebf0f4d12a2ddd492516c0b166c3744cad182a",
+      "last_modified": "Wed, 21 Oct 2026 08:51:08 GMT",
+      "etag": "\"91d2ad780d97721aedee591367c00a05\""
+    }
+  },
+  "fixture": {
+    "file": "porto_2010_excerpt.psv",
+    "sha256": "8f38fcb576a56d697acbd85868ffa7a7d0d77d536bd4f61647d25459682f0385",
+    "bytes": 15675,
+    "row_count": 6,
+    "column_count": 329,
+    "source_line_numbers": [
+      2,
+      14,
+      26,
+      38,
+      50,
+      482
+    ],
+    "selection_timestamps_utc": [
+      "2010-01-01T00:00:00",
+      "2010-01-01T06:00:00",
+      "2010-01-01T12:00:00",
+      "2010-01-01T18:00:00",
+      "2010-01-02T00:00:00",
+      "2010-01-11T00:00:00"
+    ],
+    "transformation": "Header and six complete source lines copied byte-for-byte, in source order. No fields rewritten; original LF endings retained. Curated examples, not a contiguous time series."
+  },
+  "station_fixture": {
+    "file": "station_record.txt",
+    "sha256": "fc4347900ea3343414a6ea87b7c46c62929ab4e4b8aaa6113b970f194b83888f",
+    "bytes": 89,
+    "transformation": "One complete station-list line copied byte-for-byte."
+  },
+  "semantics": {
+    "timestamp_timezone": "UTC, explicitly documented despite offset-free DATE strings",
+    "rainfall_units": "mm of liquid-equivalent accumulated precipitation",
+    "primary_field": "precipitation_6_hour",
+    "primary_interval_minutes": 360,
+    "secondary_field": "precipitation_12_hour",
+    "secondary_interval_minutes": 720,
+    "missing": "Empty precipitation cells; never replace with zero.",
+    "trace": "Measurement code T with value 0.0 is a trace, not an observed dry interval.",
+    "quality": "Blank source QC codes do not establish passed QC.",
+    "overlap": "Do not combine overlapping 6-hour and 12-hour totals or invent sub-hourly observations."
+  },
+  "interpretation": "Historical rainfall ingestion examples only. No river-level observations, flood labels, accuracy scores or evidence of a flood event."
+}
