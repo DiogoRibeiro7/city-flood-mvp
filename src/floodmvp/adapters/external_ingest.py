@@ -82,8 +82,12 @@ def parse_json(path: Path) -> list[dict[str, Any]]:
             return [_normalize_record(r) for r in raw["records"]]
         if "device_id" in raw and "events" in raw and isinstance(raw["events"], list):
             default_device_id = raw.get("device_id")
-            return [_normalize_record(r, default_device_id=default_device_id) for r in raw["events"]]
-    raise ValueError("Unsupported JSON format. Use a list, {records:[...]}, or {device_id, events:[...]}.")
+            return [
+                _normalize_record(r, default_device_id=default_device_id) for r in raw["events"]
+            ]
+    raise ValueError(
+        "Unsupported JSON format. Use a list, {records:[...]}, or {device_id, events:[...]}."
+    )
 
 
 def parse_ndjson(lines: Iterable[str]) -> list[dict[str, Any]]:

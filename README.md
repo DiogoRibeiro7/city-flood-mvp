@@ -6,8 +6,8 @@
 [![Last Commit](https://img.shields.io/github/last-commit/DiogoRibeiro7/city-flood-mvp)](https://github.com/DiogoRibeiro7/city-flood-mvp/commits/develop)
 [![Issues](https://img.shields.io/github/issues/DiogoRibeiro7/city-flood-mvp)](https://github.com/DiogoRibeiro7/city-flood-mvp/issues)
 [![Stars](https://img.shields.io/github/stars/DiogoRibeiro7/city-flood-mvp)](https://github.com/DiogoRibeiro7/city-flood-mvp/stargazers)
-[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/downloads/release/python-3120/)
-[![Node](https://img.shields.io/badge/Node-20-green)](https://nodejs.org/en/blog/release/v20.0.0)
+[![Python](https://img.shields.io/badge/Python-3.12--3.14-blue)](docs/releases/version-policy.md)
+[![Node](https://img.shields.io/badge/Node-24-green)](docs/releases/version-policy.md)
 
 City Flood MVP is a synthetic **city-scale flood monitoring demonstration**. It models drainage networks (pipes, rivers, gauges), generates telemetry, runs event and hotspot analytics, and presents the results in a web UI. Generic file and HTTP adapters already support external telemetry. Their presence does not establish a validated real-world data integration, and the analytics confidence scores are heuristic scores rather than calibrated flood probabilities.
 
@@ -75,7 +75,10 @@ python -m scripts.smoke_stack
 
 Requires Python 3.12+ and Docker Compose; no application `.env` or pre-started
 services are needed. See the [smoke runbook](docs/runbooks/smoke.md) for isolation,
-failure injection, diagnostics, cleanup and the opt-in CI workflow.
+failure injection, diagnostics, cleanup and the shared CI/manual workflow.
+The [candidate checklist](docs/releases/rc-checklist.md) records release checks,
+artifact commands and the current no-go decision; the [version policy](docs/releases/version-policy.md)
+defines the tested runtime matrix. No candidate has been tagged or published.
 
 ```bash
 poetry run pytest -q tests/unit

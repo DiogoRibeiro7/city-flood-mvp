@@ -37,9 +37,7 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncClient:
         ("2026-02-01T00:00:00", dt.datetime(2026, 2, 1, tzinfo=dt.UTC)),
     ],
 )
-def test_query_timestamp_preserves_utc_normalization(
-    value: str, expected: dt.datetime
-) -> None:
+def test_query_timestamp_preserves_utc_normalization(value: str, expected: dt.datetime) -> None:
     assert parse_query_timestamp(value, "from") == expected
 
 

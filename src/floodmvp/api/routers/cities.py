@@ -18,13 +18,10 @@ router = APIRouter(tags=["cities"])
         200: {
             "content": {
                 "application/json": {
-                    "example": [
-                        {"city_id": "city_porto_mvp", "name": "Porto", "country": "PT"}
-                    ]
+                    "example": [{"city_id": "city_porto_mvp", "name": "Porto", "country": "PT"}]
                 }
             }
-        }
-        ,
+        },
         400: RESP_INVALID_ARGUMENT,
     },
 )
@@ -43,8 +40,7 @@ async def cities(session: AsyncSession = Depends(get_session)) -> list[CityOut]:
                     "example": {"city_id": "city_porto_mvp", "name": "Porto", "country": "PT"}
                 }
             }
-        }
-        ,
+        },
         404: error_response(
             code="CITY_NOT_FOUND",
             message="City not found",
@@ -56,6 +52,7 @@ async def city(city_id: str, session: AsyncSession = Depends(get_session)) -> Ci
     c = await get_city(session, city_id)
     if c is None:
         from floodmvp.common.errors import AppError
+
         raise AppError(
             code="CITY_NOT_FOUND",
             message="City not found",

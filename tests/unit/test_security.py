@@ -56,7 +56,18 @@ async def test_analytics_api_key_required(client: AsyncClient) -> None:
     prev_key = settings.analytics_api_key
     settings.analytics_api_key = "secret"
     try:
-        res = await client.post("/v1/analytics/jobs", json={"type": "export_csv", "query": {"asset_ids": ["a"], "metric": "m", "from": "2026-01-01T00:00:00Z", "to": "2026-01-02T00:00:00Z"}})
+        res = await client.post(
+            "/v1/analytics/jobs",
+            json={
+                "type": "export_csv",
+                "query": {
+                    "asset_ids": ["a"],
+                    "metric": "m",
+                    "from": "2026-01-01T00:00:00Z",
+                    "to": "2026-01-02T00:00:00Z",
+                },
+            },
+        )
         assert res.status_code == 401
         body = res.json()
         assert body["error"]["code"] == "UNAUTHORIZED"

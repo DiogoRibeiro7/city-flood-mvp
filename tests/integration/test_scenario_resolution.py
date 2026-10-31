@@ -104,9 +104,7 @@ async def test_scenario_ids_are_validated_against_real_database(
         {"base_scenario_id": "run_recent", "compare_scenario_id": "missing"},
     ):
         endpoint = "observations" if "scenario_id" in params else "observations:compare"
-        response = await client.get(
-            f"{base}/{endpoint}", params={**observation_params, **params}
-        )
+        response = await client.get(f"{base}/{endpoint}", params={**observation_params, **params})
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "SCENARIO_NOT_FOUND"
 

@@ -354,9 +354,7 @@ async def calibration_recommendations(
         rain = await _percentiles(
             session, city_id, "rain_gauge", "rain_mmph", start, end, month=month
         )
-        fill = await _percentiles(
-            session, city_id, "pipe", "fill_ratio", start, end, month=month
-        )
+        fill = await _percentiles(session, city_id, "pipe", "fill_ratio", start, end, month=month)
         thresholds = dict(default_thresholds)
         if rain:
             thresholds["rain_event_threshold_mmph"] = rain["p90"]
@@ -606,7 +604,7 @@ async def run_report_csv(
     def _csv_escape(val: object | None) -> str:
         s = "" if val is None else str(val)
         s = s.replace('"', '""')
-        return f"\"{s}\""
+        return f'"{s}"'
 
     rows_written = 0
     with file_path.open("w", encoding="utf-8") as f:
@@ -614,7 +612,9 @@ async def run_report_csv(
         rows_written += 1
         f.write(f"meta,city_id,{_csv_escape(city_id)}\n")
         f.write(f"meta,generated_at,{_csv_escape(now.isoformat())}\n")
-        f.write(f"meta,window,{_csv_escape(f'{query.from_ts.isoformat()} -> {query.to_ts.isoformat()}')}\n")
+        f.write(
+            f"meta,window,{_csv_escape(f'{query.from_ts.isoformat()} -> {query.to_ts.isoformat()}')}\n"
+        )
         rows_written += 3
 
         if summary and status:

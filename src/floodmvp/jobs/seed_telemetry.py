@@ -51,12 +51,22 @@ async def main(scenario_id: str | None = None) -> None:
                 start = end - dt.timedelta(days=days)
 
             # pick one rain gauge and one river gauge
-            rain_gauge = (await session.execute(
-                select(Asset).where(Asset.city_id == city.city_id).where(Asset.asset_type == "rain_gauge").limit(1)
-            )).scalar_one()
-            river_gauge = (await session.execute(
-                select(Asset).where(Asset.city_id == city.city_id).where(Asset.asset_type == "river_gauge").limit(1)
-            )).scalar_one()
+            rain_gauge = (
+                await session.execute(
+                    select(Asset)
+                    .where(Asset.city_id == city.city_id)
+                    .where(Asset.asset_type == "rain_gauge")
+                    .limit(1)
+                )
+            ).scalar_one()
+            river_gauge = (
+                await session.execute(
+                    select(Asset)
+                    .where(Asset.city_id == city.city_id)
+                    .where(Asset.asset_type == "river_gauge")
+                    .limit(1)
+                )
+            ).scalar_one()
 
             if realism == "tier2_porto":
                 if city.telemetry.realism_profile != "porto":
@@ -66,7 +76,9 @@ async def main(scenario_id: str | None = None) -> None:
                     realism = "synthetic"
                 else:
                     cdsapirc = os.path.expanduser("~/.cdsapirc")
-                    if not (os.environ.get("CDSAPI_URL") and os.environ.get("CDSAPI_KEY")) and not os.path.exists(cdsapirc):
+                    if not (
+                        os.environ.get("CDSAPI_URL") and os.environ.get("CDSAPI_KEY")
+                    ) and not os.path.exists(cdsapirc):
                         print(
                             "CDS API credentials not found (.cdsapirc or CDSAPI_URL/CDSAPI_KEY). "
                             "Falling back to synthetic telemetry."
@@ -85,13 +97,21 @@ async def main(scenario_id: str | None = None) -> None:
             await _upsert_series(session, river, scenario_id=scenario_id)
 
             # subset of pipes for telemetry to keep DB smaller (UI still good)
-            pipe_limit = int(env_pipe_limit) if env_pipe_limit is not None else city.telemetry.pipe_limit
-            pipes = (await session.execute(
-                select(Asset)
-                .where(Asset.city_id == city.city_id)
-                .where(Asset.asset_type == "pipe")
-                .limit(pipe_limit)
-            )).scalars().all()
+            pipe_limit = (
+                int(env_pipe_limit) if env_pipe_limit is not None else city.telemetry.pipe_limit
+            )
+            pipes = (
+                (
+                    await session.execute(
+                        select(Asset)
+                        .where(Asset.city_id == city.city_id)
+                        .where(Asset.asset_type == "pipe")
+                        .limit(pipe_limit)
+                    )
+                )
+                .scalars()
+                .all()
+            )
 
             rng = np.random.default_rng(42)
             for p in pipes:
@@ -112,7 +132,9 @@ async def main(scenario_id: str | None = None) -> None:
                     await _upsert_series(session, series, scenario_id=scenario_id)
 
             await session.commit()
-            print(f"Seeded telemetry for city_id={city.city_id} ({start.isoformat()} -> {end.isoformat()})")
+            print(
+                f"Seeded telemetry for city_id={city.city_id} ({start.isoformat()} -> {end.isoformat()})"
+            )
 
 
 async def _upsert_series(

@@ -81,13 +81,19 @@ def _validate_season(season: str) -> None:
     if season == "all":
         return
     if not season.startswith("month-") or len(season) != 8:
-        raise AppError(code="INVALID_ARGUMENT", message="season must be 'all' or 'month-01'..'month-12'")
+        raise AppError(
+            code="INVALID_ARGUMENT", message="season must be 'all' or 'month-01'..'month-12'"
+        )
     try:
         month = int(season.split("-", 1)[1])
     except ValueError as exc:
-        raise AppError(code="INVALID_ARGUMENT", message="season must be 'all' or 'month-01'..'month-12'") from exc
+        raise AppError(
+            code="INVALID_ARGUMENT", message="season must be 'all' or 'month-01'..'month-12'"
+        ) from exc
     if month < 1 or month > 12:
-        raise AppError(code="INVALID_ARGUMENT", message="season must be 'all' or 'month-01'..'month-12'")
+        raise AppError(
+            code="INVALID_ARGUMENT", message="season must be 'all' or 'month-01'..'month-12'"
+        )
 
 
 async def _require_export_city(session: AsyncSession, city_id: str) -> None:
@@ -144,8 +150,7 @@ async def _validate_export_assets(session: AsyncSession, query: ExportJobQuery) 
                     }
                 }
             }
-        }
-        ,
+        },
         400: RESP_INVALID_ARGUMENT,
     },
 )
@@ -175,8 +180,7 @@ async def city_status(
                     }
                 }
             }
-        }
-        ,
+        },
         400: RESP_INVALID_ARGUMENT,
     },
 )
@@ -199,8 +203,7 @@ async def city_summary(
                     "example": [{"asset_id": "pipe_123", "score": 42.5, "details": {}}]
                 }
             }
-        }
-        ,
+        },
         400: RESP_INVALID_ARGUMENT,
     },
 )
@@ -279,9 +282,7 @@ async def analytics_calibration_recommendations(
         "risk_fill_watch": settings.risk_fill_watch,
         "risk_fill_warning": settings.risk_fill_warning,
     }
-    thresholds = await calibration_recommendations(
-        session, city_id, start, end, seasonality, base
-    )
+    thresholds = await calibration_recommendations(session, city_id, start, end, seasonality, base)
     typed_thresholds = {k: CalibrationThresholds(**v) for k, v in thresholds.items()}
     return CalibrationRecommendationOut(
         city_id=city_id,
@@ -413,15 +414,9 @@ async def analytics_runs_diff(
     hotspots = AnalyticsHotspotDiffSummary(
         base_count=diff["hotspots"]["base_count"],
         compare_count=diff["hotspots"]["compare_count"],
-        changed=[
-            HotspotDiffItem(**row) for row in diff["hotspots"]["changed"]
-        ],
-        added=[
-            HotspotDiffItem(**row) for row in diff["hotspots"]["added"]
-        ],
-        removed=[
-            HotspotDiffItem(**row) for row in diff["hotspots"]["removed"]
-        ],
+        changed=[HotspotDiffItem(**row) for row in diff["hotspots"]["changed"]],
+        added=[HotspotDiffItem(**row) for row in diff["hotspots"]["added"]],
+        removed=[HotspotDiffItem(**row) for row in diff["hotspots"]["removed"]],
     )
 
     return AnalyticsRunDiffOut(
@@ -500,7 +495,9 @@ async def create_job(
         if payload.query.from_ts >= payload.query.to_ts:
             raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
         if payload.query.agg not in {"avg", "min", "max"}:
-            raise AppError(code="INVALID_ARGUMENT", message="agg must be one of ['avg','min','max']")
+            raise AppError(
+                code="INVALID_ARGUMENT", message="agg must be one of ['avg','min','max']"
+            )
         try:
             parse_bucket_interval(payload.query.granularity)
         except ValueError as exc:
@@ -514,10 +511,14 @@ async def create_job(
         if payload.query.from_ts >= payload.query.to_ts:
             raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
         if payload.query.top_hotspots < 0 or payload.query.top_hotspots > 200:
-            raise AppError(code="INVALID_ARGUMENT", message="top_hotspots must be between 0 and 200")
+            raise AppError(
+                code="INVALID_ARGUMENT", message="top_hotspots must be between 0 and 200"
+            )
         await _require_export_city(session, payload.query.city_id)
     else:
-        raise AppError(code="INVALID_ARGUMENT", message="type must be one of ['export_csv','report_csv']")
+        raise AppError(
+            code="INVALID_ARGUMENT", message="type must be one of ['export_csv','report_csv']"
+        )
 
     job_id = new_id("job")
     await create_export_job(
@@ -649,7 +650,7 @@ async def get_job(
                         },
                     }
                 }
-            }
+            },
         },
     },
 )

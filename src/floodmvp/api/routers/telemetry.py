@@ -46,8 +46,7 @@ router = APIRouter(tags=["telemetry"])
                     ]
                 }
             }
-        }
-        ,
+        },
         400: RESP_INVALID_ARGUMENT,
     },
 )
@@ -94,8 +93,7 @@ async def telemetry_qa(
     "/assets/{asset_id}/metrics",
     response_model=list[str],
     responses={
-        200: {"content": {"application/json": {"example": ["fill_ratio", "flow_m3s"]}}}
-        ,
+        200: {"content": {"application/json": {"example": ["fill_ratio", "flow_m3s"]}}},
         404: error_response(code="SCENARIO_NOT_FOUND", message="Scenario not found"),
     },
 )
@@ -127,11 +125,8 @@ async def metrics(
                     }
                 }
             }
-        }
-        ,
-        400: error_response(
-            code="INVALID_ARGUMENT", message="'to' must be after 'from'"
-        ),
+        },
+        400: error_response(code="INVALID_ARGUMENT", message="'to' must be after 'from'"),
         404: error_response(code="SCENARIO_NOT_FOUND", message="Scenario not found"),
     },
 )
@@ -200,11 +195,8 @@ async def observations(
                     }
                 }
             }
-        }
-        ,
-        400: error_response(
-            code="INVALID_ARGUMENT", message="'to' must be after 'from'"
-        ),
+        },
+        400: error_response(code="INVALID_ARGUMENT", message="'to' must be after 'from'"),
         404: error_response(code="SCENARIO_NOT_FOUND", message="Scenario not found"),
     },
 )

@@ -8,7 +8,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     curl     libpq-dev     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
-RUN pip install --no-cache-dir poetry==1.8.4
+RUN pip install --no-cache-dir poetry==2.2.1
 
 # Copy only dependency files first (better caching)
 COPY pyproject.toml poetry.lock* /app/

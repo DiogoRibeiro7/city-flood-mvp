@@ -206,9 +206,7 @@ async def ingest_events_batch(
             inserted = rowcount is None or rowcount > 0
             if inserted:
                 accepted += 1
-                results.append(
-                    IngestEventResult(ts=event.ts, type=event.type, status="accepted")
-                )
+                results.append(IngestEventResult(ts=event.ts, type=event.type, status="accepted"))
             else:
                 rejected += 1
                 results.append(
@@ -219,9 +217,7 @@ async def ingest_events_batch(
         else:
             rejected += 1
             results.append(
-                IngestEventResult(
-                    ts=event.ts, type=event.type, status="rejected", reason=reason
-                )
+                IngestEventResult(ts=event.ts, type=event.type, status="rejected", reason=reason)
             )
 
     response = IngestResponse(
@@ -234,8 +230,7 @@ async def ingest_events_batch(
 
     if idempotency_key:
         await session.execute(
-            insert(IngestIdempotency)
-            .values(
+            insert(IngestIdempotency).values(
                 idempotency_key=idempotency_key,
                 device_id=payload.device_id,
                 response={

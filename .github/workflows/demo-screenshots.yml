@@ -1,0 +1,75 @@
+name: Optional demo screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Build the demo images
+        run: |
+          mkdir -p test-results/screenshots
+          cp .env.example .env
+          docker build -f infra/backend/Dockerfile -t city-flood-mvp-backend:ci . 2>&1 | tee test-results/screenshots/backend-build.log
+          docker build -f web/Dockerfile -t city-flood-mvp-web:ci web 2>&1 | tee test-results/screenshots/web-build.log
+      - name: Start the disposable runner's demo
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --no-build db backend web prometheus grafana
+          for i in {1..40}; do
+            if curl -fsS http://localhost:5173/ >/dev/null; then
+              exit 0
+            fi
+            echo "Waiting for web ($i/40)"
+            sleep 3
+          done
+          echo "Web did not become ready in time."
+          exit 1
+      - name: Seed demo data
+        run: bash ./scripts/seed_all.sh 2>&1 | tee test-results/screenshots/seed.log
+        env:
+          TELEMETRY_REALISM: synthetic
+          TELEMETRY_DAYS: "1"
+          PIPE_TELEMETRY_LIMIT: "10"
+          ANALYTICS_PIPE_LIMIT: "25"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+      - name: Install browser tooling
+        working-directory: web
+        run: |
+          npm install --global corepack@0.35.0
+          corepack enable
+          corepack yarn install --immutable
+          corepack yarn playwright install --with-deps chromium
+      - name: Capture screenshots
+        working-directory: web
+        run: corepack yarn capture:screenshots
+        env:
+          SCREENSHOT_MODE: light
+      - name: Collect service diagnostics
+        if: always()
+        run: |
+          mkdir -p test-results/screenshots
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml ps -a > test-results/screenshots/services.txt
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --no-color > test-results/screenshots/services.log 2>&1
+      - name: Clean up this hosted runner
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down --volumes --remove-orphans
+      - name: Retain screenshots and diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: demo-screenshots
+          path: |
+            docs/screenshots/*.png
+            test-results/screenshots/
+          retention-days: 14

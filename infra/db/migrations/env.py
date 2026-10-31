@@ -14,6 +14,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+
 def get_url() -> str:
     # Alembic runs inside container; use DATABASE_URL if available
     url = os.getenv("DATABASE_URL")
@@ -23,10 +24,12 @@ def get_url() -> str:
     # Alembic needs sync URL
     return url.replace("+asyncpg", "+psycopg2")
 
+
 def run_migrations_offline() -> None:
     context.configure(url=get_url(), target_metadata=target_metadata, literal_binds=True)
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online() -> None:
     configuration = config.get_section(config.config_ini_section) or {}
@@ -41,6 +44,7 @@ def run_migrations_online() -> None:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

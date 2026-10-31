@@ -111,6 +111,4 @@ async def test_branching_traversal_batches_each_depth(
     assert [asset.asset_id for asset in found] == ["p1", "p2", "n1", "n2", "p3", "n3"]
     assert list_pipes.await_count == 2
     assert list_pipes.await_args_list[0].args == (session, {"n0"}, "downstream", "city_a")
-    assert list_pipes.await_args_list[1].args == (
-        session, {"n1", "n2"}, "downstream", "city_a"
-    )
+    assert list_pipes.await_args_list[1].args == (session, {"n1", "n2"}, "downstream", "city_a")

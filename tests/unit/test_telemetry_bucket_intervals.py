@@ -82,9 +82,7 @@ async def test_five_minute_continuous_aggregate_keeps_fast_path() -> None:
     result.all.return_value = [(START, 0.42)]
     session.execute.return_value = result
 
-    rows = await get_observations(
-        session, "pipe_1", "fill_ratio", START, END, "5 minutes", "avg"
-    )
+    rows = await get_observations(session, "pipe_1", "fill_ratio", START, END, "5 minutes", "avg")
 
     assert rows == [(START, 0.42)]
     statement = session.execute.await_args.args[0]

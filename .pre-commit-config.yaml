@@ -6,19 +6,21 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.2
-    hooks:
-      - id: ruff
-        args: ["check", "."]
-      - id: ruff-format
-        args: ["--check"]
-
   - repo: local
     hooks:
+      - id: ruff
+        name: locked Ruff lint
+        entry: poetry run ruff check .
+        language: system
+        pass_filenames: false
+      - id: ruff-format
+        name: locked Ruff formatting
+        entry: poetry run ruff format --check .
+        language: system
+        pass_filenames: false
       - id: mypy
         name: mypy
-        entry: poetry run mypy src
+        entry: poetry run mypy src scripts/export_openapi.py scripts/database_test_support.py scripts/smoke_stack.py scripts/seed_smoke.py scripts/release_manifest.py
         language: system
         pass_filenames: false
 

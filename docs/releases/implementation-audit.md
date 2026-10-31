@@ -26,6 +26,8 @@ The subsequent [API contract audit](api-contract-audit.md) records prompt 3
 findings and fixes against the merged prompt 2 baseline.
 The [migration verification follow-up](../runbooks/migrations.md) records prompt 4
 schema comparisons, seeded upgrade evidence and the ORM timestamp-default fix.
+The [candidate preparation checkpoint](rc-checklist.md) records prompt 5's CI
+layout, runtime policy, formatting baseline and remaining release blockers.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
 

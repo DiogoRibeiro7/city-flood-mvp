@@ -18,13 +18,21 @@ depends_on = None
 
 def upgrade() -> None:
     op.add_column("city", sa.Column("telemetry_retention_days", sa.Integer(), nullable=True))
-    op.add_column("city", sa.Column("compliance_tags", sa.ARRAY(sa.String(length=64)), nullable=True))
+    op.add_column(
+        "city", sa.Column("compliance_tags", sa.ARRAY(sa.String(length=64)), nullable=True)
+    )
     op.add_column("city", sa.Column("retention_policy", sa.JSON(), nullable=True))
 
     op.create_table(
         "dataset_import",
         sa.Column("import_id", sa.String(length=64), primary_key=True),
-        sa.Column("city_id", sa.String(length=64), sa.ForeignKey("city.city_id"), nullable=True, index=True),
+        sa.Column(
+            "city_id",
+            sa.String(length=64),
+            sa.ForeignKey("city.city_id"),
+            nullable=True,
+            index=True,
+        ),
         sa.Column("source", sa.String(length=64), nullable=False),
         sa.Column("source_uri", sa.String(length=512), nullable=True),
         sa.Column("format", sa.String(length=16), nullable=False),
@@ -34,7 +42,9 @@ def upgrade() -> None:
         sa.Column("records_accepted", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("records_rejected", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("inserted_rows", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("validation_report", sa.JSON(), nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column(
+            "validation_report", sa.JSON(), nullable=False, server_default=sa.text("'{}'::jsonb")
+        ),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()")),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
     )
@@ -47,7 +57,12 @@ def upgrade() -> None:
 
     op.add_column(
         "telemetry_observation",
-        sa.Column("import_id", sa.String(length=64), sa.ForeignKey("dataset_import.import_id"), nullable=True),
+        sa.Column(
+            "import_id",
+            sa.String(length=64),
+            sa.ForeignKey("dataset_import.import_id"),
+            nullable=True,
+        ),
     )
     op.add_column(
         "telemetry_observation",

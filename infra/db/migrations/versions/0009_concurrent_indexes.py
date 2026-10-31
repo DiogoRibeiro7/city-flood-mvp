@@ -31,9 +31,7 @@ def upgrade() -> None:
             "ON analytics_event (city_id, event_type, start_ts);"
         )
 
-        op.execute(
-            "DROP INDEX IF EXISTS ix_telemetry_observation_asset_metric_ts_default;"
-        )
+        op.execute("DROP INDEX IF EXISTS ix_telemetry_observation_asset_metric_ts_default;")
         op.execute(
             "CREATE INDEX IF NOT EXISTS "
             "ix_telemetry_observation_asset_metric_ts_default "

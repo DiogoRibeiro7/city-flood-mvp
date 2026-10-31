@@ -1,8 +1,8 @@
-FROM node:25-slim
+FROM node:24-slim
 
 WORKDIR /app
 COPY .yarnrc.yml package.json yarn.lock /app/
-RUN if ! command -v corepack >/dev/null 2>&1; then npm install -g corepack --force; fi \
+RUN npm install --global corepack@0.35.0 --force \
     && corepack enable \
     && corepack prepare yarn@4.1.1 --activate \
     && yarn install --immutable

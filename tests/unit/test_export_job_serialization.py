@@ -201,7 +201,9 @@ async def test_job_creation_stores_json_serializable_query(
         payload = ExportCsvRequest(
             type="export_csv",
             query=ExportJobQuery(
-                asset_ids=["pipe_1"], metric="fill_ratio", **{"from": NOW, "to": NOW + dt.timedelta(days=1)}
+                asset_ids=["pipe_1"],
+                metric="fill_ratio",
+                **{"from": NOW, "to": NOW + dt.timedelta(days=1)},
             ),
         )
     else:
