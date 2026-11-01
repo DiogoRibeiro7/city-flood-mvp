@@ -1,0 +1,42 @@
+{
+  "status": "validated",
+  "dataset_version": "5d533b9b99411a68a8e7704d9e334162a237552a3fa886bb62567575d4bd623a",
+  "adapter_version": "1",
+  "format_version": "1.1.0",
+  "station_id": "POMU0068545",
+  "asset_id": "porto_ghcnh_pedras_rubras",
+  "start": "2010-01-01T00:00:00+00:00",
+  "end": "2010-01-12T00:00:00+00:00",
+  "metric": "rain_6h_mean_mmph",
+  "interval_minutes": 360,
+  "source_rows": 17464,
+  "outside_window": 16935,
+  "received": 529,
+  "accepted": 6,
+  "rejected": 523,
+  "reasons": {
+    "missing_rainfall": 522,
+    "trace_rainfall": 1
+  },
+  "duplicates": 0,
+  "inserted": 0,
+  "sources": [
+    {
+      "year": 2010,
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+      "sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+      "bytes": 14325059,
+      "retrieved_at": "2026-11-01T21:19:24.516688+00:00",
+      "mode": "http",
+      "attempts": 1,
+      "etag": "\"067d4bd961a53bb36dbe46ff7fa81987\"",
+      "last_modified": "Fri, 10 Jul 2026 16:15:47 GMT"
+    }
+  ],
+  "license": "CC0-1.0",
+  "dataset_doi": "https://doi.org/10.25921/jp3d-3v19",
+  "interpretation": "Six-hour mean rates with unverified source QC; not instantaneous rainfall or flood labels.",
+  "dry_run": true,
+  "city_id": "porto_real",
+  "asset_validation": "not_checked"
+}

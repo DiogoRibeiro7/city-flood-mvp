@@ -30,8 +30,10 @@ The [candidate preparation checkpoint](rc-checklist.md) records prompt 5's CI
 layout, runtime policy, formatting baseline and remaining release blockers.
 The [real-source assessment](../data/real-source-assessment.md) records prompt 6's
 Portuguese source comparison, selected NOAA GHCNh rainfall and permitted fixture;
-the baseline inventory below predates that evidence. Ingestion, quality and
-event evaluation remain incomplete.
+the baseline inventory below predates that evidence. The
+[provider ingestion follow-up](../runbooks/noaa_ghcnh.md) records prompt 7's
+bounded downloads, provenance, atomic writes and verified reruns. Full quality
+characterization and event evaluation remain incomplete.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
 
