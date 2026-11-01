@@ -62,6 +62,10 @@ Build on a reviewed RC baseline, in this order:
    quality, define an event evaluation protocol, and reproduce one historical
    case study with provenance. Label results descriptive if independent event
    labels are unavailable. Never substitute synthetic metrics for observations.
+   The [source assessment](docs/data/real-source-assessment.md) now selects
+   NOAA GHCNh Porto rainfall with CC0 provenance and a recorded fixture.
+   Its sparse 6/12-hour totals do not validate the 15-minute detector;
+   provider ingestion, quality characterization and the case study remain open.
 2. **Verify reliability and security (prompts 11-13).** Complete observable
    API/ingest/worker objectives and scraping, a disposable backup/restore and
    worker recovery drill, and a focused multi-process security review. Resolve

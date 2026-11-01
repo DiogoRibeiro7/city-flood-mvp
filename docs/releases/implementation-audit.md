@@ -28,6 +28,10 @@ The [migration verification follow-up](../runbooks/migrations.md) records prompt
 schema comparisons, seeded upgrade evidence and the ORM timestamp-default fix.
 The [candidate preparation checkpoint](rc-checklist.md) records prompt 5's CI
 layout, runtime policy, formatting baseline and remaining release blockers.
+The [real-source assessment](../data/real-source-assessment.md) records prompt 6's
+Portuguese source comparison, selected NOAA GHCNh rainfall and permitted fixture;
+the baseline inventory below predates that evidence. Ingestion, quality and
+event evaluation remain incomplete.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
 

@@ -1,0 +1,242 @@
+{
+  "assessment_date": "2026-10-31",
+  "baseline_commit": "22f5b90cf2b9ce0cf1aee6e1006c2a6b2092ee90",
+  "method": "Unauthenticated HTTPS GET using Python urllib.request; 25-second socket timeout; at most 20,000,001 response bytes read; oversized responses rejected. SHA-256 over response bytes. No upstream data written. Timestamps are UTC. Successful GETs establish point-in-time access, not an uptime guarantee.",
+  "probes": [
+    {
+      "local_scratch_name": "ghcnh-station-list.txt",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-station-list.txt",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh-station-list.txt",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:24:40.368778+00:00",
+      "bytes": 3459429,
+      "sha256": "ff451fafc8f251560029e9ed31ebf0f4d12a2ddd492516c0b166c3744cad182a",
+      "last_modified": "Wed, 21 Oct 2026 08:51:08 GMT",
+      "etag": "\"91d2ad780d97721aedee591367c00a05\""
+    },
+    {
+      "local_scratch_name": "ghcnh-documentation.pdf",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh_DOCUMENTATION.pdf",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh_DOCUMENTATION.pdf",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:24:41.530009+00:00",
+      "bytes": 423879,
+      "sha256": "df5694efdc2d498f006a343165bae65701d14809174b9bed660149bd4fe591b7",
+      "last_modified": "Wed, 21 Oct 2026 08:51:08 GMT",
+      "etag": "\"030148bbfbb31c63fd0dc4c89f8539f3\""
+    },
+    {
+      "local_scratch_name": "ghcnh-metadata.xml",
+      "url": "https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01688/xml",
+      "final_url": "https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ncdc:C01688/xml",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:24:42.593896+00:00",
+      "bytes": 57650,
+      "sha256": "6021c232eb6c5a0509ecb23677e98ed99d2c04142f24dc401eb113f1da5375b4",
+      "last_modified": null,
+      "etag": null
+    },
+    {
+      "local_scratch_name": "GHCNh_POMU0068545_2010.psv",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+      "retrieved_at": "2026-10-31T10:26:51.355574+00:00",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+      "status": 200,
+      "bytes": 14325059,
+      "sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+      "last_modified": "Fri, 10 Jul 2026 16:15:47 GMT",
+      "etag": "\"067d4bd961a53bb36dbe46ff7fa81987\"",
+      "rows": 17464,
+      "rain_counts": {
+        "precipitation": 0,
+        "precipitation_5_minute": 0,
+        "precipitation_15_minute": 0,
+        "precipitation_3_hour": 0,
+        "precipitation_6_hour": 178,
+        "precipitation_9_hour": 0,
+        "precipitation_12_hour": 226,
+        "precipitation_15_hour": 0,
+        "precipitation_18_hour": 0,
+        "precipitation_21_hour": 0,
+        "precipitation_24_hour": 0
+      }
+    },
+    {
+      "local_scratch_name": "ghcnh-2010-repeat.psv",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+      "retrieved_at": "2026-10-31T10:28:11.206247+00:00",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+      "status": 200,
+      "bytes": 14325059,
+      "sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+      "last_modified": "Fri, 10 Jul 2026 16:15:47 GMT",
+      "etag": "\"067d4bd961a53bb36dbe46ff7fa81987\""
+    },
+    {
+      "local_scratch_name": "ghcnh-porto-2023.psv",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2023/psv/GHCNh_POMU0068545_2023.psv",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2023/psv/GHCNh_POMU0068545_2023.psv",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:25:44.867690+00:00",
+      "bytes": 12227881,
+      "sha256": "a424e115bb3059cfde97b0730ca32a834e8d8f9c096485b1e0284788038b3be7",
+      "last_modified": "Sat, 11 Jul 2026 11:20:45 GMT",
+      "etag": "\"72ef69cbf80d7e8d6a190af306bd8dcc\""
+    },
+    {
+      "local_scratch_name": "POM00008549.psv",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2023/psv/GHCNh_POM00008549_2023.psv",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2023/psv/GHCNh_POM00008549_2023.psv",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:26:24.622738+00:00",
+      "bytes": 10543,
+      "sha256": "6db5780239ff70ac22220e0dae20cd546ed00656a8d52b0bc33fdea3d20a8900",
+      "last_modified": "Sat, 11 Jul 2026 11:20:41 GMT",
+      "etag": "\"05fe0d88a24ae1ea1247012d91cd41d4\""
+    },
+    {
+      "local_scratch_name": "POM00008579.psv",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2023/psv/GHCNh_POM00008579_2023.psv",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2023/psv/GHCNh_POM00008579_2023.psv",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:26:24.858003+00:00",
+      "bytes": 42322,
+      "sha256": "5162e260135dc1256f67e95267754f71df95e210ceaa8c4b107d41f26ab58414",
+      "last_modified": "Sat, 11 Jul 2026 11:20:43 GMT",
+      "etag": "\"738ff7b3c1729ce8ecd0ef20d7c56037\""
+    },
+    {
+      "local_scratch_name": "GHCNh_POM00008546_2000.psv",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2000/psv/GHCNh_POM00008546_2000.psv",
+      "retrieved_at": "2026-10-31T10:26:51.355574+00:00",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2000/psv/GHCNh_POM00008546_2000.psv",
+      "status": 200,
+      "bytes": 292120,
+      "sha256": "54c11e76f4a41f5dc0426b500dc0b8d1d084a461210826ac5830ca09b5875a70",
+      "last_modified": "Fri, 10 Jul 2026 12:30:20 GMT",
+      "etag": "\"7aa57fc0669e5d0c79c7ddf70e9e5ef5\"",
+      "rows": 660,
+      "rain_counts": {
+        "precipitation": 0,
+        "precipitation_5_minute": 0,
+        "precipitation_15_minute": 0,
+        "precipitation_3_hour": 0,
+        "precipitation_6_hour": 0,
+        "precipitation_9_hour": 0,
+        "precipitation_12_hour": 0,
+        "precipitation_15_hour": 0,
+        "precipitation_18_hour": 0,
+        "precipitation_21_hour": 0,
+        "precipitation_24_hour": 0
+      }
+    },
+    {
+      "local_scratch_name": "GHCNh_POM00008543_2010.psv",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POM00008543_2010.psv",
+      "retrieved_at": "2026-10-31T10:26:51.355574+00:00",
+      "error": "HTTPError: HTTP Error 404: Not Found"
+    },
+    {
+      "local_scratch_name": "GHCNh_POM00008511_2023.psv",
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2023/psv/GHCNh_POM00008511_2023.psv",
+      "retrieved_at": "2026-10-31T10:26:51.356573+00:00",
+      "final_url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2023/psv/GHCNh_POM00008511_2023.psv",
+      "status": 200,
+      "bytes": 14643,
+      "sha256": "62ddbd91756e123cc48c89cd1d61ae03593ab03bce65a8c83fa6c16692557828",
+      "last_modified": "Sat, 11 Jul 2026 11:20:41 GMT",
+      "etag": "\"44a2375e2f7e5ab6ea97e8be3e5a67d8\"",
+      "rows": 9,
+      "rain_counts": {
+        "precipitation": 0,
+        "precipitation_5_minute": 0,
+        "precipitation_15_minute": 0,
+        "precipitation_3_hour": 0,
+        "precipitation_6_hour": 0,
+        "precipitation_9_hour": 0,
+        "precipitation_12_hour": 0,
+        "precipitation_15_hour": 0,
+        "precipitation_18_hour": 0,
+        "precipitation_21_hour": 0,
+        "precipitation_24_hour": 0
+      }
+    },
+    {
+      "local_scratch_name": "ghcnd-stations.txt",
+      "url": "https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt",
+      "final_url": "https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-stations.txt",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:25:49.240425+00:00",
+      "bytes": 11441526,
+      "sha256": "437ee87f0343bcad408a492cf7a02163fb69255364c541b4006d5d76055d0dc3",
+      "last_modified": "Thu, 29 Oct 2026 04:05:55 GMT",
+      "etag": "\"ae9576-65ef2cbd693ec\""
+    },
+    {
+      "local_scratch_name": "ghcnd-porto.dly",
+      "url": "https://www.ncei.noaa.gov/pub/data/ghcn/daily/all/PO000008546.dly",
+      "final_url": "https://www.ncei.noaa.gov/pub/data/ghcn/daily/all/PO000008546.dly",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:26:25.370142+00:00",
+      "bytes": 731160,
+      "sha256": "3c8c00ebb1296526981bc1fdd50182c1451a16cbed422d3fd252ba4f7c41ccb9",
+      "last_modified": "Sat, 31 Oct 2026 00:55:42 GMT",
+      "etag": "\"b2818-65f185f455838\""
+    },
+    {
+      "local_scratch_name": "ghcnd-porto.csv",
+      "url": "https://noaa-ghcn-pds.s3.amazonaws.com/csv/by_station/PO000008546.csv",
+      "final_url": "https://noaa-ghcn-pds.s3.amazonaws.com/csv/by_station/PO000008546.csv",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:29:09.000271+00:00",
+      "bytes": 2759532,
+      "sha256": "f28deec4bdf4b4c4f2a095bbb0b16bf48d5e5bd3e091f4da7158dab73004701b",
+      "last_modified": "Sat, 31 Oct 2026 01:15:23 GMT",
+      "etag": "\"83110e272a734867448d39b18b27f7bb\""
+    },
+    {
+      "local_scratch_name": "ipma-stations.json",
+      "url": "https://api.ipma.pt/open-data/observation/meteorology/stations/stations.json",
+      "final_url": "https://api.ipma.pt/open-data/observation/meteorology/stations/stations.json",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:24:43.373476+00:00",
+      "bytes": 49864,
+      "sha256": "cd795de81f53b2c6f2935be522314f582610412217d548769747ecef2307dd90",
+      "last_modified": "Sat, 31 Oct 2026 09:35:01 GMT",
+      "etag": "\"23c-c2c8-65f1fa07a7e19\""
+    },
+    {
+      "local_scratch_name": "ipma-observations.json",
+      "url": "https://api.ipma.pt/open-data/observation/meteorology/stations/observations.json",
+      "final_url": "https://api.ipma.pt/open-data/observation/meteorology/stations/observations.json",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:24:43.768141+00:00",
+      "bytes": 1072577,
+      "sha256": "bcc6593fba007e04941c1e97f62ee62469ff5f34fecee5d513524a84fdb80162",
+      "last_modified": "Sat, 31 Oct 2026 09:35:03 GMT",
+      "etag": "\"463-105dc1-65f1fa0987610\""
+    },
+    {
+      "local_scratch_name": "snirh-catalogue.json",
+      "url": "https://dados.gov.pt/api/1/datasets/rede-de-estacoes-hidrometricas-snirh/",
+      "final_url": "https://dados.gov.pt/api/1/datasets/rede-de-estacoes-hidrometricas-snirh/",
+      "status": 200,
+      "retrieved_at": "2026-10-31T10:25:50.536680+00:00",
+      "bytes": 7012,
+      "sha256": "a4923877c15107fffdbd519d44b07dcea99a993692c7adce389b52e35f28718b",
+      "last_modified": null,
+      "etag": null
+    },
+    {
+      "local_scratch_name": "snirh.html",
+      "url": "https://snirh.apambiente.pt/index.php?idMain=2&idItem=1",
+      "retrieved_at": "2026-10-31T10:28:11.207247+00:00",
+      "final_url": "https://snirh.apambiente.pt/index.php?idMain=2&idItem=1",
+      "status": 200,
+      "bytes": 107730,
+      "sha256": "5078fe940b46c67c8364484eabd6a9f31df3603140cf73a99c64f78febc8f87f",
+      "last_modified": null,
+      "etag": null
+    }
+  ]
+}
