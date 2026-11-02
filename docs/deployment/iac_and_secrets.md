@@ -1,7 +1,9 @@
 # IaC + Secrets Management
 
 This guide outlines a pragmatic Infrastructure-as-Code (IaC) baseline and secrets management approach.
-It is provider-agnostic and works for both single-tenant and multi-tenant deployments.
+It is provider-agnostic. The supported release uses a dedicated single-tenant
+store and one API process/replica; multi-tenant infrastructure remains a future
+design, as described in the [deployment reference](reference.md).
 
 ## Recommended IaC structure
 
@@ -37,6 +39,7 @@ Never store secrets in Git, Dockerfiles, or `.env` files committed to the repo.
 - `JWT_ISSUER` (optional)
 - `JWT_AUDIENCE` (optional)
 - `ANALYTICS_API_KEY` (legacy fallback)
+- `DEPLOYMENT_TENANT_ID` (non-secret deployment identity, required for deployed data access)
 - `EXPORT_BUCKET` (if exports stored in object storage)
 
 ## Recommended secrets (optional)

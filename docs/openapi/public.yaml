@@ -35,15 +35,32 @@ paths:
       - cities
       summary: Cities
       operationId: cities_v1_cities_get
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
+                type: array
                 items:
                   $ref: '#/components/schemas/CityOut'
-                type: array
                 title: Response Cities V1 Cities Get
               example:
               - city_id: city_porto_mvp
@@ -51,6 +68,49 @@ paths:
                 country: PT
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/cities/{city_id}:
     get:
       tags:
@@ -64,6 +124,22 @@ paths:
         schema:
           type: string
           title: City Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -88,8 +164,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/cities/{city_id}/assets:
     get:
       tags:
@@ -171,6 +290,22 @@ paths:
           minimum: 0
           default: 0
           title: Offset
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -208,6 +343,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Bad Request
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/assets/{asset_id}:
     get:
       tags:
@@ -221,6 +399,22 @@ paths:
         schema:
           type: string
           title: Asset Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -256,8 +450,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/assets/{asset_id}/upstream:
     get:
       tags:
@@ -280,6 +517,22 @@ paths:
           minimum: 1
           default: 3
           title: Depth
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -303,8 +556,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/assets/{asset_id}/downstream:
     get:
       tags:
@@ -327,6 +623,22 @@ paths:
           minimum: 1
           default: 3
           title: Depth
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -350,23 +662,83 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/telemetry/scenarios:
     get:
       tags:
       - telemetry
       summary: Telemetry Scenarios
       operationId: telemetry_scenarios_v1_telemetry_scenarios_get
+      parameters:
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
+                type: array
                 items:
                   $ref: '#/components/schemas/ScenarioRunOut'
-                type: array
                 title: Response Telemetry Scenarios V1 Telemetry Scenarios Get
               example:
               - scenario_id: scenario_123
@@ -375,6 +747,49 @@ paths:
                 end_ts: '2026-02-02T00:00:00Z'
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/telemetry/qa:
     get:
       tags:
@@ -398,6 +813,22 @@ paths:
           description: YYYY-MM-DD
           title: Day
         description: YYYY-MM-DD
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -410,6 +841,49 @@ paths:
                 title: Response Telemetry Qa V1 Telemetry Qa Get
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/assets/{asset_id}/metrics:
     get:
       tags:
@@ -433,6 +907,22 @@ paths:
           description: scenario id or 'latest'
           title: Scenario Id
         description: scenario id or 'latest'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -458,8 +948,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/assets/{asset_id}/observations:
     get:
       tags:
@@ -528,6 +1061,22 @@ paths:
           description: scenario id or 'latest'
           title: Scenario Id
         description: scenario id or 'latest'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -567,6 +1116,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/assets/{asset_id}/observations:compare:
     get:
       tags:
@@ -632,6 +1224,22 @@ paths:
           description: scenario id or 'latest'
           title: Compare Scenario Id
         description: scenario id or 'latest'
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -673,6 +1281,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/telemetry/events:batch:
     post:
       tags:
@@ -808,10 +1459,51 @@ paths:
                 items:
                   $ref: '#/components/schemas/JobQueueOut'
                 title: Response Queue List V1 Jobs Queue Get
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/jobs/queue/{job_id}:
     get:
       tags:
@@ -848,10 +1540,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobQueueOut'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/jobs/queue/{job_id}/retry:
     post:
       tags:
@@ -888,10 +1621,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobQueueOut'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/jobs/queue/{job_id}/cancel:
     post:
       tags:
@@ -928,10 +1702,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobQueueOut'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/cities/{city_id}/status:
     get:
       tags:
@@ -945,6 +1760,22 @@ paths:
         schema:
           type: string
           title: City Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -961,6 +1792,49 @@ paths:
                 request_id: req_example
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/cities/{city_id}/summary:
     get:
       tags:
@@ -983,6 +1857,22 @@ paths:
           minimum: 1
           default: 15
           title: Minutes
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -1001,6 +1891,49 @@ paths:
                   warning: 1
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/hotspots:
     get:
       tags:
@@ -1038,6 +1971,22 @@ paths:
           - type: string
           - type: 'null'
           title: Run Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -1054,6 +2003,49 @@ paths:
                 details: {}
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/analytics/runs:
     get:
       tags:
@@ -1076,6 +2068,22 @@ paths:
           minimum: 1
           default: 50
           title: Limit
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -1088,6 +2096,49 @@ paths:
                 title: Response Analytics Runs V1 Analytics Runs Get
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/analytics/calibration/recommendations:
     get:
       tags:
@@ -1126,6 +2177,22 @@ paths:
           default: all
           title: Seasonality
         description: all | monthly
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -1135,6 +2202,49 @@ paths:
                 $ref: '#/components/schemas/CalibrationRecommendationOut'
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/analytics/calibration/overrides:
     get:
       tags:
@@ -1197,7 +2307,7 @@ paths:
                   request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized
+          description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
@@ -1209,9 +2319,26 @@ paths:
                   request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
     post:
       tags:
       - analytics
@@ -1261,8 +2388,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/analytics/runs/diff:
     get:
       tags:
@@ -1297,6 +2465,22 @@ paths:
           minimum: 1
           default: 100
           title: Limit
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -1306,6 +2490,49 @@ paths:
                 $ref: '#/components/schemas/AnalyticsRunDiffOut'
         '400':
           $ref: '#/components/responses/InvalidArgument'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/analytics/jobs:
     post:
       tags:
@@ -1356,7 +2583,7 @@ paths:
                   request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized
+          description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
@@ -1368,7 +2595,7 @@ paths:
                   request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden
+          description: Credential, role or deployment tenant is not permitted
         '400':
           content:
             application/json:
@@ -1406,8 +2633,25 @@ paths:
                       request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/analytics/jobs/{job_id}:
     get:
       tags:
@@ -1455,7 +2699,7 @@ paths:
                   request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized
+          description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
@@ -1467,7 +2711,7 @@ paths:
                   request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden
+          description: Credential, role or deployment tenant is not permitted
         '404':
           content:
             application/json:
@@ -1481,10 +2725,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/analytics/jobs/{job_id}/download:
     get:
       tags:
@@ -1531,7 +2792,7 @@ paths:
                   request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Unauthorized
+          description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
@@ -1543,7 +2804,7 @@ paths:
                   request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Forbidden
+          description: Credential, role or deployment tenant is not permitted
         '400':
           content:
             application/json:
@@ -1581,8 +2842,25 @@ paths:
                       request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/events:
     get:
       tags:
@@ -1645,6 +2923,22 @@ paths:
           minimum: 0
           default: 0
           title: Offset
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
       responses:
         '200':
           description: Successful Response
@@ -1677,6 +2971,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Bad Request
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/notes:
     get:
       tags:
@@ -1749,10 +3086,51 @@ paths:
                 items:
                   $ref: '#/components/schemas/NoteOut'
                 title: Response Notes V1 Notes Get
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
     post:
       tags:
       - notes
@@ -1800,10 +3178,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: City, asset or event does not exist in the requested city
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/notes/{note_id}:
     get:
       tags:
@@ -1840,10 +3259,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NoteOut'
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
     delete:
       tags:
       - notes
@@ -1882,10 +3342,51 @@ paths:
                 additionalProperties:
                   type: string
                 title: Response Remove V1 Notes  Note Id  Delete
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
 components:
   schemas:
     AnalyticsEventDiffSummary:
@@ -3065,6 +4566,18 @@ components:
       - error
       title: ErrorResponse
       type: object
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: JWT with exp, sub, role and the configured deployment tenant outside
+        local development.
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Deployment-scoped legacy key, accepted only when JWT is disabled.
+        Never embed in browser code.
   responses:
     InvalidArgument:
       description: 'INVALID_ARGUMENT: Validation error'
@@ -3150,12 +4663,4 @@ components:
               message: Conflict
               details: {}
               request_id: req_example
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-    ApiKeyAuth:
-      type: apiKey
-      in: header
-      name: X-API-Key
 security: []

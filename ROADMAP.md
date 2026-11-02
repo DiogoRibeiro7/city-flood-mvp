@@ -87,8 +87,11 @@ Build on a reviewed RC baseline, in this order:
    The [disposable recovery drill](docs/deployment/backup_restore_drills.md) now
    records a verified logical restore, killed-worker rollback/restart, real SQL
    failure/backoff/retry and stale-job detection against proposed RTO/RPO values.
-   Operational attainment, deployment-specific recovery and the security review
-   remain open; tiny synthetic timings do not establish production objectives.
+   The [security review](docs/releases/security-review.md) now enforces dedicated
+   tenant admission and documents a hard one-API-process/replica limit, with
+   cross-tenant denial and separate-process quota tests. Dependency remediation,
+   deployment evidence and operational attainment remain open; tiny synthetic
+   timings do not establish production objectives.
 3. **Verify the operator workflow (prompt 14).** Exercise observations, quality
    flags, events, explanations, notes, comparisons, and exports in the existing
    React UI. Label synthetic and real inputs and uncertainty; add focused browser

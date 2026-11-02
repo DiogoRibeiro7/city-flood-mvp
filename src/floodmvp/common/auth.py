@@ -62,6 +62,8 @@ def _decode_token(token: str) -> dict[str, Any]:
         "verify_aud": bool(settings.jwt_audience),
         "verify_iss": bool(settings.jwt_issuer),
     }
+    if not settings.is_local:
+        options["require"] = ["exp", "sub"]
     return cast(
         dict[str, Any],
         _jwt.decode(
@@ -97,9 +99,21 @@ def _extract_roles(claims: dict[str, Any]) -> list[str]:
 
 def extract_tenant(claims: dict[str, Any]) -> str | None:
     raw = claims.get(settings.jwt_tenant_claim)
-    if raw is None:
-        return None
-    return str(raw).strip() or None
+    return raw if isinstance(raw, str) and raw.strip() else None
+
+
+def credentials_match(provided: str, expected: str) -> bool:
+    """Compare encoded bytes so non-ASCII input is rejected without a server error."""
+    return hmac.compare_digest(provided.encode("utf-8"), expected.encode("utf-8"))
+
+
+def require_deployment_access(
+    x_api_key: str | None = Header(default=None, alias="X-API-Key"),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+) -> None:
+    """Admit only the configured tenant to a dedicated deployment's data routes."""
+    if not settings.is_local:
+        require_privileged_access(x_api_key, authorization, {"viewer", "analyst", "admin"})
 
 
 def get_current_user(
@@ -138,19 +152,31 @@ def require_privileged_access(
     development only, anonymous access remains available for the demo UI.
     Other environments require an explicitly configured authentication method.
     """
+    if not settings.is_local and not settings.deployment_tenant_id:
+        raise AppError(
+            code="AUTH_NOT_CONFIGURED",
+            message="DEPLOYMENT_TENANT_ID must identify the dedicated deployment",
+            status_code=503,
+        )
     if settings.jwt_secret:
         user = get_current_user(authorization)
+        if not settings.is_local and extract_tenant(user.claims) != settings.deployment_tenant_id:
+            raise AppError(
+                code="FORBIDDEN",
+                message="Tenant is not admitted to this deployment",
+                status_code=403,
+            )
         require_roles(user, allowed_roles)
         return
 
     if settings.analytics_api_key:
         if not x_api_key:
             raise AppError(code="UNAUTHORIZED", message="Missing API key", status_code=401)
-        if not hmac.compare_digest(x_api_key, settings.analytics_api_key):
+        if not credentials_match(x_api_key, settings.analytics_api_key):
             raise AppError(code="FORBIDDEN", message="Invalid API key", status_code=403)
         return
 
-    if settings.app_env.strip().lower() in {"dev", "development", "local", "test"}:
+    if settings.is_local:
         return
     raise AppError(
         code="AUTH_NOT_CONFIGURED",

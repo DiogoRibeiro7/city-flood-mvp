@@ -24,4 +24,5 @@ COPY infra/db/migrations /app/infra/db/migrations
 
 EXPOSE 8000
 
-CMD ["uvicorn", "floodmvp.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Quotas are process-local: the supported deployment has one API process/replica.
+CMD ["uvicorn", "floodmvp.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

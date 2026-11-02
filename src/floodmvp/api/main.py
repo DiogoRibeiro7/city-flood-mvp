@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import hmac
 import logging
 import math
 import time
@@ -30,7 +29,12 @@ from floodmvp.api.routers import (
     notes,
     telemetry,
 )
-from floodmvp.common.auth import extract_tenant, try_decode_token
+from floodmvp.common.auth import (
+    credentials_match,
+    extract_tenant,
+    require_deployment_access,
+    try_decode_token,
+)
 from floodmvp.common.errors import AppError, as_error_payload, as_error_payload_raw
 from floodmvp.common.logging import configure_logging, log_json
 from floodmvp.config.settings import settings
@@ -125,7 +129,7 @@ def _resolve_tenant_id(request: Request) -> str:
         not settings.jwt_secret
         and api_key
         and settings.analytics_api_key
-        and hmac.compare_digest(api_key, settings.analytics_api_key)
+        and credentials_match(api_key, settings.analytics_api_key)
     ):
         return "analytics-key"
     return "public"
@@ -143,6 +147,9 @@ def _finish_request(
     duration = time.perf_counter() - started_at
     response.headers["x-request-id"] = request_id
     path = request.url.path
+    if not settings.is_local and path.startswith("/v1/") and path != "/v1/health":
+        # The local demo's asset cache must never serve authenticated deployment data.
+        response.headers["Cache-Control"] = "private, no-store"
     # Raw URLs contain user-controlled IDs: keep Prometheus label cardinality bounded.
     # Requests rejected before routing have no matched route and use a fixed label.
     route_path = getattr(request.scope.get("route"), "path", None)
@@ -363,11 +370,16 @@ async def metrics(session: AsyncSession = Depends(get_session)) -> Response:
 
 
 app.include_router(health.router, prefix="/v1")
-app.include_router(cities.router, prefix="/v1")
-app.include_router(assets.router, prefix="/v1")
-app.include_router(telemetry.router, prefix="/v1")
-app.include_router(ingest.router, prefix="/v1")
-app.include_router(jobs.router, prefix="/v1")
-app.include_router(analytics.router, prefix="/v1")
-app.include_router(events.router, prefix="/v1")
-app.include_router(notes.router, prefix="/v1")
+for data_router in (
+    cities.router,
+    assets.router,
+    telemetry.router,
+    ingest.router,
+    jobs.router,
+    analytics.router,
+    events.router,
+    notes.router,
+):
+    # Ingestion has its own deployment-specific server-to-server credential.
+    admission = [] if data_router is ingest.router else [Depends(require_deployment_access)]
+    app.include_router(data_router, prefix="/v1", dependencies=admission)

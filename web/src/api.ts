@@ -30,7 +30,7 @@ function authHeaders(): Record<string, string> {
 }
 
 export async function fetchCities(): Promise<City[]> {
-  const r = await fetch(`${API_BASE}/v1/cities`);
+  const r = await fetch(`${API_BASE}/v1/cities`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`cities: ${r.status}`);
   return r.json();
 }
@@ -51,7 +51,7 @@ export async function fetchAssets(
   }
   if (limit !== undefined) q.set("limit", String(limit));
   if (offset !== undefined) q.set("offset", String(offset));
-  const r = await fetch(`${API_BASE}/v1/cities/${cityId}/assets?${q.toString()}`);
+  const r = await fetch(`${API_BASE}/v1/cities/${cityId}/assets?${q.toString()}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`assets: ${r.status}`);
   return r.json();
 }
@@ -59,7 +59,7 @@ export async function fetchAssets(
 export async function fetchMetrics(assetId: string, scenarioId?: string): Promise<string[]> {
   const q = new URLSearchParams();
   if (scenarioId) q.set("scenario_id", scenarioId);
-  const r = await fetch(`${API_BASE}/v1/assets/${assetId}/metrics?${q.toString()}`);
+  const r = await fetch(`${API_BASE}/v1/assets/${assetId}/metrics?${q.toString()}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`metrics: ${r.status}`);
   return r.json();
 }
@@ -78,7 +78,7 @@ export async function fetchObservations(
   q.set("granularity", "5m");
   q.set("agg", "avg");
   if (scenarioId) q.set("scenario_id", scenarioId);
-  const r = await fetch(`${API_BASE}/v1/assets/${assetId}/observations?${q.toString()}`);
+  const r = await fetch(`${API_BASE}/v1/assets/${assetId}/observations?${q.toString()}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`observations: ${r.status}`);
   return r.json();
 }
@@ -99,19 +99,19 @@ export async function fetchObservationsCompare(
   q.set("agg", "avg");
   q.set("base_scenario_id", baseScenarioId);
   q.set("compare_scenario_id", compareScenarioId);
-  const r = await fetch(`${API_BASE}/v1/assets/${assetId}/observations:compare?${q.toString()}`);
+  const r = await fetch(`${API_BASE}/v1/assets/${assetId}/observations:compare?${q.toString()}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`observations compare: ${r.status}`);
   return r.json();
 }
 
 export async function fetchScenarios() {
-  const r = await fetch(`${API_BASE}/v1/telemetry/scenarios`);
+  const r = await fetch(`${API_BASE}/v1/telemetry/scenarios`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`scenarios: ${r.status}`);
   return r.json();
 }
 
 export async function fetchCityStatus(cityId: string) {
-  const r = await fetch(`${API_BASE}/v1/cities/${cityId}/status`);
+  const r = await fetch(`${API_BASE}/v1/cities/${cityId}/status`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`status: ${r.status}`);
   return r.json();
 }
@@ -121,7 +121,7 @@ export async function fetchHotspots(cityId: string, top = 20) {
   q.set("city_id", cityId);
   q.set("metric", "overflow_risk");
   q.set("top", String(top));
-  const r = await fetch(`${API_BASE}/v1/hotspots?${q.toString()}`);
+  const r = await fetch(`${API_BASE}/v1/hotspots?${q.toString()}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`hotspots: ${r.status}`);
   return r.json();
 }
@@ -129,7 +129,7 @@ export async function fetchHotspots(cityId: string, top = 20) {
 export async function fetchCitySummary(cityId: string, minutes = 15) {
   const q = new URLSearchParams();
   q.set("minutes", String(minutes));
-  const r = await fetch(`${API_BASE}/v1/cities/${cityId}/summary?${q.toString()}`);
+  const r = await fetch(`${API_BASE}/v1/cities/${cityId}/summary?${q.toString()}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`summary: ${r.status}`);
   return r.json();
 }
@@ -147,7 +147,7 @@ export async function fetchEvents(
   q.set("to", to);
   q.set("limit", String(limit));
   if (type) q.set("type", type);
-  const r = await fetch(`${API_BASE}/v1/events?${q.toString()}`);
+  const r = await fetch(`${API_BASE}/v1/events?${q.toString()}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`events: ${r.status}`);
   return r.json();
 }

@@ -34,12 +34,12 @@ and recovery procedure; they are not tested by the logical drill.
 ## Scaling
 
 ### Backend
-- Request quotas are process-local. Adding API replicas or `uvicorn` workers
-  changes their effective limits; a shared-state strategy or an explicit
-  single-worker deployment constraint must be verified before scaling.
-- Tenant attribution in request metrics does not establish tenant data
-  isolation. See the [deployment limitations](deployment/reference.md) and
-  [release security gate](releases/v1-acceptance.md) before exposing shared data.
+- The release requires exactly one API process and one replica per dedicated
+  tenant deployment. Use `uvicorn --workers 1`; do not overlap rollout replicas
+  or enable autoscaling with the process-local limiter.
+- `DEPLOYMENT_TENANT_ID` admits only that tenant's credentials to a dedicated
+  data store; it does not implement shared-database row isolation. See the
+  [security review](releases/security-review.md) before changing the boundary.
 
 ### Database
 - Increase Postgres resources (CPU/RAM/IOPS) first.
