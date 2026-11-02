@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "project": "city-flood-recovery-071254bbc837",
+  "status": "failed",
+  "phase": "archive_integrity",
+  "started_at": "2026-11-02T21:44:59.750019+00:00",
+  "proposed_targets": {
+    "database_rto_seconds": 14400,
+    "rpo_exposure_seconds": 900,
+    "worker_rto_seconds": 300
+  },
+  "fixture_sha256": "c3a55b2f64900b2d367b058d106b9c5c34801426c7cb5ee217b18e160b91fad7",
+  "injected_failure": "corrupt-backup",
+  "cleanup": "completed",
+  "code_revision": "2133ba60996a19208f9d824b6af07707b95d6f15",
+  "code_dirty": false,
+  "database_images": {
+    "db": "sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9",
+    "restored-db": "sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9"
+  },
+  "fixture": {
+    "export_id": "recovery_export",
+    "queue_id": "job_64603be281f942f1841600b92b7d3736",
+    "seed": {
+      "assets": 3,
+      "cities": 1,
+      "observations": 36,
+      "sha256": "c3a55b2f64900b2d367b058d106b9c5c34801426c7cb5ee217b18e160b91fad7"
+    },
+    "timestamp_fixture": "scheduled_at deliberately aged ten minutes"
+  },
+  "checkpoint_action_started_at": "2026-11-02T21:45:36.060073+00:00",
+  "checkpoint": {
+    "at": "2026-11-02T21:45:40.759506+00:00",
+    "protected_checkpoint_committed": true
+  },
+  "source_snapshot_sha256": "006fe46a006d02e39a6f831b3992cdfce6fa2065dfce6e27f70163c1857c9641",
+  "migration_head": "0018_ingest_expiry",
+  "postgres_version": "16.11 (Ubuntu 16.11-1.pgdg22.04+1)",
+  "extensions": [
+    [
+      "pg_trgm",
+      "1.6"
+    ],
+    [
+      "plpgsql",
+      "1.0"
+    ],
+    [
+      "postgis",
+      "3.6.1"
+    ],
+    [
+      "timescaledb",
+      "2.25.0"
+    ],
+    [
+      "uuid-ossp",
+      "1.1"
+    ]
+  ],
+  "backup_seconds": 0.782,
+  "archive": {
+    "sha256": "40edd5e04c48aac1a50716b6cb3e5f11da1cf19d512778337ae33991e76ab1db",
+    "bytes": 73398,
+    "format": "pg_dump custom"
+  },
+  "error": "SmokeError: Backup archive checksum mismatch; restore refused",
+  "elapsed_seconds": 52.453,
+  "completed_at": "2026-11-02T21:45:52.196307+00:00"
+}

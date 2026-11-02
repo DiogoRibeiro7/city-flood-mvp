@@ -1,0 +1,69 @@
+# Only scripts/recovery_drill.py creates this project. No application .env or external DB.
+x-app: &app
+  image: ${SMOKE_PROJECT:?Use python -m scripts.recovery_drill}-backend
+  environment: &app-env
+    APP_ENV: test
+    DATABASE_URL: postgresql+asyncpg://postgres:recovery-test-only@db:5432/test_recovery_source
+    INGEST_TOKEN: recovery-ingest-only
+    SMOKE_PROJECT: ${SMOKE_PROJECT}
+    CITY_IDS: city_porto_mvp
+    EXPORT_DIR: /app/data/exports
+  volumes:
+    - exports:/app/data/exports
+
+x-db: &db
+  # PostgreSQL 16.11 / TimescaleDB 2.25.0 OSS; both servers use the same image.
+  image: timescale/timescaledb-ha@sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9
+  environment: &db-env
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: recovery-test-only
+    POSTGRES_DB: test_recovery_source
+  healthcheck:
+    test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+    interval: 2s
+    timeout: 2s
+    retries: 60
+
+services:
+  db:
+    <<: *db
+    volumes:
+      - source_data:/home/postgres/pgdata/data
+      - ./infra/db/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+  restored-db:
+    <<: *db
+    environment:
+      <<: *db-env
+      POSTGRES_DB: test_recovery_restored
+    volumes:
+      - restored_data:/home/postgres/pgdata/data
+      - ./infra/db/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+  backend:
+    <<: *app
+    build:
+      context: .
+      dockerfile: infra/backend/Dockerfile
+  recovered-api:
+    <<: *app
+    environment:
+      <<: *app-env
+      DATABASE_URL: postgresql+asyncpg://postgres:recovery-test-only@restored-db:5432/test_recovery_restored
+    ports:
+      - "127.0.0.1::8000"
+  interrupted-worker:
+    <<: *app
+    environment:
+      <<: *app-env
+      DATABASE_URL: postgresql+asyncpg://postgres:recovery-test-only@restored-db:5432/test_recovery_restored
+    command: ["python", "-m", "scripts.recovery_probe", "--target", "restored", "paused-worker"]
+  retry-worker:
+    <<: *app
+    environment:
+      <<: *app-env
+      DATABASE_URL: postgresql+asyncpg://postgres:recovery-test-only@restored-db:5432/test_recovery_restored
+    command: ["python", "-m", "floodmvp.jobs.queue_worker", "--once"]
+
+volumes:
+  source_data:
+  restored_data:
+  exports:

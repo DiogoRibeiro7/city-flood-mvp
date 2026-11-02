@@ -80,11 +80,15 @@ Build on a reviewed RC baseline, in this order:
    API/ingest/worker objectives and scraping, a disposable backup/restore and
    worker recovery drill, and a focused multi-process security review. Resolve
    process-local quota limitations and the gap between tenant attribution and
-   authorization. RTO/RPO and SLO values remain proposals until measured.
+   authorization. RTO/RPO and SLO values remain proposals pending operational evidence.
    The [observability runbook](docs/runbooks/observability.md) now specifies
    candidate SLI denominators and thresholds, API/worker scraping, committed
    ingestion/job outcomes, due backlog, dashboards and tested alert predicates.
-   Operational attainment, recovery drills and the security review remain open.
+   The [disposable recovery drill](docs/deployment/backup_restore_drills.md) now
+   records a verified logical restore, killed-worker rollback/restart, real SQL
+   failure/backoff/retry and stale-job detection against proposed RTO/RPO values.
+   Operational attainment, deployment-specific recovery and the security review
+   remain open; tiny synthetic timings do not establish production objectives.
 3. **Verify the operator workflow (prompt 14).** Exercise observations, quality
    flags, events, explanations, notes, comparisons, and exports in the existing
    React UI. Label synthetic and real inputs and uncertainty; add focused browser

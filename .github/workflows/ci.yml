@@ -44,7 +44,7 @@ jobs:
         run: poetry run ruff format --check . 2>&1 | tee test-results/static/format.log
       - name: Types
         if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
-        run: poetry run mypy src scripts/export_openapi.py scripts/database_test_support.py scripts/smoke_stack.py scripts/seed_smoke.py scripts/release_manifest.py 2>&1 | tee test-results/static/types.log
+        run: poetry run mypy src scripts/export_openapi.py scripts/database_test_support.py scripts/smoke_stack.py scripts/seed_smoke.py scripts/release_manifest.py scripts/recovery_drill.py scripts/recovery_probe.py 2>&1 | tee test-results/static/types.log
       - name: Validate workflows
         if: ${{ !cancelled() && steps.tools.outcome == 'success' }}
         run: |

@@ -178,7 +178,9 @@ complete error-budget paging policy. Alertmanager routing is not configured here
 
 Ratio guards reduce low-volume noise; they do not establish statistical confidence.
 Zero traffic should lead to source/scheduler expectation checks, not a success
-claim. Read-only triage comes first; recovery and backup drills belong to prompt 12.
+claim. Read-only triage comes first; use the [disposable recovery drill and manual
+decision guide](../deployment/backup_restore_drills.md) for interruption, retry,
+stale-job handling and backup/restore verification.
 
 ## Verification
 

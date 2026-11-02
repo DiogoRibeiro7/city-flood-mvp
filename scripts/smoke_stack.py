@@ -114,8 +114,12 @@ def verify_csv(content: str) -> None:
 
 
 class Stack:
-    def __init__(self, artifacts: Path) -> None:
-        self.project = f"city-flood-smoke-{uuid.uuid4().hex[:12]}"
+    def __init__(
+        self, artifacts: Path, *, compose_file: Path = COMPOSE, purpose: str = "smoke"
+    ) -> None:
+        if purpose not in {"smoke", "recovery"}:
+            raise ValueError("Unsupported disposable stack purpose")
+        self.project = f"city-flood-{purpose}-{uuid.uuid4().hex[:12]}"
         self.artifacts = artifacts.resolve() / self.project
         self.artifacts.mkdir(parents=True, exist_ok=False)
         self.env_file = self.artifacts / "compose.env"
@@ -134,7 +138,7 @@ class Stack:
             "-p",
             self.project,
             "-f",
-            str(COMPOSE),
+            str(compose_file),
         ]
 
     def configure_api(self, base: str) -> None:

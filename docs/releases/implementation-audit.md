@@ -47,6 +47,12 @@ The [observability follow-up](../runbooks/observability.md) records prompt 11's
 candidate objectives, worker scraping, committed outcome metrics, bounded labels,
 independent backlog snapshots and alert-rule tests. These establish monitoring
 semantics, not achieved operational service levels.
+The [recovery follow-up](../deployment/backup_restore_drills.md) records prompt
+12's disposable logical backup/restore consistency, measured recovery/loss
+intervals, killed-worker rollback/restart, retries, stale-job detection and
+corrupt-backup refusal. Clean-commit results are retained; production targets,
+PITR and external export-store recovery remain unverified. The inventory below
+retains the original audit baseline rather than retroactively changing its results.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
 

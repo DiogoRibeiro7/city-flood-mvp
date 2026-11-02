@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "project": "city-flood-recovery-44748d017c5d",
+  "status": "passed",
+  "phase": "stale_running_detection",
+  "started_at": "2026-11-02T21:42:53.306521+00:00",
+  "proposed_targets": {
+    "database_rto_seconds": 14400,
+    "rpo_exposure_seconds": 900,
+    "worker_rto_seconds": 300
+  },
+  "fixture_sha256": "c3a55b2f64900b2d367b058d106b9c5c34801426c7cb5ee217b18e160b91fad7",
+  "injected_failure": null,
+  "cleanup": "completed",
+  "code_revision": "2133ba60996a19208f9d824b6af07707b95d6f15",
+  "code_dirty": false,
+  "database_images": {
+    "db": "sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9",
+    "restored-db": "sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9"
+  },
+  "fixture": {
+    "export_id": "recovery_export",
+    "queue_id": "job_e893ae4ae4544e86a7dceb22c0e2ea7f",
+    "seed": {
+      "assets": 3,
+      "cities": 1,
+      "observations": 36,
+      "sha256": "c3a55b2f64900b2d367b058d106b9c5c34801426c7cb5ee217b18e160b91fad7"
+    },
+    "timestamp_fixture": "scheduled_at deliberately aged ten minutes"
+  },
+  "checkpoint_action_started_at": "2026-11-02T21:43:21.951207+00:00",
+  "checkpoint": {
+    "at": "2026-11-02T21:43:24.684644+00:00",
+    "protected_checkpoint_committed": true
+  },
+  "source_snapshot_sha256": "eeedfa9961b1beb38b7520abce4d0488f45b9ee644abc5023fd0929a4fcebe9e",
+  "migration_head": "0018_ingest_expiry",
+  "postgres_version": "16.11 (Ubuntu 16.11-1.pgdg22.04+1)",
+  "extensions": [
+    [
+      "pg_trgm",
+      "1.6"
+    ],
+    [
+      "plpgsql",
+      "1.0"
+    ],
+    [
+      "postgis",
+      "3.6.1"
+    ],
+    [
+      "timescaledb",
+      "2.25.0"
+    ],
+    [
+      "uuid-ossp",
+      "1.1"
+    ]
+  ],
+  "backup_seconds": 0.516,
+  "archive": {
+    "sha256": "96aee11aa67b8d14acd84d6fc728c6558f27eb76648ebb9649e069c7aea78352",
+    "bytes": 73399,
+    "format": "pg_dump custom"
+  },
+  "post_backup_write": {
+    "committed_observations_after_backup": 1,
+    "timestamp": "2026-11-02T21:43:34.129997+00:00"
+  },
+  "fault_declared_at": "2026-11-02T21:43:34.944970+00:00",
+  "rpo_exposure_upper_bound": {
+    "measured_seconds": 13.0,
+    "proposed_target_seconds": 900,
+    "within_candidate_in_this_drill": true
+  },
+  "restore_command_seconds": 1.688,
+  "restored_snapshot_sha256": "eeedfa9961b1beb38b7520abce4d0488f45b9ee644abc5023fd0929a4fcebe9e",
+  "snapshot_match": true,
+  "observed_data_loss": {
+    "post_backup_observations_missing": 1,
+    "pre_backup_observations_restored": 36,
+    "interpretation": "One deliberately committed post-backup observation is absent; no WAL replay was performed."
+  },
+  "database_recovery": {
+    "measured_seconds": 14.859,
+    "proposed_target_seconds": 14400,
+    "within_candidate_in_this_drill": true,
+    "scope": "Source-stop request through restore, equality checks and restored API data read; destination server pre-provisioned."
+  },
+  "active_worker_probe": {
+    "attempts": 0,
+    "backlog": {
+      "due_export_jobs": 1.0,
+      "oldest_export_age_seconds": 637.569757
+    },
+    "due": true,
+    "export_id": "recovery_export",
+    "export_status": "queued",
+    "has_error": false,
+    "job_id": "job_e893ae4ae4544e86a7dceb22c0e2ea7f",
+    "lock_available": false,
+    "lock_metadata_cleared": true,
+    "row_count": null,
+    "scheduled_at": "2026-11-02T21:33:21.397261+00:00",
+    "status": "queued"
+  },
+  "killed_worker": {
+    "exit_code": 137,
+    "rollback_state": {
+      "attempts": 0,
+      "backlog": {
+        "due_export_jobs": 1.0,
+        "oldest_export_age_seconds": 642.541606
+      },
+      "due": true,
+      "export_id": "recovery_export",
+      "export_status": "queued",
+      "has_error": false,
+      "job_id": "job_e893ae4ae4544e86a7dceb22c0e2ea7f",
+      "lock_available": true,
+      "lock_metadata_cleared": true,
+      "row_count": null,
+      "scheduled_at": "2026-11-02T21:33:21.397261+00:00",
+      "status": "queued"
+    }
+  },
+  "worker_recovery": {
+    "measured_seconds": 15.938,
+    "proposed_target_seconds": 300,
+    "within_candidate_in_this_drill": true,
+    "scope": "SIGKILL request through rollback, same-container restart and exact CSV download verification.",
+    "completed_job": {
+      "attempts": 1,
+      "backlog": {
+        "due_export_jobs": 0.0,
+        "oldest_export_age_seconds": 0.0
+      },
+      "due": true,
+      "export_id": "recovery_export",
+      "export_status": "completed",
+      "has_error": false,
+      "job_id": "job_e893ae4ae4544e86a7dceb22c0e2ea7f",
+      "lock_available": true,
+      "lock_metadata_cleared": true,
+      "row_count": 12,
+      "scheduled_at": "2026-11-02T21:33:21.397261+00:00",
+      "status": "completed"
+    }
+  },
+  "retry_first_attempt": {
+    "attempts": 1,
+    "due": false,
+    "early_claim_excluded": true,
+    "export_id": "recovery_retry",
+    "export_status": "queued",
+    "has_error": true,
+    "job_id": "job_66a03876700249ff8821e6b584feb06c",
+    "lock_available": true,
+    "lock_metadata_cleared": true,
+    "row_count": null,
+    "scheduled_at": "2026-11-02T21:44:27.443076+00:00",
+    "status": "queued"
+  },
+  "retry_recovery": {
+    "measured_seconds": 25.156,
+    "proposed_target_seconds": 300,
+    "within_candidate_in_this_drill": true,
+    "completed_job": {
+      "attempts": 2,
+      "backlog": {
+        "due_export_jobs": 0.0,
+        "oldest_export_age_seconds": 0.0
+      },
+      "due": true,
+      "export_id": "recovery_retry",
+      "export_status": "completed",
+      "has_error": false,
+      "job_id": "job_66a03876700249ff8821e6b584feb06c",
+      "lock_available": true,
+      "lock_metadata_cleared": true,
+      "row_count": 12,
+      "scheduled_at": "2026-11-02T21:44:27.443076+00:00",
+      "status": "completed"
+    }
+  },
+  "stale_running_probe": {
+    "automatically_requeued": false,
+    "due_export_jobs": 1.0,
+    "fixture": "deliberately aged committed running row",
+    "job_id": "recovery_stale_running",
+    "oldest_export_age_seconds": 600.065495,
+    "status": "running"
+  },
+  "limitations": [
+    "Synthetic tiny workload; local measurements do not establish production RTO/RPO.",
+    "Logical backup only: no PITR, WAL shipping, off-site storage, role/ACL recovery or external export-store restoration.",
+    "Stale timestamps are controlled fixtures; alert hold duration and operator notification were not exercised.",
+    "No automatic stale-job requeue; worker claim rollback does not guarantee exactly-once external side effects."
+  ],
+  "elapsed_seconds": 120.11,
+  "completed_at": "2026-11-02T21:44:53.408125+00:00"
+}
