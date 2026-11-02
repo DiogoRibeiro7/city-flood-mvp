@@ -5,4 +5,5 @@ tests/fixtures/real_sources/noaa_ghcnh/station_record.txt text eol=lf
 docs/case-studies/porto-2010/*.json text eol=lf
 docs/case-studies/porto-2010/*.csv text eol=lf
 docs/case-studies/porto-2010/*.md text eol=lf
-docs/case-studies/porto-2010/*.svg text eol=lf
+# Preserve the renderer's exact SVG bytes, including its path whitespace.
+docs/case-studies/porto-2010/*.svg -text -whitespace

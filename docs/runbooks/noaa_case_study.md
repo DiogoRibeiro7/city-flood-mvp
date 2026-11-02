@@ -118,8 +118,9 @@ NOAA's archive reuse evidence and attribution are recorded in the source
 assessment (CC0-1.0; Menne et al., DOI `10.25921/jp3d-3v19`). Commit only the small
 report, figure, tables and manifests under `docs/case-studies/porto-2010/`.
 Keep annual raw downloads, database state, credentials and large run logs under
-ignored local output directories. `.gitattributes` preserves the LF bytes of
-the checksummed text artifacts on Windows checkouts.
+ignored local output directories. `.gitattributes` preserves LF for JSON, CSV
+and Markdown artifacts and retains the renderer's SVG bytes without Git newline
+conversion or whitespace checks on its generated paths.
 
 ## Verification commands
 
@@ -140,8 +141,9 @@ itself needs no database URL and always provisions its own resources.
 
 Implementation revision: `ec77b2224a30f63714fb8ad4a8c79d2b3081a6b1` on
 Windows, Python 3.12.10 and Poetry 2.2.1. Both full-source runs recorded a clean
-checkout of that revision. The following commit only retains artifacts and
-updates documentation; it does not change the executed implementation.
+checkout of that revision. Subsequent commits retain artifacts, reconcile
+documentation and preserve generated SVG bytes in Git; they do not change the
+executed implementation.
 
 | Check | Actual result |
 | --- | --- |
