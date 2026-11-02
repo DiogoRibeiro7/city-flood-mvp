@@ -21,8 +21,11 @@ The [Portuguese source assessment](docs/data/real-source-assessment.md) selects
 a licensed historical Porto rainfall archive and records a small real fixture.
 The [NOAA ingestion CLI](docs/runbooks/noaa_ghcnh.md) now supports bounded
 historical downloads, offline previews and atomic reruns with provenance.
-Its six-hour mean rates remain separate from the 15-minute detector; a full
-quality report and validated flood evaluation remain outstanding.
+The [quality report](docs/runbooks/noaa_ghcnh_quality.md) describes missing data,
+sampling, freshness, availability on an assumed grid and clipped interval
+support from a checksummed live archive download.
+Its six-hour mean rates remain separate from the 15-minute detector; event
+evaluation and a reproducible case study remain outstanding.
 
 ## What’s included
 

@@ -32,8 +32,12 @@ The [real-source assessment](../data/real-source-assessment.md) records prompt 6
 Portuguese source comparison, selected NOAA GHCNh rainfall and permitted fixture;
 the baseline inventory below predates that evidence. The
 [provider ingestion follow-up](../runbooks/noaa_ghcnh.md) records prompt 7's
-bounded downloads, provenance, atomic writes and verified reruns. Full quality
-characterization and event evaluation remain incomplete.
+bounded downloads, provenance, atomic writes and verified reruns. The
+[quality characterization](../runbooks/noaa_ghcnh_quality.md) records prompt 8's
+assumed-grid availability, clipped interval support, gaps, sampling and freshness.
+Its JSON/Markdown reports contain reproducible analytical results for pinned
+inputs; HTTP retrieval metadata changes between runs. Event evaluation and the
+case study remain incomplete.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
 

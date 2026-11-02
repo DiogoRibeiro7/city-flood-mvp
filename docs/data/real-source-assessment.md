@@ -218,3 +218,12 @@ CI result is asserted by this local record.
 [snirh-catalogue]: https://dados.gov.pt/pt/datasets/rede-de-estacoes-hidrometricas-snirh/
 [snirh-api]: https://dados.gov.pt/api/1/datasets/rede-de-estacoes-hidrometricas-snirh/
 [dados-terms]: https://dados.gov.pt/pt/termos-de-utilizacao
+
+## Quality follow-up (2026-11-02)
+
+The [quality report](../runbooks/noaa_ghcnh_quality.md) records a
+new successful checksummed HTTP acquisition. Quantitative support is sparse:
+30/264 hours from selected reports, and 6/44 slots on an assumed six-hour grid.
+G5 remains open for evaluation and the descriptive case study. The report also
+describes sampling, gaps and historical freshness; it does not certify station
+completeness. The assessment above remains the 2026-10-31 selection record.

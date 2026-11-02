@@ -168,3 +168,10 @@ child database, then dropped that child. The owned test container was also
 stopped and removed after verification. Local evidence is under ignored
 `test-results/noaa-ingestion/`; unit tests use the permitted fixture and mock
 HTTP only. No hosted CI result or detector accuracy is asserted here.
+
+## Quality characterization
+
+The [quality CLI](noaa_ghcnh_quality.md) adds JSON/Markdown reports for missing
+intervals, duplicates, impossible values, sampling, historical freshness and
+unit-contract limitations. It shares the acquisition/parser rules above and
+distinguishes missing, trace and observed zero rainfall before aggregation.
