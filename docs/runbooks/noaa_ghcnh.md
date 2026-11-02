@@ -14,7 +14,10 @@ The metric includes the interval because the existing database key is
 `(asset_id, metric, ts)`. Twelve-hour totals remain outside this stream.
 These rates are not sent to the existing `rain_mmph` detector and do not
 validate its 15-minute intensity threshold. River-level ingestion, event
-labels, coverage analysis and detector evaluation remain outstanding.
+labels and real-event validation remain outstanding. The
+[quality report](noaa_ghcnh_quality.md) and
+[evaluation protocol](../evaluation/event-protocol.md) describe measured interval
+support and the requirements for scoring detector output.
 
 ## Preview without a database
 

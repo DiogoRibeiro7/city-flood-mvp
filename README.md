@@ -24,8 +24,10 @@ historical downloads, offline previews and atomic reruns with provenance.
 The [quality report](docs/runbooks/noaa_ghcnh_quality.md) describes missing data,
 sampling, freshness, availability on an assumed grid and clipped interval
 support from a checksummed live archive download.
-Its six-hour mean rates remain separate from the 15-minute detector; event
-evaluation and a reproducible case study remain outstanding.
+Its six-hour mean rates remain separate from the 15-minute detector. The
+[event evaluation protocol](docs/evaluation/event-protocol.md) provides tested
+matching and scoring functions, with explicit label and timing requirements.
+Independent real-event labels and a reproducible case study remain outstanding.
 
 ## What’s included
 
