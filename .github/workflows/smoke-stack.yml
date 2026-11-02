@@ -25,8 +25,18 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
-      - name: Exercise the disposable stack
-        run: python -m scripts.smoke_stack
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+      - name: Install operator browser dependencies
+        working-directory: web
+        run: |
+          npm install --global corepack@0.35.0
+          corepack enable
+          corepack yarn install --immutable
+          corepack yarn playwright install chromium --only-shell --with-deps
+      - name: Exercise the disposable stack and operator workflow
+        run: python -m scripts.smoke_stack --operator
       - name: Verify the stopped-worker failure path
         if: ${{ inputs.check_failure_path }}
         shell: python
@@ -57,3 +67,7 @@ jobs:
           path: |
             test-results/smoke/
             test-results/smoke-negative/
+            test-results/web/operator/
+            test-results/web/operator.xml
+            test-results/web/operator-live/
+            test-results/web/operator-live.xml

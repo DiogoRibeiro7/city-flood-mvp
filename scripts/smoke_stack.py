@@ -241,6 +241,8 @@ def exercise(stack: Stack, args: argparse.Namespace, report: dict[str, Any]) -> 
                 "-T",
                 "db",
                 "pg_isready",
+                "-h",
+                "127.0.0.1",
                 "-U",
                 "postgres",
                 "-d",
@@ -371,6 +373,38 @@ def exercise(stack: Stack, args: argparse.Namespace, report: dict[str, Any]) -> 
     verify_csv(content)
     (stack.artifacts / "export.csv").write_text(content, encoding="utf-8")
     report["checks"].append("worker CSV completion and exact download")
+    if getattr(args, "operator", False):
+        phase("operator")
+        stack.command(
+            "run", "--rm", "--no-deps", "backend", "python", "-m", "scripts.seed_operator_smoke"
+        )
+        browser = subprocess.run(
+            [
+                "node",
+                "node_modules/@playwright/test/cli.js",
+                "test",
+                "--config",
+                "playwright/operator.config.ts",
+            ],
+            cwd=ROOT / "web",
+            env={**stack.env, "OPERATOR_WEB_BASE": web, "OPERATOR_API_BASE": api},
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            capture_output=True,
+            timeout=180,
+            check=False,
+        )
+        (stack.artifacts / "operator-browser.log").write_text(
+            browser.stdout + browser.stderr, encoding="utf-8"
+        )
+        if browser.returncode:
+            raise SmokeError(
+                "Operator browser workflow failed; see operator-browser.log and test-results/web/operator-live"
+            )
+        report["checks"].append(
+            "browser evidence, producing run, persisted note, worker report and scenario comparison"
+        )
     phase("scheduler")
     # Start only after assertions over the fixed historical analytics run.
     stack.command("up", "-d", "--no-build", "scheduler")
@@ -484,6 +518,11 @@ def main() -> int:
     )
     parser.add_argument("--job-timeout", type=positive_seconds, default=60)
     parser.add_argument("--build-timeout", type=positive_seconds, default=1200)
+    parser.add_argument(
+        "--operator",
+        action="store_true",
+        help="Run operator browser workflow (requires installed web dependencies and Chromium)",
+    )
     parser.add_argument(
         "--keep", action="store_true", help="Retain this run's resources for inspection"
     )

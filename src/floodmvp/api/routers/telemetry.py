@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 import datetime as dt
+import math
 
 from fastapi import APIRouter, Depends, Query, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.api.openapi_examples import RESP_INVALID_ARGUMENT, error_response
 from floodmvp.api.validation import parse_query_timestamp
 from floodmvp.common.errors import AppError
+from floodmvp.models.db import Asset, TelemetryObservation
 from floodmvp.models.domain import (
     ObservationDeltaOut,
+    ObservationEvidenceOut,
     ObservationOut,
+    ObservationsEvidenceOut,
     ObservationsOut,
     ScenarioCompareOut,
     ScenarioRunOut,
@@ -27,6 +32,83 @@ from floodmvp.storage.repos.telemetry import (
 )
 
 router = APIRouter(tags=["telemetry"])
+
+
+@router.get(
+    "/assets/{asset_id}/observations/evidence",
+    response_model=ObservationsEvidenceOut,
+    responses={
+        400: RESP_INVALID_ARGUMENT,
+        404: error_response(code="NOT_FOUND", message="Not found"),
+    },
+)
+async def observation_evidence(
+    asset_id: str,
+    metric: str = Query(...),
+    from_ts: str = Query(..., alias="from"),
+    to_ts: str = Query(..., alias="to"),
+    scenario_id: str | None = Query(default=None),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    session: AsyncSession = Depends(get_session),
+) -> ObservationsEvidenceOut:
+    """Bounded raw evidence, not aggregates or a certification of source quality."""
+    start = parse_query_timestamp(from_ts, "from")
+    end = parse_query_timestamp(to_ts, "to")
+    if end <= start:
+        raise AppError(code="INVALID_ARGUMENT", message="'to' must be after 'from'")
+    if await session.get(Asset, asset_id) is None:
+        raise AppError(code="ASSET_NOT_FOUND", message="Asset not found", status_code=404)
+    resolved = await resolve_scenario_id(session, scenario_id) if scenario_id else None
+    if scenario_id and resolved is None:
+        raise AppError(code="SCENARIO_NOT_FOUND", message="Scenario not found", status_code=404)
+    records = list(
+        (
+            await session.scalars(
+                select(TelemetryObservation)
+                .where(TelemetryObservation.asset_id == asset_id)
+                .where(TelemetryObservation.metric == metric)
+                .where(TelemetryObservation.scenario_id == resolved)
+                .where(TelemetryObservation.ts >= start, TelemetryObservation.ts < end)
+                .order_by(TelemetryObservation.ts)
+                .offset(offset)
+                .limit(limit + 1)
+            )
+        ).all()
+    )
+    rows = []
+    for row in records[:limit]:
+        # Do not expose arbitrary importer payloads, URLs or credentials from lineage.
+        lineage = row.lineage if isinstance(row.lineage, dict) else {}
+        observation = lineage.get("observation", {})
+        context: dict[str, str | int | float] = {}
+        for key in ("interval_start", "interval_end", "interval_minutes"):
+            value = observation.get(key) if isinstance(observation, dict) else None
+            if isinstance(value, (str, int, float)) and not isinstance(value, bool):
+                context[key] = value
+        if isinstance(lineage.get("conversion"), str):
+            context["conversion"] = lineage["conversion"]
+        rows.append(
+            ObservationEvidenceOut(
+                ts=row.ts,
+                value=row.value if math.isfinite(row.value) else None,
+                quality_flag=row.quality_flag,
+                source=row.source,
+                source_type=row.source_type,
+                source_id=row.source_id,
+                scenario_id=row.scenario_id,
+                measurement_context=context,
+            )
+        )
+    has_more = len(records) > limit
+    return ObservationsEvidenceOut(
+        asset_id=asset_id,
+        metric=metric,
+        scenario_id=resolved,
+        rows=rows,
+        has_more=has_more,
+        next_offset=offset + limit if has_more else None,
+    )
 
 
 @router.get(

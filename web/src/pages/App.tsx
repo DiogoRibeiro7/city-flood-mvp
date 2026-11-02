@@ -24,12 +24,22 @@ import {
   fetchScenarios,
   setAuthToken,
 } from "../api";
+import { EventExplanation, ObservationEvidencePanel, WindowControls, ReviewWindow, sample } from "./Evidence";
 import "./App.css";
 
 function isoNowMinus(hours: number): { from: string; to: string } {
   const to = new Date();
   const from = new Date(to.getTime() - hours * 3600 * 1000);
   return { from: from.toISOString(), to: to.toISOString() };
+}
+
+function initialWindow(): ReviewWindow {
+  const params = new URLSearchParams(window.location.search);
+  const from = new Date(params.get("from") || ""), to = new Date(params.get("to") || "");
+  if (Number.isFinite(+from) && Number.isFinite(+to) && to > from && +to - +from <= 30 * 86400000)
+    return { from: from.toISOString(), to: to.toISOString() };
+  const hours = Number(params.get("range") || 24);
+  return isoNowMinus([6, 24, 168].includes(hours) ? hours : 24);
 }
 
 export default function App() {
@@ -39,13 +49,16 @@ export default function App() {
   const [selected, setSelected] = useState<Asset | null>(null);
   const [metrics, setMetrics] = useState<string[]>([]);
   const [metric, setMetric] = useState<string>("fill_ratio");
-  const [series, setSeries] = useState<{ ts: string; value: number }[]>([]);
+  const [series, setSeries] = useState<{ ts: string; value: number | null }[]>([]);
   const [status, setStatus] = useState<any>(null);
   const [hotspots, setHotspots] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [events, setEvents] = useState<any[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
-  const [rangeHours, setRangeHours] = useState<number>(24);
+  const [rangeHours, setRangeHours] = useState<number>(() => new URLSearchParams(window.location.search).has("from") ? 0 : 24);
+  const [reviewWindow, setReviewWindow] = useState<ReviewWindow>(initialWindow);
+  const changeRange = (hours: number) => { setRangeHours(hours); setReviewWindow(isoNowMinus(hours)); };
+  const applyWindow = (value: ReviewWindow) => { setRangeHours(0); setReviewWindow(value); };
   const [loadingAssets, setLoadingAssets] = useState<boolean>(false);
   const [loadingSeries, setLoadingSeries] = useState<boolean>(false);
   const [loadingCity, setLoadingCity] = useState<boolean>(false);
@@ -55,7 +68,7 @@ export default function App() {
   const [tagFilter, setTagFilter] = useState<string>("");
   const [tagInput, setTagInput] = useState<string>("");
   const [scenarios, setScenarios] = useState<any[]>([]);
-  const [scenarioId, setScenarioId] = useState<string>("latest");
+  const [scenarioId, setScenarioId] = useState<string>("");
   const [eventType, setEventType] = useState<string>("");
   const [timelineView, setTimelineView] = useState<"timeline" | "compact">("timeline");
   const [timelineLimit, setTimelineLimit] = useState<number>(8);
@@ -90,7 +103,7 @@ export default function App() {
   const [templateType, setTemplateType] = useState<string>("storm_response");
   const [templateDraft, setTemplateDraft] = useState<string>("");
   const assetCache = useRef<Map<string, Asset[]>>(new Map());
-  const eventCache = useRef<Map<string, any[]>>(new Map());
+  const requestedEvent = useRef(new URLSearchParams(window.location.search).get("event_id"));
 
   useEffect(() => {
     const savedRole = window.localStorage.getItem("floodmvp.role");
@@ -111,7 +124,7 @@ export default function App() {
     fetchCities()
       .then((c) => {
         setCities(c);
-        if (c.length) setCityId(c[0].city_id);
+        if (c.length) setCityId(current => c.some(city => city.city_id === current) ? current : c[0].city_id);
       })
       .catch((err) => {
         setErrorMsg(err?.message ?? "Failed to load cities");
@@ -142,7 +155,7 @@ export default function App() {
     const selectedEventParam = params.get("event_id");
     if (city) setCityId(city);
     if (scenario) setScenarioId(scenario);
-    if (range && !Number.isNaN(Number(range))) setRangeHours(Number(range));
+    if (range && !params.has("from") && [6, 24, 168].includes(Number(range))) setRangeHours(Number(range));
     if (event !== null) setEventType(event);
     if (tags) {
       setTagInput(tags);
@@ -176,23 +189,28 @@ export default function App() {
   }, [tagInput]);
 
   useEffect(() => {
+    let active = true;
+    setStatus(null); setSummary(null); setHotspots([]); setAssets([]);
+    setSelected(current => current?.city_id && current.city_id !== cityId ? null : current);
     if (!cityId) return;
     setLoadingCity(true);
-    Promise.all([fetchCityStatus(cityId).then(setStatus), fetchCitySummary(cityId, 15).then(setSummary)])
+    Promise.all([fetchCityStatus(cityId).then(value => { if (active) setStatus(value); }), fetchCitySummary(cityId, 15).then(value => { if (active) setSummary(value); })])
       .catch((err) => {
+        if (!active) return;
         setErrorMsg(err?.message ?? "Failed to load city summary");
         console.error(err);
       })
-      .finally(() => setLoadingCity(false));
+      .finally(() => { if (active) setLoadingCity(false); });
 
     setLoadingHotspots(true);
     fetchHotspots(cityId, 10)
-      .then(setHotspots)
+      .then(value => { if (active) setHotspots(value); })
       .catch((err) => {
+        if (!active) return;
         setErrorMsg(err?.message ?? "Failed to load hotspots");
         console.error(err);
       })
-      .finally(() => setLoadingHotspots(false));
+      .finally(() => { if (active) setLoadingHotspots(false); });
 
     const bbox = "-8.75,41.05,-8.45,41.25";
     const tags = tagFilter
@@ -206,7 +224,8 @@ export default function App() {
     const cached = assetCache.current.get(cacheKey);
     if (cached) {
       setAssets(cached);
-      return;
+      setLoadingAssets(false);
+      return () => { active = false; };
     }
     setLoadingAssets(true);
     Promise.all([
@@ -218,36 +237,34 @@ export default function App() {
       .then(([pipes, rivers, rain, river]) => {
         const merged = [...pipes, ...rivers, ...rain, ...river];
         assetCache.current.set(cacheKey, merged);
-        setAssets(merged);
+        if (active) setAssets(merged);
       })
       .catch((err) => {
+        if (!active) return;
         setErrorMsg(err?.message ?? "Failed to load assets");
         console.error(err);
       })
-      .finally(() => setLoadingAssets(false));
+      .finally(() => { if (active) setLoadingAssets(false); });
+    return () => { active = false; };
   }, [cityId, tagFilter, denseView]);
 
   useEffect(() => {
+    let active = true;
+    setEvents([]); setSelectedEvent(null); setLoadingEvents(false);
     if (!cityId) return;
-    const { from, to } = isoNowMinus(rangeHours);
-    const cacheKey = `${cityId}|${rangeHours}|${eventType || "all"}`;
-    const cached = eventCache.current.get(cacheKey);
-    if (cached) {
-      setEvents(cached);
-      return;
-    }
     setLoadingEvents(true);
-    fetchEvents(cityId, from, to, eventType || undefined, 50)
-      .then((rows) => {
-        eventCache.current.set(cacheKey, rows);
+    fetchEvents(cityId, reviewWindow.from, reviewWindow.to, eventType || undefined, 50)
+      .then(rows => {
+        if (!active) return;
         setEvents(rows);
+        const sharedId = requestedEvent.current;
+        if (sharedId) setSelectedEvent(rows.find((event: any) => event.event_id === sharedId) || null);
+        requestedEvent.current = null;
       })
-      .catch((err) => {
-        setErrorMsg(err?.message ?? "Failed to load events");
-        console.error(err);
-      })
-      .finally(() => setLoadingEvents(false));
-  }, [cityId, rangeHours, eventType]);
+      .catch(err => { if (active) setErrorMsg(err.message); })
+      .finally(() => { if (active) setLoadingEvents(false); });
+    return () => { active = false; };
+  }, [cityId, reviewWindow, eventType]);
 
   useEffect(() => {
     // Discard notes from the previous city or token before loading another scope.
@@ -299,77 +316,49 @@ export default function App() {
   }, [activeNoteId, notes]);
 
   useEffect(() => {
+    let active = true;
+    setMetrics([]); setMetric("");
     if (!selected) return;
     fetchMetrics(selected.asset_id, scenarioId)
-      .then((m) => {
-        setMetrics(m);
-        if (m.includes("fill_ratio")) setMetric("fill_ratio");
-        else if (m.length) setMetric(m[0]);
-      })
-      .catch((err) => {
-        setErrorMsg(err?.message ?? "Failed to load metrics");
-        console.error(err);
-      });
-  }, [selected, scenarioId]);
+      .then(rows => { if (active) { setMetrics(rows); setMetric(rows.includes("fill_ratio") ? "fill_ratio" : rows[0] || ""); } })
+      .catch(err => { if (active) setErrorMsg(err.message); });
+    return () => { active = false; };
+  }, [selected?.asset_id, scenarioId]);
 
   useEffect(() => {
+    let active = true;
+    setSeries([]); setLoadingSeries(false);
     if (!selected || !metric) return;
-    const { from, to } = isoNowMinus(rangeHours);
     setLoadingSeries(true);
-    fetchObservations(selected.asset_id, metric, from, to, scenarioId)
-      .then((r) => setSeries((r.series ?? []).map((x: any) => ({ ts: x.ts, value: x.value }))))
-      .catch((err) => {
-        setErrorMsg(err?.message ?? "Failed to load observations");
-        console.error(err);
-      })
-      .finally(() => setLoadingSeries(false));
-  }, [selected, metric, rangeHours, scenarioId]);
+    fetchObservations(selected.asset_id, metric, reviewWindow.from, reviewWindow.to, scenarioId)
+      .then(result => { if (active) setSeries(result.series || []); })
+      .catch(err => { if (active) setErrorMsg(err.message); })
+      .finally(() => { if (active) setLoadingSeries(false); });
+    return () => { active = false; };
+  }, [selected?.asset_id, metric, reviewWindow, scenarioId]);
 
   useEffect(() => {
-    if (!selected || !metric || !compareScenario) {
-      setCompareSeries([]);
-      return;
-    }
-    const { from, to } = isoNowMinus(rangeHours);
+    let active = true;
+    setCompareSeries([]); setLoadingCompare(false);
+    if (!selected || !metric || !compareScenario || !compareBaseScenario) return;
     setLoadingCompare(true);
-    fetchObservationsCompare(
-      selected.asset_id,
-      metric,
-      from,
-      to,
-      compareBaseScenario,
-      compareScenario
-    )
-      .then((r) => {
-        const rows = (r.series ?? []).map((row: any) => ({
-          ts: row.ts,
-          base: row.base ?? null,
-          compare: row.compare ?? null,
-          delta: row.delta ?? null,
-        }));
-        setCompareSeries(rows);
-      })
-      .catch((err) => {
-        setErrorMsg(err?.message ?? "Failed to load scenario comparison");
-        console.error(err);
-      })
-      .finally(() => setLoadingCompare(false));
-  }, [selected, metric, rangeHours, compareScenario, compareBaseScenario]);
+    fetchObservationsCompare(selected.asset_id, metric, reviewWindow.from, reviewWindow.to, compareBaseScenario, compareScenario)
+      .then(result => { if (active) setCompareSeries(result.series || []); })
+      .catch(err => { if (active) setErrorMsg(err.message); })
+      .finally(() => { if (active) setLoadingCompare(false); });
+    return () => { active = false; };
+  }, [selected?.asset_id, metric, reviewWindow, compareScenario, compareBaseScenario]);
 
   useEffect(() => {
-    if (!compareScenario && scenarios.length) {
-      setCompareScenario(scenarios[0].scenario_id);
-    }
-  }, [scenarios, compareScenario]);
-
-  useEffect(() => {
-    if (!selected) return;
+    if (!selected || loadingAssets || !assets.length) return;
+    const matching = assets.find(a => a.asset_id === selected.asset_id);
+    if (matching && !selected.name) setSelected(matching);
     if (!assets.find((a) => a.asset_id === selected.asset_id)) {
       setSelected(null);
       setSeries([]);
       setMetrics([]);
     }
-  }, [assets, selected]);
+  }, [assets, selected, loadingAssets]);
 
   useEffect(() => {
     if (!selectedEvent) return;
@@ -434,7 +423,7 @@ export default function App() {
   const formatTime = (iso: string) => {
     const dt = new Date(iso);
     if (Number.isNaN(dt.getTime())) return iso;
-    return dt.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", month: "short", day: "2-digit" });
+    return dt.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", month: "short", day: "2-digit", timeZone: "UTC", timeZoneName: "short" });
   };
 
   const formatShort = (iso: string) => {
@@ -447,7 +436,8 @@ export default function App() {
     const assetId = evt?.asset_ids?.[0];
     if (!assetId) return;
     const asset = assets.find((a) => a.asset_id === assetId) ?? null;
-    if (asset) setSelected(asset);
+    if (asset) { setSelected(asset); document.getElementById("review-heading")?.scrollIntoView(); }
+    else setErrorMsg("Event asset is outside the loaded map selection. Clear tag filters or enable Dense view to inspect it.");
   };
 
   const onFeatureClick = (_: any, layer: any) => {
@@ -534,7 +524,7 @@ export default function App() {
         <div className="map-header">
           <div>
             <div className="app-title">City Flood MVP</div>
-            <div className="app-subtitle">Synthetic assets, telemetry, analytics, and QA</div>
+            <div className="app-subtitle">Inspect measurements, quality and detector evidence</div>
           </div>
           <div className="header-actions">
             <div className="control-group">
@@ -550,7 +540,8 @@ export default function App() {
             <div className="control-group">
               <label htmlFor="scenario-select">Scenario</label>
               <select id="scenario-select" value={scenarioId} onChange={(e) => setScenarioId(e.target.value)}>
-                <option value="latest">Latest</option>
+                <option value="">Stored observations</option>
+                {scenarios.length > 0 && <option value="latest">Latest scenario</option>}
                 {scenarios.map((s) => (
                   <option key={s.scenario_id} value={s.scenario_id}>
                     {s.name}
@@ -591,6 +582,7 @@ export default function App() {
             />
             {showRiver && (
               <GeoJSON
+                key={"river-" + JSON.stringify(featuresByType.river)}
                 data={featuresByType.river}
                 onEachFeature={onFeatureClick}
                 style={() => ({ color: "#1d4ed8", weight: 4, opacity: 0.85 })}
@@ -598,6 +590,7 @@ export default function App() {
             )}
             {showPipes && (
               <GeoJSON
+                key={"pipes-" + JSON.stringify(featuresByType.pipes)}
                 data={featuresByType.pipes}
                 onEachFeature={onFeatureClick}
                 style={(feature: any) => {
@@ -614,6 +607,7 @@ export default function App() {
             )}
             {showGauges && (
               <GeoJSON
+                key={"gauges-" + JSON.stringify(featuresByType.gauges)}
                 data={featuresByType.gauges}
                 onEachFeature={onFeatureClick}
                 pointToLayer={(_, latlng) => {
@@ -630,16 +624,16 @@ export default function App() {
           </MapContainer>
 
           <div className="map-toolbar">
-            <button className={showRiver ? "toggle-on" : ""} onClick={() => setShowRiver((v) => !v)}>
+            <button aria-pressed={showRiver} className={showRiver ? "toggle-on" : ""} onClick={() => setShowRiver((v) => !v)}>
               River
             </button>
-            <button className={showPipes ? "toggle-on" : ""} onClick={() => setShowPipes((v) => !v)}>
+            <button aria-pressed={showPipes} className={showPipes ? "toggle-on" : ""} onClick={() => setShowPipes((v) => !v)}>
               Pipes
             </button>
-            <button className={showGauges ? "toggle-on" : ""} onClick={() => setShowGauges((v) => !v)}>
+            <button aria-pressed={showGauges} className={showGauges ? "toggle-on" : ""} onClick={() => setShowGauges((v) => !v)}>
               Gauges
             </button>
-            <button className={showHotspots ? "toggle-on" : ""} onClick={() => setShowHotspots((v) => !v)}>
+            <button aria-pressed={showHotspots} className={showHotspots ? "toggle-on" : ""} onClick={() => setShowHotspots((v) => !v)}>
               Hotspots
             </button>
           </div>
@@ -672,7 +666,27 @@ export default function App() {
       </section>
 
       <section className="side-panel">
-        {errorMsg && <div className="error-banner">{errorMsg}</div>}
+        {errorMsg && <div className="error-banner" role="alert">{errorMsg} <button onClick={() => setErrorMsg(null)}>Dismiss</button></div>}
+
+        <section className="card review-card" aria-labelledby="review-heading">
+          <h1 id="review-heading">Evidence review</h1>
+          <p className="evidence-hint">1. Inspect a measurement → 2. Review its event → 3. Compare scenarios → 4. Record a note and export.</p>
+          <WindowControls window={reviewWindow} onApply={applyWindow} />
+          <div className="control-group">
+            <label htmlFor="review-asset">Inspect asset (loaded map selection)</label>
+            <select id="review-asset" value={selected?.asset_id || ""} onChange={e => setSelected(assets.find(a => a.asset_id === e.target.value) || null)}>
+              <option value="">Select an asset</option>
+              {assets.map(a => <option key={a.asset_id} value={a.asset_id}>{a.name} ({a.asset_type})</option>)}
+            </select>
+          </div>
+          {metrics.length > 0 && <div className="control-group">
+            <label htmlFor="evidence-metric">Evidence metric</label>
+            <select id="evidence-metric" value={metric} onChange={e => setMetric(e.target.value)}>{metrics.map(m => <option key={m}>{m}</option>)}</select>
+          </div>}
+          {selected && metric && <ObservationEvidencePanel key={`${selected.asset_id}|${metric}|${scenarioId}|${reviewWindow.from}|${reviewWindow.to}`} assetId={selected.asset_id} metric={metric} window={reviewWindow} scenarioId={scenarioId} />}
+          <nav aria-label="Review steps" className="detail-actions"><a href="#incident-timeline">Events</a><a href="#asset-detail">Chart and comparison</a><a href="#notes">Notes</a><a href="#report">Export</a></nav>
+          <p className="evidence-hint">City status, summary and hotspots below are current snapshots, separate from this historical review.</p>
+        </section>
 
         {executiveMode && (
           <div className="card exec-card">
@@ -814,7 +828,7 @@ export default function App() {
           </div>
         )}
 
-        <div className="card timeline-card">
+        <div className="card timeline-card" id="incident-timeline">
           <div className="card-title">Incident timeline</div>
           <div className="asset-meta">
             <div className="control-group">
@@ -822,8 +836,9 @@ export default function App() {
               <select
                 id="event-range"
                 value={rangeHours}
-                onChange={(e) => setRangeHours(Number(e.target.value))}
+                onChange={(e) => changeRange(Number(e.target.value))}
               >
+                <option value={0} disabled>Custom window</option>
                 <option value={6}>Last 6h</option>
                 <option value={24}>Last 24h</option>
                 <option value={168}>Last 7d</option>
@@ -851,7 +866,7 @@ export default function App() {
           </div>
           <div className="metrics-grid">
             <div className="metric-tile">
-              Total events
+              Loaded events (up to 50)
               <div className="metric-value">{events.length}</div>
             </div>
             <div className="metric-tile">
@@ -864,13 +879,14 @@ export default function App() {
             </div>
           </div>
           {loadingEvents && <div className="empty-state">Loading timeline...</div>}
-          {!loadingEvents && events.length === 0 && <div className="empty-state">No incidents in range.</div>}
+          {!loadingEvents && events.length === 0 && <div className="empty-state">No detected events in range. This does not establish the absence of flooding.</div>}
           {timelineView === "timeline" ? (
             <div className="timeline">
               {timelineEvents.slice(0, timelineLimit).map((evt) => (
                 <button
                   key={evt.event_id}
                   className={`timeline-item ${selectedEvent?.event_id === evt.event_id ? "active" : ""}`}
+                  aria-pressed={selectedEvent?.event_id === evt.event_id}
                   onClick={() => setSelectedEvent(evt)}
                 >
                   <span className={`timeline-dot timeline-dot-${evt.event_type}`} />
@@ -891,7 +907,8 @@ export default function App() {
                 <li key={evt.event_id} className="compact-item">
                   <button
                     className={`compact-button ${selectedEvent?.event_id === evt.event_id ? "active" : ""}`}
-                    onClick={() => setSelectedEvent(evt)}
+                    aria-pressed={selectedEvent?.event_id === evt.event_id}
+                  onClick={() => setSelectedEvent(evt)}
                   >
                     <span className={`timeline-dot timeline-dot-${evt.event_type}`} />
                     <div>
@@ -928,8 +945,8 @@ export default function App() {
                   <strong>{formatTime(selectedEvent.start_ts)} → {formatTime(selectedEvent.end_ts)}</strong>
                 </div>
                 <div>
-                  <span>Confidence</span>
-                  <strong>{Number(selectedEvent.confidence ?? 0).toFixed(2)}</strong>
+                  <span>Heuristic confidence</span>
+                  <strong>{selectedEvent.confidence == null ? "Not recorded" : Number(selectedEvent.confidence).toFixed(2)}</strong>
                 </div>
                 <div>
                   <span>Assets</span>
@@ -937,6 +954,8 @@ export default function App() {
                 </div>
               </div>
               <div className="detail-summary">{selectedEvent.summary}</div>
+              <p className="evidence-hint">Event assets: {(selectedEvent.asset_ids ?? []).join(", ") || "Not recorded"}. Use Focus asset to inspect its measurements.</p>
+              <EventExplanation key={selectedEvent.event_id} eventId={selectedEvent.event_id} eventType={selectedEvent.event_type} />
               <div className="detail-actions">
                 <button onClick={() => setSelectedEvent(null)}>Clear</button>
                 <button onClick={() => focusEventAsset(selectedEvent)}>Focus asset</button>
@@ -945,7 +964,8 @@ export default function App() {
           )}
         </div>
 
-        <div className="card report-card">
+        <div className="card report-card" id="report">
+          <p className="evidence-hint">CSV includes events in the applied window. Summary and hotspots are current snapshots. It does not export raw quality or provenance; retain those in your review note.</p>
           <div className="card-title">Report builder</div>
           {role === "viewer" && (
             <div className="empty-state">Report builder available for analyst/admin roles.</div>
@@ -975,9 +995,10 @@ export default function App() {
               <select
                 id="report-range"
                 value={rangeHours}
-                onChange={(e) => setRangeHours(Number(e.target.value))}
+                onChange={(e) => changeRange(Number(e.target.value))}
                 disabled={role === "viewer"}
               >
+                <option value={0} disabled>Custom window</option>
                 <option value={6}>Last 6h</option>
                 <option value={24}>Last 24h</option>
                 <option value={168}>Last 7d</option>
@@ -1034,7 +1055,7 @@ export default function App() {
                 setReportBusy(true);
                 setReportStatus("Queuing report...");
                 try {
-                  const { from, to } = isoNowMinus(rangeHours);
+                  const { from, to } = reviewWindow;
                   const job = await createReportJob({
                     city_id: cityId,
                     from,
@@ -1071,9 +1092,10 @@ export default function App() {
                   a.remove();
                   URL.revokeObjectURL(url);
                   setReportStatus("Report downloaded");
+                } catch (error) {
+                  setReportStatus(error instanceof Error ? error.message : "Report failed. Try again.");
                 } finally {
                   setReportBusy(false);
-                  setTimeout(() => setReportStatus(""), 3000);
                 }
               }}
             >
@@ -1085,7 +1107,7 @@ export default function App() {
                 if (!cityId) return;
                 setReportBusy(true);
                 try {
-                  const { from, to } = isoNowMinus(rangeHours);
+                  const { from, to } = reviewWindow;
                   const [freshSummary, freshStatus, freshHotspots, freshEvents] = await Promise.all([
                     fetchCitySummary(cityId, 15),
                     fetchCityStatus(cityId),
@@ -1185,7 +1207,7 @@ export default function App() {
               Print PDF
             </button>
           </div>
-          {reportStatus && <div className="report-status">{reportStatus}</div>}
+          {reportStatus && <div className="report-status" role="status">{reportStatus}</div>}
         </div>
 
         <div className="card template-card">
@@ -1216,6 +1238,7 @@ export default function App() {
             <input id="template-title" type="text" value={templateDraftTitle} readOnly />
           </div>
           <textarea
+            aria-label="Incident report draft"
             className="template-area"
             value={templateDraft}
             onChange={(e) => setTemplateDraft(e.target.value)}
@@ -1263,7 +1286,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="card notes-card">
+        <div className="card notes-card" id="notes">
           <div className="card-title">Collaborative notes</div>
           <div className="asset-meta">
             <div className="control-group grow">
@@ -1287,6 +1310,7 @@ export default function App() {
             </div>
           </div>
           <textarea
+            aria-label="Note body"
             className="note-area"
             value={noteBody}
             onChange={(e) => setNoteBody(e.target.value)}
@@ -1365,6 +1389,12 @@ export default function App() {
                       onClick={() => {
                         const params = new URLSearchParams(window.location.search);
                         params.set("note", n.note_id);
+                        params.set("city", n.city_id);
+                        params.set("from", reviewWindow.from);
+                        params.set("to", reviewWindow.to);
+                        params.set("scenario", scenarioId);
+                        if (n.asset_id) params.set("asset", n.asset_id); else params.delete("asset");
+                        if (n.event_id) params.set("event_id", n.event_id); else params.delete("event_id");
                         const url = `${window.location.origin}?${params.toString()}`;
                         navigator.clipboard?.writeText(url);
                         setErrorMsg("Note link copied to clipboard.");
@@ -1445,6 +1475,7 @@ export default function App() {
                 if (!cityId) return;
                 const view = {
                   id: `view_${Date.now()}`,
+                  reviewWindow,
                   title: storyTitle || `View ${savedViews.length + 1}`,
                   cityId,
                   scenarioId,
@@ -1472,14 +1503,16 @@ export default function App() {
               <li key={view.id} className="story-item">
                 <div>
                   <div className="story-title">{view.title}</div>
-                  <div className="app-subtitle">{view.cityId} · {view.rangeHours}h</div>
+                  <div className="app-subtitle">{view.cityId} · {view.reviewWindow ? `${formatTime(view.reviewWindow.from)} → ${formatTime(view.reviewWindow.to)}` : `${view.rangeHours}h`}</div>
                 </div>
                 <div className="story-actions">
                   <button
                     onClick={() => {
+                      requestedEvent.current = view.selectedEventId;
                       setCityId(view.cityId);
                       setScenarioId(view.scenarioId);
-                      setRangeHours(view.rangeHours);
+                      if (view.reviewWindow) applyWindow(view.reviewWindow);
+                      else changeRange([6, 24, 168].includes(view.rangeHours) ? view.rangeHours : 24);
                       setEventType(view.eventType);
                       setTagInput(view.tagFilter || "");
                       setTagFilter(view.tagFilter || "");
@@ -1497,6 +1530,7 @@ export default function App() {
                   <button
                     onClick={() => {
                       const params = new URLSearchParams();
+                      if (view.reviewWindow) { params.set("from", view.reviewWindow.from); params.set("to", view.reviewWindow.to); }
                       params.set("city", view.cityId);
                       params.set("scenario", view.scenarioId);
                       params.set("range", String(view.rangeHours));
@@ -1530,7 +1564,7 @@ export default function App() {
           </ul>
         </div>
 
-        <div className="card asset-detail">
+        <div className="card asset-detail" id="asset-detail">
           <div className="asset-meta">
             <div>
               <div className="card-title">Asset detail</div>
@@ -1545,7 +1579,8 @@ export default function App() {
           <div className="asset-meta">
             <div className="control-group">
               <label htmlFor="range-select">Range</label>
-              <select id="range-select" value={rangeHours} onChange={(e) => setRangeHours(Number(e.target.value))}>
+              <select id="range-select" value={rangeHours} onChange={(e) => changeRange(Number(e.target.value))}>
+                <option value={0} disabled>Custom window</option>
                 <option value={6}>Last 6h</option>
                 <option value={24}>Last 24h</option>
                 <option value={168}>Last 7d</option>
@@ -1572,7 +1607,7 @@ export default function App() {
                   <XAxis dataKey="ts" hide />
                   <YAxis />
                   <Tooltip />
-                  <Line type="monotone" dataKey="value" dot={false} stroke="#2563eb" strokeWidth={2} />
+                  <Line type="linear" connectNulls={false} dataKey="value" dot={false} stroke="#2563eb" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -1586,7 +1621,7 @@ export default function App() {
             <div className="compare-header">
               <div>
                 <div className="card-title">Scenario comparison</div>
-                <div className="app-subtitle">Compare the selected metric across two scenarios.</div>
+                <div className="app-subtitle">Scenario comparison is not prediction validation. Values are 5-minute means; missing samples are not zero.</div>
               </div>
               <button
                 onClick={() => {
@@ -1607,7 +1642,7 @@ export default function App() {
                   value={compareBaseScenario}
                   onChange={(e) => setCompareBaseScenario(e.target.value)}
                 >
-                  <option value="latest">Latest</option>
+                  <option value="latest">Latest scenario</option>
                   {scenarios.map((s) => (
                     <option key={`base-${s.scenario_id}`} value={s.scenario_id}>
                       {s.name}
@@ -1622,7 +1657,8 @@ export default function App() {
                   value={compareScenario}
                   onChange={(e) => setCompareScenario(e.target.value)}
                 >
-                  <option value="latest">Latest</option>
+                  <option value="">Choose a scenario</option>
+                  <option value="latest">Latest scenario</option>
                   {scenarios.map((s) => (
                     <option key={`cmp-${s.scenario_id}`} value={s.scenario_id}>
                       {s.name}
@@ -1638,8 +1674,8 @@ export default function App() {
                     <XAxis dataKey="ts" hide />
                     <YAxis />
                     <Tooltip />
-                    <Line type="monotone" dataKey="base" dot={false} stroke="#0f766e" strokeWidth={2} />
-                    <Line type="monotone" dataKey="compare" dot={false} stroke="#f97316" strokeWidth={2} />
+                    <Line type="linear" connectNulls={false} dataKey="base" dot={false} stroke="#0f766e" strokeWidth={2} />
+                    <Line type="linear" connectNulls={false} dataKey="compare" dot={false} stroke="#f97316" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
@@ -1647,6 +1683,13 @@ export default function App() {
               )}
             </div>
             {loadingCompare && <div className="empty-state">Loading comparison...</div>}
+            {compareSeries.length > 0 && <details><summary>Comparison measurements (UTC)</summary>
+              <div className="evidence-scroll" tabIndex={0} role="region" aria-label="Scenario comparison table"><table className="evidence-table">
+                <caption>Five-minute means and paired differences (compare minus base)</caption>
+                <thead><tr><th scope="col">UTC</th><th scope="col">Base</th><th scope="col">Compare</th><th scope="col">Delta</th></tr></thead>
+                <tbody>{compareSeries.map(row => <tr key={row.ts}><td>{row.ts}</td><td>{sample(row.base)}</td><td>{sample(row.compare)}</td><td>{sample(row.delta)}</td></tr>)}</tbody>
+              </table></div>
+            </details>}
             {compareStats && (
               <div className="compare-stats">
                 <div>

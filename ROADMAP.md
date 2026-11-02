@@ -96,6 +96,11 @@ Build on a reviewed RC baseline, in this order:
    flags, events, explanations, notes, comparisons, and exports in the existing
    React UI. Label synthetic and real inputs and uncertainty; add focused browser
    and accessibility assertions. Screenshots alone are not workflow tests.
+   The [operator workflow](docs/ui-workflows.md) adds raw source/quality evidence,
+   producing-run explanations, shared UTC windows and accessible measurements,
+   with browser regressions and a disposable real-stack workflow. Historical run
+   inputs are not immutable snapshots; synthetic demonstrations and source
+   attribution do not establish flood-prediction accuracy.
 4. **Prepare provenance and a release decision (prompt 15).** Re-run every
    acceptance gate, publish exact results/skips in the readiness PR, reconcile
    version metadata, changelog and established author/citation details, and give

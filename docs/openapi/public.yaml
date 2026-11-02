@@ -707,6 +707,144 @@ paths:
         and authentication. JWT takes precedence over API keys; tenant must match
         and role must permit the operation. Local demos retain anonymous ordinary
         reads and existing privileged-endpoint rules.
+  /v1/assets/{asset_id}/observations/evidence:
+    get:
+      tags:
+      - telemetry
+      summary: Observation Evidence
+      description: Bounded raw evidence, not aggregates or a certification of source
+        quality.
+      operationId: observation_evidence_v1_assets__asset_id__observations_evidence_get
+      parameters:
+      - name: asset_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Asset Id
+      - name: metric
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Metric
+      - name: from
+        in: query
+        required: true
+        schema:
+          type: string
+          title: From
+      - name: to
+        in: query
+        required: true
+        schema:
+          type: string
+          title: To
+      - name: scenario_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Scenario Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 500
+          minimum: 1
+          default: 100
+          title: Limit
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+          title: Offset
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObservationsEvidenceOut'
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+        '404':
+          content:
+            application/json:
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Not found
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/telemetry/scenarios:
     get:
       tags:
@@ -2861,6 +2999,101 @@ paths:
         and authentication. JWT takes precedence over API keys; tenant must match
         and role must permit the operation. Local demos retain anonymous ordinary
         reads and existing privileged-endpoint rules.
+  /v1/events/{event_id}/run:
+    get:
+      tags:
+      - events
+      summary: Event Run
+      description: Return the event's producing run, never the latest run or today's
+        settings.
+      operationId: event_run_v1_events__event_id__run_get
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Event Id
+      - name: X-API-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Api-Key
+      - name: Authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsRunOut'
+        '404':
+          content:
+            application/json:
+              example:
+                error:
+                  code: NOT_FOUND
+                  message: Event or run not found
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '401':
+          content:
+            application/json:
+              example:
+                error:
+                  code: UNAUTHORIZED
+                  message: Missing, invalid or expired credential
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Missing, invalid or expired credential
+        '403':
+          content:
+            application/json:
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Credential, role or deployment tenant is not permitted
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Credential, role or deployment tenant is not permitted
+        '503':
+          content:
+            application/json:
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Deployment tenant or authentication is not configured
+                  details: {}
+                  request_id: req_example
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Deployment tenant or authentication is not configured
+        '400':
+          $ref: '#/components/responses/InvalidArgument'
+      security:
+      - BearerAuth: []
+      - ApiKeyAuth: []
+      x-deployment-access: Non-local environments require a dedicated DEPLOYMENT_TENANT_ID
+        and authentication. JWT takes precedence over API keys; tenant must match
+        and role must permit the operation. Local demos retain anonymous ordinary
+        reads and existing privileged-endpoint rules.
   /v1/events:
     get:
       tags:
@@ -4322,6 +4555,54 @@ components:
       - compare
       - delta
       title: ObservationDeltaOut
+    ObservationEvidenceOut:
+      properties:
+        ts:
+          type: string
+          format: date-time
+          title: Ts
+        value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Value
+        quality_flag:
+          type: string
+          title: Quality Flag
+        source:
+          type: string
+          title: Source
+        source_type:
+          type: string
+          title: Source Type
+        source_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source Id
+        scenario_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Scenario Id
+        measurement_context:
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: integer
+            - type: number
+          type: object
+          title: Measurement Context
+      type: object
+      required:
+      - ts
+      - value
+      - quality_flag
+      - source
+      - source_type
+      - source_id
+      - scenario_id
+      title: ObservationEvidenceOut
     ObservationOut:
       properties:
         ts:
@@ -4338,6 +4619,41 @@ components:
       - ts
       - value
       title: ObservationOut
+    ObservationsEvidenceOut:
+      properties:
+        asset_id:
+          type: string
+          title: Asset Id
+        metric:
+          type: string
+          title: Metric
+        scenario_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Scenario Id
+        rows:
+          items:
+            $ref: '#/components/schemas/ObservationEvidenceOut'
+          type: array
+          title: Rows
+        has_more:
+          type: boolean
+          title: Has More
+        next_offset:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Next Offset
+      type: object
+      required:
+      - asset_id
+      - metric
+      - scenario_id
+      - rows
+      - has_more
+      - next_offset
+      title: ObservationsEvidenceOut
     ObservationsOut:
       properties:
         metric:

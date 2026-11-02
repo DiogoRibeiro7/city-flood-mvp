@@ -77,6 +77,7 @@ export async function fetchObservations(
   q.set("to", to);
   q.set("granularity", "5m");
   q.set("agg", "avg");
+  q.set("include_gaps", "true");
   if (scenarioId) q.set("scenario_id", scenarioId);
   const r = await fetch(`${API_BASE}/v1/assets/${assetId}/observations?${q.toString()}`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`observations: ${r.status}`);
@@ -107,6 +108,30 @@ export async function fetchObservationsCompare(
 export async function fetchScenarios() {
   const r = await fetch(`${API_BASE}/v1/telemetry/scenarios`, { headers: authHeaders() });
   if (!r.ok) throw new Error(`scenarios: ${r.status}`);
+  return r.json();
+}
+
+export type ObservationEvidence = {
+  ts: string; value: number | null; quality_flag: string;
+  source: string; source_type: string; source_id: string | null; scenario_id: string | null;
+  measurement_context: Record<string, string | number>;
+};
+
+export async function fetchObservationEvidence(
+  assetId: string, metric: string, from: string, to: string, scenarioId: string, offset = 0
+): Promise<{ rows: ObservationEvidence[]; has_more: boolean; next_offset: number | null }> {
+  const q = new URLSearchParams({ metric, from, to, offset: String(offset), limit: "100" });
+  if (scenarioId) q.set("scenario_id", scenarioId);
+  const r = await fetch(`${API_BASE}/v1/assets/${encodeURIComponent(assetId)}/observations/evidence?${q}`, { headers: authHeaders() });
+  if (!r.ok) throw new Error(`Observation evidence unavailable (${r.status})`);
+  return r.json();
+}
+
+export async function fetchEventRun(eventId: string): Promise<{
+  run_id: string; version: string; start_ts: string; end_ts: string; params: Record<string, unknown>;
+}> {
+  const r = await fetch(`${API_BASE}/v1/events/${encodeURIComponent(eventId)}/run`, { headers: authHeaders() });
+  if (!r.ok) throw new Error(`Event run unavailable (${r.status})`);
   return r.json();
 }
 

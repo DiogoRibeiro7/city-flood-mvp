@@ -150,6 +150,7 @@ jobs:
         run: |
           corepack yarn playwright install --with-deps chromium --only-shell 2>&1 | tee ../test-results/web/browser-install.log
           corepack yarn test:security 2>&1 | tee ../test-results/web/security.log
+          corepack yarn test:operator 2>&1 | tee ../test-results/web/operator.log
       - name: Retain web build and diagnostics
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

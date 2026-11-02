@@ -6,11 +6,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from floodmvp.api.openapi_examples import error_response
 from floodmvp.api.validation import parse_query_timestamp
 from floodmvp.common.errors import AppError
-from floodmvp.models.domain import EventOut
+from floodmvp.models.db import AnalyticsEvent, AnalyticsRun
+from floodmvp.models.domain import AnalyticsRunOut, EventOut
 from floodmvp.storage.db import get_session
 from floodmvp.storage.repos.analytics import list_events
 
 router = APIRouter(tags=["events"])
+
+
+@router.get(
+    "/events/{event_id}/run",
+    response_model=AnalyticsRunOut,
+    responses={404: error_response(code="NOT_FOUND", message="Event or run not found")},
+)
+async def event_run(
+    event_id: str,
+    session: AsyncSession = Depends(get_session),
+) -> AnalyticsRunOut:
+    """Return the event's producing run, never the latest run or today's settings."""
+    event = await session.get(AnalyticsEvent, event_id)
+    run = await session.get(AnalyticsRun, event.run_id) if event else None
+    if run is None:
+        raise AppError(code="NOT_FOUND", message="Event or run not found", status_code=404)
+    return AnalyticsRunOut.model_validate(run, from_attributes=True)
 
 
 @router.get(

@@ -10,6 +10,12 @@ or included in this audit.
 
 ## Status meanings
 
+Prompt 14 follow-up: the [operator evidence workflow](../ui-workflows.md) adds
+raw provenance/quality inspection, producing-run explanations, shared historical
+windows and browser assertions through notes, comparison and CSV. The original
+inventory below remains a dated baseline; the follow-up records the implemented
+scope, verification and remaining scientific/accessibility limitations.
+
 - **Implemented and tested:** the described behavior has implementation and
   relevant automated assertions that passed in this audit. Scope and limitations
   still apply; this does not imply a complete workflow or operational validation.
