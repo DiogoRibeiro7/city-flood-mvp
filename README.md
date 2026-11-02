@@ -27,7 +27,11 @@ support from a checksummed live archive download.
 Its six-hour mean rates remain separate from the 15-minute detector. The
 [event evaluation protocol](docs/evaluation/event-protocol.md) provides tested
 matching and scoring functions, with explicit label and timing requirements.
-Independent real-event labels and a reproducible case study remain outstanding.
+The [Porto case study](docs/case-studies/porto-2010/report.md) now reproduces
+acquisition, validation, database ingestion/replay, interval analytics, tables,
+figures and an observation timeline with [one command](docs/runbooks/noaa_case_study.md).
+It is descriptive: independent real-event labels remain unavailable and no
+prediction accuracy is established.
 
 ## What’s included
 

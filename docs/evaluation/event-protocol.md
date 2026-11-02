@@ -7,7 +7,9 @@ six-hour rainfall totals cannot validate a 15-minute intensity detector. The
 quantitative interval support from selected reports, with an assumed reporting
 grid. Do not turn that window into a fully reviewed negative period, treat
 missing rain as dry, or enlarge a tolerance until coarse data appears to validate
-the detector. G5 remains open for real evidence and the descriptive case study.
+the detector. The [descriptive case study](../runbooks/noaa_case_study.md) now
+reproduces this window through ingestion and interval analytics. Independent
+real-event validation remains open; the case study reports no accuracy scores.
 
 `floodmvp.analytics.evaluation.evaluate_events` implements protocol version 1.
 It is a pure, database-free function returning JSON-compatible evidence, matches,
