@@ -237,6 +237,13 @@ poetry run python -m floodmvp.jobs.generate_external_telemetry \
 ```
 
 ## Onboarding a new city data source
+
+For the selected Portuguese historical rainfall source, use the
+[NOAA GHCNh provider runbook](noaa_ghcnh.md). It defines duration-specific
+parsing, provenance and replay conflicts. Its default dry run makes no database
+writes; the older generic ingestion commands above retain their documented
+audit-row behavior.
+
 1. Create the city and assets (seed or import). Ensure `asset_id` values are stable.
 2. Collect a sample of the external telemetry and identify device identifiers and metrics.
 3. Create an asset map if external IDs do not match internal `asset_id`.

@@ -19,7 +19,9 @@ achieved operational service levels have not been demonstrated.
 
 The [Portuguese source assessment](docs/data/real-source-assessment.md) selects
 a licensed historical Porto rainfall archive and records a small real fixture.
-Its 6/12-hour totals support descriptive ingestion work; a provider adapter,
+The [NOAA ingestion CLI](docs/runbooks/noaa_ghcnh.md) now supports bounded
+historical downloads, offline previews and atomic reruns with provenance.
+Its six-hour mean rates remain separate from the 15-minute detector; a full
 quality report and validated flood evaluation remain outstanding.
 
 ## What’s included

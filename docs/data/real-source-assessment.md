@@ -5,6 +5,11 @@ selection for a historical, descriptive experiment. Gate G5 remains open:
 there is no provider adapter, complete quality report, validated flood event,
 or real-data case study yet.
 
+**2026-11-01 follow-up:** the [provider ingestion runbook](../runbooks/noaa_ghcnh.md)
+records prompt 7's implementation and live/disposable-database verification.
+The assessment below preserves the original source-selection evidence;
+quality characterization and flood-event validation remain open.
+
 ## Decision
 
 Select **NOAA NCEI GHCNh, Portuguese station `POMU0068545`, Porto / Pedras
