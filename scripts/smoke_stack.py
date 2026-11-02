@@ -283,6 +283,22 @@ def exercise(stack: Stack, args: argparse.Namespace, report: dict[str, Any]) -> 
     prom = stack.base_url("prometheus", 9090)
     grafana = stack.base_url("grafana", 3000)
     wait_for("Prometheus readiness", lambda: request(f"{prom}/-/ready"), bool, args.timeout)
+    targets = wait_for(
+        "API and worker Prometheus scrapes",
+        lambda: json_request(f"{prom}/api/v1/targets"),
+        lambda result: (
+            {
+                target["labels"]["job"]
+                for target in result.get("data", {}).get("activeTargets", [])
+                if target["health"] == "up"
+            }
+            >= {"floodmvp-backend", "floodmvp-worker"}
+        ),
+        args.timeout,
+    )
+    (stack.artifacts / "prometheus-targets.json").write_text(
+        json.dumps(targets, indent=2), encoding="utf-8"
+    )
     wait_for(
         "Grafana database",
         lambda: json_request(f"{grafana}/api/health"),
@@ -319,6 +335,7 @@ def exercise(stack: Stack, args: argparse.Namespace, report: dict[str, Any]) -> 
     report["checks"] = [
         "seed replay",
         "service readiness",
+        "API and worker metrics scrapes",
         "web API configuration",
         "API fixture",
         "analytics events",
@@ -360,6 +377,32 @@ def exercise(stack: Stack, args: argparse.Namespace, report: dict[str, Any]) -> 
 
     wait_for("scheduler analytics completion", scheduled, bool, args.job_timeout)
     report["checks"].append("scheduler enqueued analytics completed by worker")
+    expression = 'job_queue_completed_total{job="floodmvp-worker",job_type="analytics_run"}'
+    completion_metric = wait_for(
+        "scraped committed analytics completion",
+        lambda: json_request(
+            f"{prom}/api/v1/query?" + urllib.parse.urlencode({"query": expression})
+        ),
+        lambda result: any(
+            float(sample["value"][1]) >= 1 for sample in result.get("data", {}).get("result", [])
+        ),
+        args.timeout,
+    )
+    (stack.artifacts / "prometheus-completion.json").write_text(
+        json.dumps(completion_metric, indent=2), encoding="utf-8"
+    )
+    report["checks"].append("Prometheus observed committed analytics completion")
+    dashboard = json.loads(
+        (ROOT / "infra/observability/grafana/dashboards/floodmvp.json").read_text(encoding="utf-8")
+    )
+    for panel in dashboard["panels"]:
+        for target in panel["targets"]:
+            result = json_request(
+                f"{prom}/api/v1/query?" + urllib.parse.urlencode({"query": target["expr"]})
+            )
+            if result.get("status") != "success":
+                raise SmokeError(f"Dashboard query failed: {panel['title']} / {target['refId']}")
+    report["checks"].append("all Grafana panel queries accepted by Prometheus")
     phase("regressions")
     # The regression script drives the queue itself; stop competing consumers.
     stack.command("stop", "scheduler", "worker")

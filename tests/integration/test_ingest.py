@@ -5,6 +5,7 @@ import datetime as dt
 import pytest
 from geoalchemy2.elements import WKTElement
 from httpx import ASGITransport, AsyncClient
+from prometheus_client import REGISTRY
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -75,6 +76,7 @@ async def test_ingest_idempotency(app_client: AsyncClient, db_session: AsyncSess
         "events": [{"ts": dt.datetime.now(dt.UTC).isoformat(), "type": "fill_ratio", "value": 0.7}],
     }
     headers = {"Authorization": "Bearer dev-ingest-token", "Idempotency-Key": "key-1"}
+    metric_before = REGISTRY.get_sample_value("ingest_events_total", {"outcome": "accepted"}) or 0
 
     res1 = await app_client.post("/v1/telemetry/events:batch", json=payload, headers=headers)
     assert res1.status_code == 200
@@ -86,6 +88,10 @@ async def test_ingest_idempotency(app_client: AsyncClient, db_session: AsyncSess
     res2 = await app_client.post("/v1/telemetry/events:batch", json=payload, headers=headers)
     assert res2.status_code == 200
     assert res2.json() == body1
+    assert (
+        REGISTRY.get_sample_value("ingest_events_total", {"outcome": "accepted"})
+        == metric_before + 1
+    )
 
     payload["events"].append(
         {"ts": dt.datetime.now(dt.UTC).isoformat(), "type": "fill_ratio", "value": 0.8}

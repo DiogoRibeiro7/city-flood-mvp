@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import hmac
 import math
@@ -18,6 +19,7 @@ from floodmvp.common.errors import AppError
 from floodmvp.config.settings import settings
 from floodmvp.models.db import Asset, IngestIdempotency, TelemetryObservation
 from floodmvp.models.domain import IngestEventResult, IngestRequest, IngestResponse
+from floodmvp.observability.metrics import record_ingest_commit
 from floodmvp.storage.db import get_session
 
 router = APIRouter(tags=["ingest"])
@@ -241,4 +243,5 @@ async def ingest_events_batch(
         )
 
     await session.commit()
+    record_ingest_commit(response, dt.datetime.now(dt.UTC))
     return response

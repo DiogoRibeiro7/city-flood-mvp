@@ -6,13 +6,20 @@ import datetime as dt
 import time
 from typing import Any
 
+from prometheus_client import start_http_server
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.config.cities import get_city_config
 from floodmvp.config.settings import settings
 from floodmvp.jobs.run_analytics import run_city_analytics
 from floodmvp.models.domain import ExportJobQuery, ReportJobQuery
-from floodmvp.observability.metrics import JOB_PROCESSING_DURATION, JOB_QUEUE_AGE
+from floodmvp.observability.metrics import (
+    JOB_PROCESSING_DURATION,
+    JOB_QUEUE_AGE,
+    WORKER_LAST_POLL,
+    job_type_label,
+    record_job_commit,
+)
 from floodmvp.storage.db import SessionLocal
 from floodmvp.storage.repos.analytics import (
     add_export_job_log,
@@ -139,13 +146,14 @@ async def run_worker(poll_seconds: float, once: bool) -> None:
             job = await fetch_next_job(session, worker_id)
             if job is None:
                 await session.commit()
+                WORKER_LAST_POLL.set_to_current_time()
                 if once:
                     return
                 await asyncio.sleep(poll_seconds)
                 continue
             now = dt.datetime.now(dt.UTC)
             queue_age = (now - job.scheduled_at).total_seconds()
-            JOB_QUEUE_AGE.labels(job_type=job.job_type).observe(max(0.0, queue_age))
+            JOB_QUEUE_AGE.labels(job_type=job_type_label(job.job_type)).observe(max(0.0, queue_age))
             started = time.perf_counter()
             try:
                 # PostgreSQL marks a transaction as aborted after a SQL error.
@@ -185,21 +193,36 @@ async def run_worker(poll_seconds: float, once: bool) -> None:
                 await mark_job_success(session, job)
             finally:
                 duration = time.perf_counter() - started
-                JOB_PROCESSING_DURATION.labels(job_type=job.job_type).observe(duration)
+                JOB_PROCESSING_DURATION.labels(job_type=job_type_label(job.job_type)).observe(
+                    duration
+                )
 
             # Keep commit failures outside the task handler's retry path;
             # otherwise we would try to write failure metadata in an invalid
             # transaction and mask the original error.
             await session.commit()
+            record_job_commit(job.job_type, job.status, job.created_at, dt.datetime.now(dt.UTC))
+            WORKER_LAST_POLL.set_to_current_time()
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run job queue worker")
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--poll", type=float, default=2.0)
+    parser.add_argument("--metrics-host", default="127.0.0.1")
+    parser.add_argument("--metrics-port", type=int, default=9101)
     args = parser.parse_args()
 
-    asyncio.run(run_worker(args.poll, args.once))
+    if args.once:
+        asyncio.run(run_worker(args.poll, args.once))
+    else:
+        server, thread = start_http_server(args.metrics_port, addr=args.metrics_host)
+        try:
+            asyncio.run(run_worker(args.poll, args.once))
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
     return 0
 
 

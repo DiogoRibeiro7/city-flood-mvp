@@ -43,6 +43,10 @@ controlled labels. The [Porto case study](../runbooks/noaa_case_study.md) record
 prompt 10's live acquisition, migrated-database ingestion/replay and descriptive
 interval analytics, with matching cached-source tables/figures. Independent
 real-event validation remains incomplete.
+The [observability follow-up](../runbooks/observability.md) records prompt 11's
+candidate objectives, worker scraping, committed outcome metrics, bounded labels,
+independent backlog snapshots and alert-rule tests. These establish monitoring
+semantics, not achieved operational service levels.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
 

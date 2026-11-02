@@ -17,30 +17,40 @@
   "id": null,
   "panels": [
     {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Scrape health and queue collection",
+      "description": "A zero or missing series requires investigation. Collection failure makes cached backlog values unusable.",
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s"
-        }
-      },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
         "y": 0
       },
-      "id": 1,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_latency_seconds_bucket[5m])) by (le))",
-          "legendFormat": "p95 latency",
+          "expr": "up{job=~\"floodmvp-backend|floodmvp-worker\"}",
+          "legendFormat": "{{job}} {{instance}}",
           "refId": "A"
+        },
+        {
+          "expr": "job_queue_collection_success{job=\"floodmvp-backend\"}",
+          "legendFormat": "queue collection {{instance}}",
+          "refId": "B"
         }
-      ],
-      "title": "API Latency (p95)",
-      "type": "timeseries"
+      ]
     },
     {
+      "id": 2,
+      "type": "timeseries",
+      "title": "API request rate (probes excluded)",
+      "description": "Business routes and unmatched requests; excludes /metrics and /v1/health. No traffic means no availability sample.",
       "datasource": "Prometheus",
       "gridPos": {
         "h": 8,
@@ -48,18 +58,24 @@
         "x": 12,
         "y": 0
       },
-      "id": 2,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[5m]))",
-          "legendFormat": "req/s",
+          "expr": "floodmvp:api_requests:rate5m",
+          "legendFormat": "requests/s",
           "refId": "A"
         }
-      ],
-      "title": "Request Rate",
-      "type": "timeseries"
+      ]
     },
     {
+      "id": 3,
+      "type": "timeseries",
+      "title": "API availability \u2014 proposed 99.9%",
+      "description": "Five-minute diagnostic, not the 30-day objective. 4xx counts as a served response; inspect client/rejection errors separately. Missing scrapes and no traffic are not 100% availability.",
       "datasource": "Prometheus",
       "gridPos": {
         "h": 8,
@@ -67,85 +83,124 @@
         "x": 0,
         "y": 8
       },
-      "id": 3,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        }
+      },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_errors_total[5m])) by (status_class)",
-          "legendFormat": "{{status_class}}",
+          "expr": "floodmvp:api_availability:ratio5m",
+          "legendFormat": "non-5xx fraction",
           "refId": "A"
         }
-      ],
-      "title": "Error Rate by Class",
-      "type": "timeseries"
+      ]
     },
     {
+      "id": 4,
+      "type": "timeseries",
+      "title": "API latency \u2014 proposed 95% within 750ms",
+      "description": "Response-start latency including upload and handler time; excludes streamed download duration. Five-minute diagnostic, not attained 30-day SLO.",
       "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        }
+      },
+      "targets": [
+        {
+          "expr": "floodmvp:api_fast:ratio5m",
+          "legendFormat": "within 750ms",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "API p95 response-start latency",
+      "description": "Inspect route templates and DB latency when above 750ms. Threshold is proposed.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
       "fieldConfig": {
         "defaults": {
           "unit": "s"
         }
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
-      },
-      "id": 4,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(db_query_latency_seconds_bucket[5m])) by (le))",
-          "legendFormat": "p95 db latency",
+          "expr": "histogram_quantile(0.95, sum by(le) (rate(http_request_latency_seconds_bucket{job=\"floodmvp-backend\",path!~\"/metrics|/v1/health\"}[5m])))",
+          "legendFormat": "p95",
           "refId": "A"
         }
-      ],
-      "title": "DB Query Latency (p95)",
-      "type": "timeseries"
+      ]
     },
     {
-      "datasource": "Prometheus",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
-      "id": 5,
-      "targets": [
-        {
-          "expr": "sum(rate(db_queries_total[5m])) by (operation)",
-          "legendFormat": "{{operation}}",
-          "refId": "A"
-        }
-      ],
-      "title": "DB Query Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": "Prometheus",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 24
-      },
       "id": 6,
+      "type": "timeseries",
+      "title": "HTTP errors by class",
+      "description": "Includes invalid batches, authorization failures, quotas and unexpected exceptions. Separate from per-event validation.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      },
       "targets": [
         {
-          "expr": "sum(rate(job_queue_enqueued_total[5m])) by (job_type)",
-          "legendFormat": "enqueued {{job_type}}",
+          "expr": "sum by(status_class) (rate(http_requests_errors_total{job=\"floodmvp-backend\",path!~\"/metrics|/v1/health\"}[5m]))",
+          "legendFormat": "{{status_class}}",
           "refId": "A"
-        },
-        {
-          "expr": "sum(rate(job_queue_completed_total[5m])) by (job_type)",
-          "legendFormat": "completed {{job_type}}",
-          "refId": "B"
         }
-      ],
-      "title": "Job Queue Throughput",
-      "type": "timeseries"
+      ]
     },
     {
+      "id": 7,
+      "type": "timeseries",
+      "title": "API ingestion outcomes",
+      "description": "Committed non-replayed batches only. Duplicate, invalid and accepted rows remain separate; CLI imports are outside this metric.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by(outcome) (rate(ingest_events_total{job=\"floodmvp-backend\"}[5m]))",
+          "legendFormat": "{{outcome}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Live freshness \u2014 proposed 95% within 5m",
+      "description": "Inserted event timestamp to commit. Future/naive timestamps count against freshness; historical backfills are not live feeds. No inserts means no fraction.",
       "datasource": "Prometheus",
       "gridPos": {
         "h": 8,
@@ -153,27 +208,341 @@
         "x": 12,
         "y": 24
       },
-      "id": 7,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        }
+      },
       "targets": [
         {
-          "expr": "sum(rate(job_queue_failed_total[5m])) by (job_type)",
-          "legendFormat": "failed {{job_type}}",
+          "expr": "floodmvp:ingest_fresh:ratio5m",
+          "legendFormat": "within 300s",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(job_queue_retried_total[5m])) by (job_type)",
-          "legendFormat": "retried {{job_type}}",
+          "expr": "max(ingest_expected_active{job=\"floodmvp-backend\"})",
+          "legendFormat": "live expectation enabled",
           "refId": "B"
         }
-      ],
-      "title": "Job Failures + Retries",
-      "type": "timeseries"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Invalid event fraction \u2014 proposed below 1%",
+      "description": "Duplicates excluded from denominator. Whole-request rejection appears in HTTP errors. Check clocks separately.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        }
+      },
+      "targets": [
+        {
+          "expr": "floodmvp:ingest_invalid:ratio5m",
+          "legendFormat": "invalid / (accepted + invalid)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Timestamp anomalies and arrival age",
+      "description": "Future and naive event timestamps are not silently clamped into fresh events. Feed silence has a separate alert.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by(reason) (rate(ingest_timestamp_anomalies_total{job=\"floodmvp-backend\"}[5m]))",
+          "legendFormat": "{{reason}} events/s",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Time since last inserted API event",
+      "description": "Process-local arrival timestamp; no value before the first insertion. Replays, duplicate-only batches and backfills via CLI do not refresh it. Live expectation is opt-in.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "expr": "time() - (max(ingest_last_commit_timestamp_seconds{job=\"floodmvp-backend\"}) > 0)",
+          "legendFormat": "arrival age",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Committed due unfinished jobs",
+      "description": "May include active processing. Future schedules and terminal jobs excluded. Multiple API replicas see the same database: do not sum replicas.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "expr": "job_queue_due_jobs{job=\"floodmvp-backend\"} and on(job,instance) (job_queue_collection_success == 1) and on(job,instance) (time() - job_queue_collection_timestamp_seconds < 60)",
+          "legendFormat": "{{job_type}} {{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Oldest due work \u2014 proposed below 5m",
+      "description": "Remains observable with a stopped worker. Includes active processing held in an uncommitted transaction; query failure suppresses the panel.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "expr": "job_queue_oldest_due_age_seconds{job=\"floodmvp-backend\"} and on(job,instance) (job_queue_collection_success == 1) and on(job,instance) (time() - job_queue_collection_timestamp_seconds < 60)",
+          "legendFormat": "{{job_type}} {{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Committed worker outcomes",
+      "description": "Counters update after commit. Process restarts reset them; a crash after commit but before metric publication can undercount.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 48
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by(job_type) (rate(job_queue_completed_total{job=\"floodmvp-worker\"}[5m]))",
+          "legendFormat": "completed {{job_type}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by(job_type) (rate(job_queue_failed_total{job=\"floodmvp-worker\"}[5m]))",
+          "legendFormat": "terminal failure {{job_type}}",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by(job_type) (rate(job_queue_retried_total{job=\"floodmvp-worker\"}[5m]))",
+          "legendFormat": "retry {{job_type}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Analytics timely success \u2014 proposed 95%",
+      "description": "Creation through terminal commit, including retries and scheduling. Cancelled and unfinished jobs are excluded: always pair with due backlog. No terminal jobs means no fraction.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 56
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        }
+      },
+      "targets": [
+        {
+          "expr": "floodmvp:analytics_timely:ratio1h",
+          "legendFormat": "successful within 300s / terminal jobs",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Worker poll progress",
+      "description": "Age of last successful committed idle poll or attempt. A reachable metrics server alone does not prove progress.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 56
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "expr": "time() - worker_last_poll_timestamp_seconds{job=\"floodmvp-worker\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "DB p95 query latency",
+      "description": "Driver execution latency, not connection pool wait. Includes monitoring queries. Use to investigate API/worker delays.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 64
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by(le,job) (rate(db_query_latency_seconds_bucket{job=~\"floodmvp-backend|floodmvp-worker\"}[5m])))",
+          "legendFormat": "{{job}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "DB query rate",
+      "description": "Bounded operation labels; SQL text, payloads and tenant identifiers are not labels.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 64
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by(operation,job) (rate(db_queries_total{job=~\"floodmvp-backend|floodmvp-worker\"}[5m]))",
+          "legendFormat": "{{job}} {{operation}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Claim wait \u2014 proposed 95% within 5m",
+      "description": "Attempt-level scheduled-to-claim delay, including retries. It cannot observe jobs never claimed: pair with the committed due backlog.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 72
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by(job_type) (rate(job_queue_age_seconds_bucket{job=\"floodmvp-worker\",le=\"300.0\"}[5m])) / sum by(job_type) (rate(job_queue_age_seconds_count{job=\"floodmvp-worker\"}[5m]))",
+          "legendFormat": "{{job_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Time since worker-observed job success",
+      "description": "Process-local completion timestamp, absent before the first successful job. Not a per-city analytics freshness guarantee; expected scheduler cadence must be reviewed separately.",
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 72
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "expr": "time() - job_last_success_timestamp_seconds{job=\"floodmvp-worker\"}",
+          "legendFormat": "{{job_type}} {{instance}}",
+          "refId": "A"
+        }
+      ]
     }
   ],
   "refresh": "10s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["floodmvp"],
+  "tags": [
+    "floodmvp"
+  ],
   "templating": {
     "list": []
   },
@@ -183,7 +552,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "FloodMVP API",
+  "title": "FloodMVP Service Objectives (proposed)",
   "uid": "floodmvp-api",
-  "version": 1
+  "version": 2,
+  "description": "Candidate objectives only. Local simulations test instrumentation, not achieved uptime. No data is unknown. See docs/runbooks/observability.md for denominators, exclusions, 30-day queries and response actions."
 }
