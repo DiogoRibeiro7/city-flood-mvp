@@ -50,6 +50,7 @@ async function fixture(page: Page) {
       status = 200;
     if (p === "/v1/cities")
       body = [{ city_id: "city", name: "Fixture City", country: "PT" }];
+    else if (p.endsWith("/assets") && url.searchParams.has("tag")) body = [];
     else if (p.endsWith("/assets"))
       body = url.searchParams.get("type") === "rain_gauge" ? assets : [];
     else if (p.endsWith("/metrics")) body = ["rain_mmph"];
@@ -355,4 +356,31 @@ test("saved reviews restore the historical window and selected event", async ({
   await expect(
     page.getByText("Stored rule: rain_mmph ≥ 5 for at least 15 minutes."),
   ).toBeVisible();
+});
+
+test("an empty map filter clears the selected observation evidence", async ({
+  page,
+}) => {
+  await fixture(page);
+  await page
+    .getByLabel("Inspect asset (loaded map selection)")
+    .selectOption("synthetic");
+  await expect(page.getByText("Synthetic data", { exact: true })).toBeVisible();
+  await page.getByLabel("Filter tags", { exact: true }).fill("missing:fixture");
+  await expect(
+    page.getByLabel("Inspect asset (loaded map selection)").locator("option"),
+  ).toHaveCount(1);
+  await expect(
+    page.getByLabel("Inspect asset (loaded map selection)"),
+  ).toHaveValue("");
+  await expect(
+    page.getByRole("heading", { name: "Observation evidence" }),
+  ).toHaveCount(0);
+  await page.getByLabel("Filter tags", { exact: true }).fill("");
+  await expect(
+    page.getByLabel("Inspect asset (loaded map selection)").locator("option"),
+  ).toHaveCount(3);
+  await expect(
+    page.getByLabel("Inspect asset (loaded map selection)"),
+  ).toHaveValue("");
 });

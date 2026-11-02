@@ -13,7 +13,7 @@ export default defineConfig({
     [
       "junit",
       {
-        outputFile: `../test-results/web/${live ? "operator-live" : "operator"}.xml`,
+          outputFile: `../../test-results/web/${live ? "operator-live" : "operator"}.xml`,
       },
     ],
   ],

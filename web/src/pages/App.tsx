@@ -224,6 +224,7 @@ export default function App() {
     const cached = assetCache.current.get(cacheKey);
     if (cached) {
       setAssets(cached);
+      setSelected(current => cached.find(asset => asset.asset_id === current?.asset_id) || null);
       setLoadingAssets(false);
       return () => { active = false; };
     }
@@ -235,12 +236,15 @@ export default function App() {
       fetchAssets(cityId, "river_gauge", bbox, tags, gaugeLimit),
     ])
       .then(([pipes, rivers, rain, river]) => {
+        if (!active) return;
         const merged = [...pipes, ...rivers, ...rain, ...river];
         assetCache.current.set(cacheKey, merged);
-        if (active) setAssets(merged);
+        setAssets(merged);
+        setSelected(current => merged.find(asset => asset.asset_id === current?.asset_id) || null);
       })
       .catch((err) => {
         if (!active) return;
+        setSelected(null);
         setErrorMsg(err?.message ?? "Failed to load assets");
         console.error(err);
       })

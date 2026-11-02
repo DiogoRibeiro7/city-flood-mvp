@@ -136,3 +136,14 @@ smoke runner and health check now require TCP readiness.
 Non-fatal tooling output remains: the existing Alembic path-separator deprecation,
 Recharts' initial pre-measurement size warning and Vite's large-bundle notice.
 These checks do not replace the final release-candidate matrix or hosted CI results.
+
+The smoke workflow was repeated from clean implementation commit
+`58a9d2b19df5fa526e65d55b61b2fef3c45ac916`. Project
+`city-flood-smoke-a58284aee8eb` passed in 161.188 seconds, including its 11.3-second
+live browser test; cleanup completed. The [retained screenshots](screenshots/README.md)
+come from this run. Its local logs are under `test-results/operator-clean/`.
+The subsequent review also fixes selection surviving an empty map filter, with
+an additional controlled browser regression; this does not change the captured path.
+All six operator browser cases and the scoped axe audit passed after that fix,
+and web typecheck passed again. JUnit output paths now resolve to the root
+`test-results/web/` artifact directory used by CI.
