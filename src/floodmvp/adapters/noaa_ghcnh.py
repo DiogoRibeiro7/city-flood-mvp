@@ -10,7 +10,7 @@ import json
 import math
 import re
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass, field
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -481,10 +481,9 @@ def acquire(
     clock: Callable[[], float] = time.monotonic,
 ) -> GHCNhBatch:
     """Fully acquire/validate every year before exposing a batch to persistence."""
-    batch = GHCNhBatch(request)
-    seen: dict[dt.datetime, tuple[str, ...]] = {}
-    try:
-        for chunk in iter_chunks(
+    return normalize_chunks(
+        request,
+        iter_chunks(
             request,
             client=client,
             fixture_manifest=fixture_manifest,
@@ -492,9 +491,30 @@ def acquire(
             limits=limits,
             sleep=sleep,
             clock=clock,
-        ):
+        ),
+        limits=limits,
+    )
+
+
+def normalize_chunks(
+    request: GHCNhRequest,
+    chunks: Iterable[SourceChunk],
+    *,
+    limits: DownloadLimits = DownloadLimits(),
+) -> GHCNhBatch:
+    """Normalize already acquired chunks so quality and ingestion share identical bytes."""
+    batch = GHCNhBatch(request)
+    seen: dict[dt.datetime, tuple[str, ...]] = {}
+    years: set[int] = set()
+    try:
+        for chunk in chunks:
+            if chunk.year not in request.years or chunk.year in years:
+                raise GHCNhError("normalization requires each requested year exactly once")
+            years.add(chunk.year)
             _parse_chunk(chunk, batch, limits, seen)
             batch.sources.append(chunk.provenance)
+        if years != set(request.years):
+            raise GHCNhError("normalization is missing a requested annual chunk")
     except GHCNhError as exc:
         exc.completed_sources = list(batch.sources)
         raise

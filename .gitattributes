@@ -1,3 +1,8 @@
 # Recorded source bytes are checksummed; preserve them on Windows checkouts.
 tests/fixtures/real_sources/noaa_ghcnh/*.psv text eol=lf
 tests/fixtures/real_sources/noaa_ghcnh/station_record.txt text eol=lf
+# Generated case-study evidence is also checksummed in its run manifest.
+docs/case-studies/porto-2010/*.json text eol=lf
+docs/case-studies/porto-2010/*.csv text eol=lf
+docs/case-studies/porto-2010/*.md text eol=lf
+docs/case-studies/porto-2010/*.svg text eol=lf
