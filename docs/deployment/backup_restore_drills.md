@@ -154,3 +154,46 @@ backup, WAL archival with a 15-minute maximum loss window, 30-day production /
 quarterly staging incident exercise need deployment owners and separate evidence.
 Repeat on the release candidate for [gate G7](../releases/v1-acceptance.md).
 
+## Observed local verification — 2026-11-02
+
+The retained [successful result](recovery-drill-result.json) and
+[intentional corruption result](recovery-drill-corruption-result.json) were
+produced from clean implementation commit
+`2133ba60996a19208f9d824b6af07707b95d6f15`. Only evidence/documentation is added
+after that implementation. Host: Windows/PowerShell, Python 3.12.10,
+Poetry 2.2.1, Docker Engine 29.8.2, Compose 5.6.0; the backend container uses
+the repository's Python 3.14 image. Both database image IDs and exact extension
+versions are retained in the result. These are local executions, not hosted CI.
+
+| Observation | Actual result | Proposed target |
+| --- | --- | --- |
+| DB recovery through verified API read | 14.859 s | 14,400 s |
+| Protected-checkpoint exposure upper bound | 13.000 s; one post-backup row lost | 900 s |
+| Killed-worker recovery through exact CSV | 15.938 s; one committed successful attempt | 300 s |
+| SQL failure, backoff and successful retry | 25.156 s; second committed attempt | 300 s |
+| Backup / restore commands | 0.516 s / 1.688 s | No separate target |
+| Source/restored equality | Matching row/schema fingerprints; all 36 protected observations restored | Exact match |
+| Stale work | Active transaction lock detected; aged persisted running row detected and left running | No automatic reset |
+| Full successful run including cleanup | 120.110 s, exit 0, cleanup completed | No separate target |
+| Corrupted archive | Exit 1 at `archive_integrity`; checksum refusal before outage/restore; cleanup completed | Expected failure |
+| Python checks | Ruff lint and format passed (169 files); mypy passed (83 source files); 522 unit tests passed, 3 skipped | Passing applicable checks |
+| Workflow validation | Pinned actionlint passed | Passing validation |
+
+The three skips are existing POSIX file-mode assertions on Windows in
+`test_noaa_quality.py`. The real PostgreSQL/Timescale recovery path was exercised
+by the drill; the separate full integration/migration pytest suites and web
+checks were not rerun for this harness-only change. Raw logs, backups and
+fingerprints remain in ignored `test-results/recovery-final/` and
+`test-results/recovery-negative/`. The two small result files above are retained
+unchanged for review. Checksums, generated job IDs and timestamps vary between
+runs; restoration must match within each run.
+
+Reproduce the static and unit checks with:
+
+```sh
+poetry run ruff check .
+poetry run ruff format --check .
+poetry run mypy src scripts/export_openapi.py scripts/database_test_support.py scripts/smoke_stack.py scripts/seed_smoke.py scripts/release_manifest.py scripts/recovery_drill.py scripts/recovery_probe.py
+poetry run pytest tests/unit -q
+```
+
