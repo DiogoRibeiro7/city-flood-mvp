@@ -71,8 +71,11 @@ Build on a reviewed RC baseline, in this order:
    selected reports, and separates missing, trace and zero rainfall.
    The [event evaluation protocol](docs/evaluation/event-protocol.md) now defines
    reviewed evidence windows, onset matching, lead time and station-day metrics,
-   with controlled software tests. Real-event validation and the case study
-   remain open; no independent flood labels have been established.
+   with controlled software tests. The [Porto case study](docs/runbooks/noaa_case_study.md)
+   now reproduces acquisition, validation, migrated-database ingestion/replay,
+   interval analytics, tables, figures and an observation timeline. Live and
+   cached runs agree within the declared comparison rules. Real-event validation
+   remains open; no independent flood labels have been established.
 2. **Verify reliability and security (prompts 11-13).** Complete observable
    API/ingest/worker objectives and scraping, a disposable backup/restore and
    worker recovery drill, and a focused multi-process security review. Resolve

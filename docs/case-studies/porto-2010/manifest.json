@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "started_at": "2026-11-02T17:19:49.211964+00:00",
+  "seed": null,
+  "randomness": "No stochastic analytics or simulated data; disposable resource/import IDs vary.",
+  "configuration": {
+    "station_id": "POMU0068545",
+    "asset_id": "porto_ghcnh_pedras_rubras",
+    "city_id": "porto_case_study",
+    "start": "2010-01-01T00:00:00+00:00",
+    "end": "2010-01-12T00:00:00+00:00",
+    "metric": "rain_6h_mean_mmph",
+    "expected_source_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+    "expected_cadence_minutes": 360,
+    "stale_after_minutes": 1440,
+    "wet_depth_threshold_mm": 0.0,
+    "database_image": "timescale/timescaledb-ha@sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9"
+  },
+  "code": {
+    "revision": "ec77b2224a30f63714fb8ad4a8c79d2b3081a6b1",
+    "dirty": false,
+    "python": "3.12.10",
+    "platform": "win32",
+    "packages": {
+      "city-flood-mvp": "0.1.0",
+      "matplotlib": "3.11.2",
+      "SQLAlchemy": "2.0.48",
+      "httpx": "0.28.1"
+    },
+    "poetry_lock_sha256": "44426e6e2f10f37179a3506f2cfb57c8aad32bd7c14e65c25ab6dae4e47b9e9e"
+  },
+  "acquisition": {
+    "mode": "live_http",
+    "sources": [
+      {
+        "year": 2010,
+        "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+        "sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+        "bytes": 14325059,
+        "retrieved_at": "2026-11-02T17:20:07.034736+00:00",
+        "mode": "http",
+        "attempts": 1,
+        "etag": "\"067d4bd961a53bb36dbe46ff7fa81987\"",
+        "last_modified": "Fri, 10 Jul 2026 16:15:47 GMT"
+      }
+    ]
+  },
+  "database": {
+    "owner_label": "6f79998a868d4306b5dc77ffc38fe909",
+    "image": "timescale/timescaledb-ha@sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9",
+    "cleanup": "removed",
+    "container_id": "98fc15bba12b71f3177c1b5f1f6c3e84fb58963dd0136f930473fae1e1516bfc",
+    "image_id": "sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9"
+  },
+  "artifacts": {
+    "case-study.json": {
+      "sha256": "7c152b5200947cdf8f65f43b8b0a6ad70301c5c11c2c4251945521dd5dc12196",
+      "bytes": 8325
+    },
+    "quality.json": {
+      "sha256": "2c756612efdf7121fd49ea3868e44381aed24f502e45bc9bd6024da05792402a",
+      "bytes": 8190
+    },
+    "observations.csv": {
+      "sha256": "105ac466c8e99e9945deb77487c58e926cabbb77dad322562884b1f9835ffb13",
+      "bytes": 1647
+    },
+    "daily.csv": {
+      "sha256": "5105708218d461e91cba47a1ffe1d32ebd161feb0e3a2d10343effa70b7928f0",
+      "bytes": 1192
+    },
+    "timeline.csv": {
+      "sha256": "50629e2e00f6951b0cb82f9754b2a6b091334b11cce052ddfcf56b017ac59cb7",
+      "bytes": 2185
+    },
+    "rainfall.svg": {
+      "sha256": "f42e59a38de67c96cf19c40386cc770cda9d560f12ee210829853ff29976d884",
+      "bytes": 73151
+    },
+    "rainfall.png": {
+      "sha256": "8c2dbb4e7198d77b4150e78c5592d359275b72848081e252baff4be0417b8660",
+      "bytes": 67158
+    },
+    "report.md": {
+      "sha256": "85d6392cc78ac73cd21fc4c9f85c3105e215b3909051e3107f6b0911cf513af7",
+      "bytes": 3251
+    }
+  },
+  "completed_at": "2026-11-02T17:20:20.015689+00:00"
+}

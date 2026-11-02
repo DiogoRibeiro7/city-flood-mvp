@@ -6,6 +6,9 @@ timestamps in `[2010-01-01T00:00Z, 2010-01-12T00:00Z)`. It is descriptive.
 There are no independently verified flood labels or reviewed event-free periods
 in these inputs, so no prediction accuracy or warning lead time is reported.
 
+The retained [report](../case-studies/porto-2010/report.md) and
+[manifest](../case-studies/porto-2010/manifest.json) record the actual run below.
+
 ## One command after setup
 
 Use a Git checkout, Python 3.12, Poetry, and Docker running Linux containers.
@@ -132,3 +135,45 @@ The last command requires `TEST_DATABASE_URL` pointing to an explicitly isolated
 test server; use the [database test isolation rules](migrations.md). The
 integration fixture resets its supplied test database. The case-study runner
 itself needs no database URL and always provisions its own resources.
+
+## Observed local verification — 2026-11-02
+
+Implementation revision: `ec77b2224a30f63714fb8ad4a8c79d2b3081a6b1` on
+Windows, Python 3.12.10 and Poetry 2.2.1. Both full-source runs recorded a clean
+checkout of that revision. The following commit only retains artifacts and
+updates documentation; it does not change the executed implementation.
+
+| Check | Actual result |
+| --- | --- |
+| Ruff lint / format | Passed; 163 files formatted |
+| Mypy including the case-study runner | Passed; 77 source files |
+| Full unit suite | 484 passed; three existing POSIX permission cases skipped on Windows; existing Alembic `path_separator` deprecation warning |
+| New migration/readback case plus existing provider integration suite | Seven passed against an owned disposable server; cleanup recorded as removed |
+| Fixture CLI | Completed: two inserted, replay zero inserted/two existing; fixture scope retained; resources removed |
+| Full live CLI | Completed: six inserted, replay zero inserted/six existing; two import audits and exact provenance verified; migration head `0018_ingest_expiry`; resources removed |
+| Full cached CLI | Completed from the live run's cached bytes in a new migrated database; resources removed |
+| Reproduction comparison | All three CSVs, `quality.json`, both figures and `report.md` byte-identical; `case-study.json` equal after excluding only the two generated import IDs |
+| Artifact integrity / plot inspection | All eight artifact byte sizes and SHA-256 hashes verified in both run manifests; PNG visually inspected for labels, unknown intervals and trace distinction |
+| Web / full application stack / hosted CI | Not run for this CLI/analytics change; no API, web or detector contract changed |
+| Independent flood-event validation / second clean renderer environment | Not performed; no such accuracy or cross-environment reproducibility claim |
+
+The live retrieval at **2026-11-02T17:20:07.034736Z** returned 14,325,059 bytes
+with the approved SHA-256
+`1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7`.
+Within the selected window, 529 unique weather timestamps comprise six positive
+six-hour reports, one trace report and 522 missing rainfall fields; there are no
+observed zeros. The reported depths are 7.9, 2, 1, 2, 1 and 2 mm, without summing
+across the gaps. Clipped quantitative support is 30/264 hours (11.36%). The
+timeline has six quantitative intervals, one trace report and six unsupported
+intervals. These are station observations and gaps, not verified flood incidents.
+
+An initial fixture check caught a false-ready signal from the image's temporary
+Unix-socket bootstrap server. The runner now probes the published authenticated
+TCP endpoint; the subsequent fixture, live, cached and database-test runs passed.
+The failed run also removed its owned container.
+
+Only nine small result files (168,400 bytes total) are retained in
+`docs/case-studies/porto-2010/`. Annual source bytes and local execution logs
+remain ignored. G5's descriptive workflow is demonstrated locally; real-event
+validation is still absent. G9 remains open for a second clean environment and
+the final reviewed release's provenance/checklist.

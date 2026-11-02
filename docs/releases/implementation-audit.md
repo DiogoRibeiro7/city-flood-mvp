@@ -39,8 +39,10 @@ Its JSON/Markdown reports contain reproducible analytical results for pinned
 inputs; HTTP retrieval metadata changes between runs. The
 [event evaluation protocol](../evaluation/event-protocol.md) records prompt 9's
 label requirements and tested onset-matching/scoring functions. The tests use
-controlled labels; independent real-event validation and the case study remain
-incomplete.
+controlled labels. The [Porto case study](../runbooks/noaa_case_study.md) records
+prompt 10's live acquisition, migrated-database ingestion/replay and descriptive
+interval analytics, with matching cached-source tables/figures. Independent
+real-event validation remains incomplete.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
 

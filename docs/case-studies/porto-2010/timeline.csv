@@ -1,0 +1,14 @@
+start,end,kind,depth_mm,six_hour_mean_mmph,detail
+2009-12-31T18:00:00+00:00,2010-01-01T00:00:00+00:00,reported_wet_interval,7.9,1.3166666666666667,Source QC unverified; sub-hourly timing unknown; no confirmed flood incident.
+2010-01-01T00:00:00+00:00,2010-01-01T06:00:00+00:00,unknown_amount_interval,,,No quantitative support from selected reports; includes censored window edges.
+2010-01-01T06:00:00+00:00,2010-01-01T12:00:00+00:00,reported_wet_interval,2.0,0.3333333333333333,Source QC unverified; sub-hourly timing unknown; no confirmed flood incident.
+2010-01-01T12:00:00+00:00,2010-01-02T18:00:00+00:00,unknown_amount_interval,,,No quantitative support from selected reports; includes censored window edges.
+2010-01-02T18:00:00+00:00,2010-01-03T00:00:00+00:00,reported_wet_interval,1.0,0.16666666666666666,Source QC unverified; sub-hourly timing unknown; no confirmed flood incident.
+2010-01-03T00:00:00+00:00,2010-01-03T06:00:00+00:00,unknown_amount_interval,,,No quantitative support from selected reports; includes censored window edges.
+2010-01-03T06:00:00+00:00,2010-01-03T12:00:00+00:00,reported_wet_interval,2.0,0.3333333333333333,Source QC unverified; sub-hourly timing unknown; no confirmed flood incident.
+2010-01-03T12:00:00+00:00,2010-01-04T06:00:00+00:00,unknown_amount_interval,,,No quantitative support from selected reports; includes censored window edges.
+2010-01-04T06:00:00+00:00,2010-01-04T12:00:00+00:00,reported_wet_interval,1.0,0.16666666666666666,Source QC unverified; sub-hourly timing unknown; no confirmed flood incident.
+2010-01-04T12:00:00+00:00,2010-01-10T06:00:00+00:00,unknown_amount_interval,,,No quantitative support from selected reports; includes censored window edges.
+2010-01-10T06:00:00+00:00,2010-01-10T12:00:00+00:00,reported_wet_interval,2.0,0.3333333333333333,Source QC unverified; sub-hourly timing unknown; no confirmed flood incident.
+2010-01-10T12:00:00+00:00,2010-01-12T00:00:00+00:00,unknown_amount_interval,,,No quantitative support from selected reports; includes censored window edges.
+2010-01-11T00:00:00+00:00,2010-01-11T00:00:00+00:00,source_trace_report,,,"Source measurement flag T; amount is unknown, not observed zero."

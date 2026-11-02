@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "station_id": "POMU0068545",
+  "start": "2010-01-01T00:00:00+00:00",
+  "end": "2010-01-12T00:00:00+00:00",
+  "scope": "annual_source_window",
+  "interpretation": "Descriptive case study; no confirmed flood incidents or validated predictions.",
+  "analytics": {
+    "analysis_version": "1",
+    "method": "classify reported six-hour depths as positive or zero; no interpolation",
+    "interpretation": "Descriptive rainfall intervals, not confirmed incidents or validated predictions.",
+    "wet_depth_threshold_mm": 0.0,
+    "comparison": "strictly_greater",
+    "quantitative_reports": 6,
+    "reported_wet_intervals": 6,
+    "observed_zero_intervals": 0,
+    "maximum_reported_depth_mm": 7.9,
+    "maximum_six_hour_mean_mmph": 1.3166666666666667,
+    "intervals": [
+      {
+        "station_id": "POMU0068545",
+        "asset_id": "porto_ghcnh_pedras_rubras",
+        "report_timestamp": "2010-01-01T00:00:00+00:00",
+        "interval_start": "2009-12-31T18:00:00+00:00",
+        "interval_end": "2010-01-01T00:00:00+00:00",
+        "depth_mm": 7.9,
+        "six_hour_mean_mmph": 1.3166666666666667,
+        "classification": "reported_wet_interval",
+        "minutes_inside_window": 0.0,
+        "quality_flag": "unverified",
+        "source_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+        "source_line": 2
+      },
+      {
+        "station_id": "POMU0068545",
+        "asset_id": "porto_ghcnh_pedras_rubras",
+        "report_timestamp": "2010-01-01T12:00:00+00:00",
+        "interval_start": "2010-01-01T06:00:00+00:00",
+        "interval_end": "2010-01-01T12:00:00+00:00",
+        "depth_mm": 2.0,
+        "six_hour_mean_mmph": 0.3333333333333333,
+        "classification": "reported_wet_interval",
+        "minutes_inside_window": 360.0,
+        "quality_flag": "unverified",
+        "source_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+        "source_line": 26
+      },
+      {
+        "station_id": "POMU0068545",
+        "asset_id": "porto_ghcnh_pedras_rubras",
+        "report_timestamp": "2010-01-03T00:00:00+00:00",
+        "interval_start": "2010-01-02T18:00:00+00:00",
+        "interval_end": "2010-01-03T00:00:00+00:00",
+        "depth_mm": 1.0,
+        "six_hour_mean_mmph": 0.16666666666666666,
+        "classification": "reported_wet_interval",
+        "minutes_inside_window": 360.0,
+        "quality_flag": "unverified",
+        "source_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+        "source_line": 98
+      },
+      {
+        "station_id": "POMU0068545",
+        "asset_id": "porto_ghcnh_pedras_rubras",
+        "report_timestamp": "2010-01-03T12:00:00+00:00",
+        "interval_start": "2010-01-03T06:00:00+00:00",
+        "interval_end": "2010-01-03T12:00:00+00:00",
+        "depth_mm": 2.0,
+        "six_hour_mean_mmph": 0.3333333333333333,
+        "classification": "reported_wet_interval",
+        "minutes_inside_window": 360.0,
+        "quality_flag": "unverified",
+        "source_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+        "source_line": 122
+      },
+      {
+        "station_id": "POMU0068545",
+        "asset_id": "porto_ghcnh_pedras_rubras",
+        "report_timestamp": "2010-01-04T12:00:00+00:00",
+        "interval_start": "2010-01-04T06:00:00+00:00",
+        "interval_end": "2010-01-04T12:00:00+00:00",
+        "depth_mm": 1.0,
+        "six_hour_mean_mmph": 0.16666666666666666,
+        "classification": "reported_wet_interval",
+        "minutes_inside_window": 360.0,
+        "quality_flag": "unverified",
+        "source_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+        "source_line": 170
+      },
+      {
+        "station_id": "POMU0068545",
+        "asset_id": "porto_ghcnh_pedras_rubras",
+        "report_timestamp": "2010-01-10T12:00:00+00:00",
+        "interval_start": "2010-01-10T06:00:00+00:00",
+        "interval_end": "2010-01-10T12:00:00+00:00",
+        "depth_mm": 2.0,
+        "six_hour_mean_mmph": 0.3333333333333333,
+        "classification": "reported_wet_interval",
+        "minutes_inside_window": 360.0,
+        "quality_flag": "unverified",
+        "source_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+        "source_line": 458
+      }
+    ],
+    "operational_detector": {
+      "status": "not_run",
+      "reason": "Six-hour totals do not support the existing 15-minute rain_mmph intensity detector."
+    },
+    "event_evaluation": {
+      "status": "not_evaluated",
+      "reason": "No independent event labels or fully reviewed event-free periods are established.",
+      "confirmed_flood_incidents": null,
+      "precision": null,
+      "recall": null,
+      "false_alarms_per_station_day": null,
+      "lead_time_seconds": null
+    }
+  },
+  "ingestion": {
+    "first_import": {
+      "status": "ingested",
+      "dataset_version": "5d533b9b99411a68a8e7704d9e334162a237552a3fa886bb62567575d4bd623a",
+      "adapter_version": "1",
+      "format_version": "1.1.0",
+      "station_id": "POMU0068545",
+      "asset_id": "porto_ghcnh_pedras_rubras",
+      "start": "2010-01-01T00:00:00+00:00",
+      "end": "2010-01-12T00:00:00+00:00",
+      "metric": "rain_6h_mean_mmph",
+      "interval_minutes": 360,
+      "source_rows": 17464,
+      "outside_window": 16935,
+      "received": 529,
+      "accepted": 6,
+      "rejected": 523,
+      "reasons": {
+        "missing_rainfall": 522,
+        "trace_rainfall": 1
+      },
+      "duplicates": 0,
+      "inserted": 6,
+      "sources": [
+        {
+          "year": 2010,
+          "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+          "sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+          "bytes": 14325059,
+          "retrieved_at": "2026-11-02T17:20:07.034736+00:00",
+          "mode": "http",
+          "attempts": 1,
+          "etag": "\"067d4bd961a53bb36dbe46ff7fa81987\"",
+          "last_modified": "Fri, 10 Jul 2026 16:15:47 GMT"
+        }
+      ],
+      "license": "CC0-1.0",
+      "dataset_doi": "https://doi.org/10.25921/jp3d-3v19",
+      "interpretation": "Six-hour mean rates with unverified source QC; not instantaneous rainfall or flood labels.",
+      "import_id": "import_833d69c08510401385b937a043391c12",
+      "city_id": "porto_case_study",
+      "asset_validation": "verified",
+      "dry_run": false,
+      "existing": 0
+    },
+    "replay": {
+      "status": "ingested",
+      "dataset_version": "5d533b9b99411a68a8e7704d9e334162a237552a3fa886bb62567575d4bd623a",
+      "adapter_version": "1",
+      "format_version": "1.1.0",
+      "station_id": "POMU0068545",
+      "asset_id": "porto_ghcnh_pedras_rubras",
+      "start": "2010-01-01T00:00:00+00:00",
+      "end": "2010-01-12T00:00:00+00:00",
+      "metric": "rain_6h_mean_mmph",
+      "interval_minutes": 360,
+      "source_rows": 17464,
+      "outside_window": 16935,
+      "received": 529,
+      "accepted": 6,
+      "rejected": 523,
+      "reasons": {
+        "missing_rainfall": 522,
+        "trace_rainfall": 1
+      },
+      "duplicates": 0,
+      "inserted": 0,
+      "sources": [
+        {
+          "year": 2010,
+          "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+          "sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+          "bytes": 14325059,
+          "retrieved_at": "2026-11-02T17:20:07.034736+00:00",
+          "mode": "http",
+          "attempts": 1,
+          "etag": "\"067d4bd961a53bb36dbe46ff7fa81987\"",
+          "last_modified": "Fri, 10 Jul 2026 16:15:47 GMT"
+        }
+      ],
+      "license": "CC0-1.0",
+      "dataset_doi": "https://doi.org/10.25921/jp3d-3v19",
+      "interpretation": "Six-hour mean rates with unverified source QC; not instantaneous rainfall or flood labels.",
+      "import_id": "import_a99e3b059490424393fdce11d5b0c070",
+      "city_id": "porto_case_study",
+      "asset_validation": "verified",
+      "dry_run": false,
+      "existing": 6
+    },
+    "stored_observations": 6,
+    "stored_import_audits": 2,
+    "provenance_preserved": true,
+    "migration_revision": "0018_ingest_expiry"
+  }
+}

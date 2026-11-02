@@ -10,6 +10,11 @@ records prompt 7's implementation and live/disposable-database verification.
 The assessment below preserves the original source-selection evidence;
 quality characterization and flood-event validation remain open.
 
+**2026-11-02 follow-up:** [quality characterization](../runbooks/noaa_ghcnh_quality.md)
+and the [reproducible descriptive case study](../runbooks/noaa_case_study.md) are
+now implemented and locally verified. Independent flood-event validation remains
+open. The assessment below preserves its original date and evidence scope.
+
 ## Decision
 
 Select **NOAA NCEI GHCNh, Portuguese station `POMU0068545`, Porto / Pedras
@@ -224,6 +229,8 @@ CI result is asserted by this local record.
 The [quality report](../runbooks/noaa_ghcnh_quality.md) records a
 new successful checksummed HTTP acquisition. Quantitative support is sparse:
 30/264 hours from selected reports, and 6/44 slots on an assumed six-hour grid.
-G5 remains open for evaluation and the descriptive case study. The report also
+At the quality-report checkpoint, evaluation and the descriptive case study
+remained outstanding; see the later [case-study evidence](../runbooks/noaa_case_study.md).
+The report also
 describes sampling, gaps and historical freshness; it does not certify station
 completeness. The assessment above remains the 2026-10-31 selection record.

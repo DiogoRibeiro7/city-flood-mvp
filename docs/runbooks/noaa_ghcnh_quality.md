@@ -105,7 +105,9 @@ cannot validate the application's 15-minute intensity detector, and there are
 no independently verified flood labels in this dataset. The
 [event evaluation protocol](../evaluation/event-protocol.md) provides label
 requirements and tested scoring functions; G5 remains open for independent
-real-event validation and a reproducible descriptive case study.
+real-event validation. The [descriptive case study](noaa_case_study.md) now
+reproduces acquisition, ingestion, interval analytics and tables/figures without
+claiming flood-event validation.
 
 ## Offline checks
 
