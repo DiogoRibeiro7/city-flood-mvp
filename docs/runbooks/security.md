@@ -1,5 +1,29 @@
 # API Security (MVP)
 
+## Supported release boundary
+
+Outside `APP_ENV=dev|development|local|test`, use **one dedicated tenant, one
+database/export store, one API process and one API replica** per deployment.
+Set `DEPLOYMENT_TENANT_ID` and either JWT or the legacy API key. All data routers
+check admission before database dependencies. A signed foreign-tenant JWT is
+rejected even if it carries an administrator role or a forged `X-Tenant-Id`.
+This is deployment admission, not shared-database row isolation: never place
+another tenant's data in the same store, and use distinct secrets per deployment.
+
+JWT requires `exp` and `sub` outside local environments, plus a string tenant
+claim exactly matching the deployment ID and a recognized role. Missing or
+invalid JWTs return 401; rejected tenants/roles return 403. Missing deployment
+identity or authentication configuration returns 503 on data routes. Set issuer
+and audience restrictions for the issuing authority; they remain configurable.
+Local demos keep their existing anonymous-read and privileged-operation behavior.
+Health is public. Ingestion uses its separate deployment secret; JWT is not an
+ingestion credential. Keep `/metrics` and worker metrics private at ingress;
+the API does not authenticate Prometheus scrapes. Schema/docs expose structure,
+not data, and should also stay private in restricted deployments.
+
+The [security review](../releases/security-review.md) records the compatibility
+change, attack cases, process measurements and remaining release blockers.
+
 ## Browser origins (CORS)
 - Local development (`APP_ENV=dev|development|local|test`) permits all browser
   origins by default so the Vite demo works from `http://localhost:5173`.
@@ -23,8 +47,19 @@
   Untrusted `X-Tenant-Id` request headers do not select quota buckets.
 - Prometheus HTTP metrics use route templates instead of concrete request
   paths; unknown URLs are grouped under `<unmatched>`.
-- Limits are process-local. Use an external rate limiter for consistent limits
-  across multiple API replicas.
+- **Do not run multiple API processes or replicas for this release.** The
+  backend image explicitly starts `uvicorn --workers 1`; Compose declares one
+  replica. Manual starts must also use `--workers 1`, regardless of
+  `WEB_CONCURRENCY`. Do not use API autoscaling or overlapping rolling replicas.
+  Queue workers do not run the HTTP limiter and are a separate concern.
+- Two real Python processes each accept two requests for a configured burst of
+  two, admitting four in total. Both IP and tenant quota tests reproduce this.
+  A shared limiter is not implemented; restarts and LRU eviction also reset
+  local buckets. These limits are abuse controls, not billing/security isolation.
+- Configure only known reverse-proxy addresses as Uvicorn's trusted forwarded
+  peers; never trust arbitrary client `X-Forwarded-For`. Prevent clients from
+  bypassing the proxy. Without forwarded-header processing, all proxy traffic
+  shares one per-IP bucket. See the [Uvicorn settings](https://uvicorn.dev/settings/).
 
 ## Request limits
 - Max request size: 1 MB (`REQUEST_MAX_BYTES`).
@@ -42,9 +77,8 @@
 - Privileged endpoints require JWT authentication when `JWT_SECRET` is set.
   JWT roles are checked server-side. The legacy `X-API-Key` is accepted only
   when JWT is not configured.
-- Outside `APP_ENV=dev|development|local|test`, missing both credentials makes
-  privileged endpoints return HTTP 503 (`AUTH_NOT_CONFIGURED`). This avoids
-  silently exposing administrative operations in staging or production.
+- Outside local environments, missing both credentials or the deployment ID
+  makes all data endpoints return HTTP 503 (`AUTH_NOT_CONFIGURED`).
 - Anonymous access without configured credentials is retained for local demos
   only. Never deploy with a development `APP_ENV` on a public network.
 - Protected operations:
@@ -53,11 +87,18 @@
   - List/read notes: `viewer`, `analyst` or `admin`.
   - Create notes: `analyst` or `admin`; delete notes: `admin`.
 - The legacy API key has no role distinction; prefer JWT for production.
-- Other read endpoints remain public. Note list/detail and calibration
-  override list responses carry `Cache-Control: private, no-store` to avoid
-  caching operational notes and settings.
-- Note reads and writes from the web UI use a configured JWT. Keep the legacy
-  API key server-side; never expose it in a browser bundle.
+- Ordinary read endpoints require at least `viewer` outside local environments.
+  Deployed data responses carry `Cache-Control: private, no-store`, overriding
+  the asset endpoint's local-demo cache policy.
+- All web data requests use a runtime JWT. **Apply token** saves it and reloads
+  the application, discarding cached records and pending requests from the old
+  identity. Apply an empty value to log out. The UI role selector controls
+  presentation only; the server authorizes the signed roles.
+- The demo retains JWTs in local storage. Same-origin JavaScript, including an
+  XSS payload or extension, can read them; this is not a hardened login/session
+  system. Never put JWT signing secrets, ingestion tokens or legacy keys in
+  `VITE_*` variables: [Vite exposes them to client code](https://vite.dev/guide/env-and-mode).
+  `VITE_API_BASE` is public configuration and must identify the intended API.
 
 ## Ingest endpoint (protected)
 - Endpoint: `POST /v1/telemetry/events:batch`
@@ -73,4 +114,5 @@
 - Rate limits apply globally; keep batch sizes reasonable to avoid 413s.
 
 ## Cache headers
-- Assets endpoints return `Cache-Control: public, max-age=60`.
+- Local asset responses use `Cache-Control: public, max-age=60`; deployed data
+  responses use `private, no-store`, including rejected requests.

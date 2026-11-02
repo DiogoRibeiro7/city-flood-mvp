@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "test:security": "playwright test --config playwright/security.config.ts",
     "capture:screenshots": "node playwright/capture_screenshots.cjs"
   },
   "dependencies": {

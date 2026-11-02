@@ -55,6 +55,10 @@ PITR and external export-store recovery remain unverified. The inventory below
 retains the original audit baseline rather than retroactively changing its results.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
+The [security follow-up](security-review.md) records prompt 13's dedicated-tenant
+admission, deployed read authentication, measured process-local quota behavior,
+single-process deployment constraint and browser credential regressions. It does
+not establish shared-database row isolation or complete the dependency review.
 
 ## Current feature inventory
 

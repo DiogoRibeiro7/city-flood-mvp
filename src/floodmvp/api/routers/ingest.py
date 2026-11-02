@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
-import hmac
 import math
 from typing import Any
 
@@ -15,6 +14,7 @@ from floodmvp.api.openapi_examples import (
     RESP_UNAUTHORIZED_BEARER,
     error_response,
 )
+from floodmvp.common.auth import credentials_match
 from floodmvp.common.errors import AppError
 from floodmvp.config.settings import settings
 from floodmvp.models.db import Asset, IngestIdempotency, TelemetryObservation
@@ -40,7 +40,7 @@ def _authorize(authorization: str | None) -> None:
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = authorization.removeprefix("Bearer ").strip()
-    if not token or not hmac.compare_digest(token, settings.ingest_token):
+    if not token or not credentials_match(token, settings.ingest_token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized",

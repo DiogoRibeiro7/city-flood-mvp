@@ -4,10 +4,13 @@ Use this checklist before production deployments or pilot rollouts.
 
 ## Access control
 
-- JWT auth enabled for report/export jobs and admin endpoints
+- Dedicated tenant DB/export store and matching `DEPLOYMENT_TENANT_ID`; no
+  other tenant's data present in those stores
+- JWT auth enabled for all data reads and privileged operations
 - Roles validated server-side (`admin`, `analyst`, `viewer`)
 - `APP_ENV=prod` (or other non-development setting), with `JWT_SECRET`
-  configured; without JWT or `ANALYTICS_API_KEY`, privileged requests return 503
+  configured; without a deployment ID and JWT or `ANALYTICS_API_KEY`, data
+  requests return 503. JWTs require expiry, subject, role and matching tenant
 - Note reads and writes authenticated; note reads require at least the `viewer`
   JWT role (or the configured legacy API key when JWT is disabled)
 - Note responses marked `Cache-Control: private, no-store`
@@ -27,7 +30,11 @@ Use this checklist before production deployments or pilot rollouts.
 - Browser CORS allowlist configured for deployed UI origins; no wildcard
   outside local development (`CORS_ALLOWED_ORIGINS`)
 - Input validation at API boundaries
-- Rate limiting enabled (per-IP)
+- Exactly one API process (`uvicorn --workers 1`) and one replica, including
+  during rollouts; process-local quotas do not support horizontal API scaling
+- Only intended reverse proxies trusted for forwarded headers; direct access blocked
+- Runtime browser token only; no signing secret/API key/ingest token in `VITE_*`
+- Private ingress for metrics and management endpoints
 - Dependency scan (Dependabot) enabled
 - Non-root containers where possible
 

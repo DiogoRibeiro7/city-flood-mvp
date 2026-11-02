@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     jwt_audience: str | None = None
     jwt_roles_claim: str = "roles"
     jwt_tenant_claim: str = "tenant"
+    # One dedicated database/export store belongs to this deployment tenant.
+    deployment_tenant_id: str = Field(
+        default="", pattern=r"^(?:[A-Za-z0-9][A-Za-z0-9._:-]{0,127})?$"
+    )
     rate_limit_rps: float = 5.0
     rate_limit_burst: int = 20
     rate_limit_bucket_capacity: int = Field(default=4096, ge=1)
@@ -49,6 +53,10 @@ class Settings(BaseSettings):
 
     telemetry_gap_granularity_minutes: int = 5
     telemetry_gap_window_days: int = 1
+
+    @property
+    def is_local(self) -> bool:
+        return self.app_env.strip().lower() in _LOCAL_ENVIRONMENTS
 
     @property
     def ingest_auth_configured(self) -> bool:

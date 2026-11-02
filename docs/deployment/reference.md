@@ -1,13 +1,17 @@
 # Deployment Reference
 
-This document describes proposed cloud topologies for **single-tenant** and
-**multi-tenant** setups. These are design options, not verified deployment
-capabilities. The [release audit](../releases/implementation-audit.md) records
-the current gaps: tenant attribution for quotas does not enforce tenant-owned
-row access, quotas are process-local, and worker metrics are not separately
-scraped. Do not treat the multi-tenant options below as an implemented security
-boundary. The target release is a demonstration; operational readiness requires
-the [acceptance evidence](../releases/v1-acceptance.md).
+The target release supports a **dedicated single-tenant deployment with one API
+process and one API replica**. `DEPLOYMENT_TENANT_ID` binds authenticated data
+access to that tenant; all records in its database/export store belong to it.
+Quotas remain process-local. Do not scale the API, including overlapping rollout
+replicas, until shared enforcement is implemented and measured. The backend image
+passes `--workers 1` explicitly; the Compose backend declares one replica.
+Worker scraping is configured separately. See the [security review](../releases/security-review.md).
+The repository's demo Compose ports bind only to loopback. Remote service
+exposure must be configured explicitly behind the deployment's trusted ingress.
+The cloud and multi-tenant topologies below are future design options, not
+verified deployment capabilities. Operational readiness still requires the
+[acceptance evidence](../releases/v1-acceptance.md).
 
 ## Shared assumptions
 
@@ -22,7 +26,7 @@ the [acceptance evidence](../releases/v1-acceptance.md).
 ### Topology
 
 - 1x DB cluster (TimescaleDB + PostGIS)
-- 1x API service (FastAPI)
+- 1x API service (FastAPI), exactly one process / one replica
 - 1x Web service (Vite build served behind a static host or reverse proxy)
 - 1x Job worker service
 - 1x Scheduler service (analytics + periodic jobs)
@@ -31,7 +35,9 @@ the [acceptance evidence](../releases/v1-acceptance.md).
 
 ### Network boundaries
 
-- API + Web behind a single public ingress (TLS termination)
+- API + Web behind a single public ingress (TLS termination); allow only known
+  proxy peers for forwarded headers and prohibit direct API access
+- Metrics, database and management/schema endpoints remain private at ingress
 - DB and internal services are private subnet only
 - Worker and scheduler use internal network only
 
@@ -46,6 +52,9 @@ the [acceptance evidence](../releases/v1-acceptance.md).
 ### Model
 
 Two possible future models, each requiring implementation and isolation tests:
+
+Neither model is enabled by the deployment-tenant setting. It rejects tokens
+for other tenants; it does not select a database or filter individual rows.
 
 1. **Shared DB, tenant-scoped rows**
    - Single DB cluster

@@ -129,14 +129,26 @@ GitHub Actions provisions an isolated database for both database suites as
 part of the backend job. Never point `TEST_DATABASE_URL` at a database
 containing data that you need to preserve.
 
-## Auth (optional)
+## Authentication and deployment boundary
 
-JWT role enforcement is disabled by default. To enable, set:
+Local demos permit anonymous ordinary reads. Outside local environments, all
+data routes require authentication and a configured `DEPLOYMENT_TENANT_ID`.
+Use one dedicated database and export store per tenant; a city filter is not
+tenant isolation. To use JWT, set:
 
 - `JWT_SECRET`
 - `JWT_ISSUER` (optional)
 - `JWT_AUDIENCE` (optional)
 - `JWT_ROLES_CLAIM` (optional, default `roles`)
+- `DEPLOYMENT_TENANT_ID` (required outside local environments)
+- `JWT_TENANT_CLAIM` (optional, default `tenant`)
+
+Deployed JWTs need `exp`, `sub`, an admitted role and a string tenant claim
+matching `DEPLOYMENT_TENANT_ID` exactly. The legacy API key is accepted only
+when JWT is disabled and grants full access to that dedicated deployment.
+Missing deployment/authentication configuration returns 503; unauthenticated
+data reads return 401 and foreign-tenant tokens return 403. Health remains
+public; ingestion uses its separate secret. Keep metrics on a private network.
 
 Roles used:
 
@@ -147,8 +159,11 @@ Roles used:
 Note list/detail reads require `viewer`, `analyst` or `admin` when JWT auth is
 enabled. If JWT is disabled, the configured `X-API-Key` is accepted instead.
 Anonymous note reads remain available only for local demos without credentials.
-The web UI sends a configured JWT on note reads and writes; do not embed an
-`ANALYTICS_API_KEY` in client-side code.
+The web UI sends the runtime JWT on all data requests. Paste it in the JWT
+field and select **Apply token** to reload data and discard the previous
+identity's caches. Apply an empty token to log out. Do not embed credentials
+in `VITE_*` variables or client-side code; the demo stores its token in browser
+local storage, which is accessible to same-origin scripts.
 
 ## Key endpoints
 
@@ -180,6 +195,11 @@ The web UI sends a configured JWT on note reads and writes; do not embed an
 - Per-IP and per-tenant request quotas are in-memory and process-local. Tenant
   attribution comes from verified JWT claims or the configured API key;
   client-supplied `X-Tenant-Id` headers are ignored for quotas and metrics.
+- The target release requires **one API process and one API replica** per
+  dedicated deployment. The container explicitly starts `uvicorn --workers 1`.
+  Multiple API processes/replicas, including overlapping rollout replicas, are
+  unsupported until a shared limiter is implemented and measured. Queue workers
+  are separate from this API-process constraint.
 - PostGIS is installed in the Timescale image but must be enabled per DB (`CREATE EXTENSION postgis`).
 - To limit seeding to specific cities, set `CITY_IDS` (comma-separated).
 - Background jobs are queued; run the worker with:
@@ -216,8 +236,11 @@ measured evidence, proposed RTO/RPO targets and manual incident actions.
 ## Security review
 
 See `docs/deployment/security_checklist.md` for the security checklist and compliance notes.
-For deployments outside local development, set `APP_ENV=prod` and configure
-`JWT_SECRET` (recommended) or `ANALYTICS_API_KEY`. Privileged endpoints return
-503 if neither credential is configured. The default `APP_ENV=dev` is for
+For deployments outside local development, set `APP_ENV=prod`, a dedicated
+`DEPLOYMENT_TENANT_ID`, and `JWT_SECRET` (recommended) or `ANALYTICS_API_KEY`.
+Data endpoints return 503 if deployment/authentication configuration is missing.
+The demo Compose ports bind only to loopback; remote access requires explicit
+deployment configuration. The default `APP_ENV=dev` is for
 local demonstrations only. Ingestion also requires a separate, non-default
 `INGEST_TOKEN` in production; startup rejects the documented demo credential.
+See the [security review and measured quota boundary](docs/releases/security-review.md).

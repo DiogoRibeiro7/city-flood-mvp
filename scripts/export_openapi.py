@@ -153,6 +153,8 @@ def _add_security_schemes(spec: dict[str, Any]) -> None:
         for op in path_item.values():
             if not isinstance(op, dict):
                 continue
+            if "security" in op:
+                continue
             if _is_bearer_auth(op):
                 op["security"] = [{"BearerAuth": []}]
             elif _is_api_key_auth(op):

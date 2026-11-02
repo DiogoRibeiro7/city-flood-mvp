@@ -42,6 +42,7 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 def production_without_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     """Set the configuration that previously exposed administrative APIs."""
     monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr(settings, "deployment_tenant_id", "tenant-a")
     monkeypatch.setattr(settings, "jwt_secret", None)
     monkeypatch.setattr(settings, "analytics_api_key", None)
 
@@ -201,7 +202,16 @@ async def test_production_calibration_reads_require_admin_role(
     monkeypatch.setattr(analytics, "list_threshold_overrides", fake_list_overrides)
 
     def bearer(role: str) -> dict[str, str]:
-        token = jwt.encode({"sub": "tester", "roles": [role]}, secret, algorithm="HS256")
+        token = jwt.encode(
+            {
+                "sub": "tester",
+                "roles": [role],
+                "tenant": "tenant-a",
+                "exp": dt.datetime.now(dt.UTC) + dt.timedelta(minutes=5),
+            },
+            secret,
+            algorithm="HS256",
+        )
         return {"Authorization": f"Bearer {token}"}
 
     path = "/v1/analytics/calibration/overrides?city_id=city_porto_mvp"
@@ -275,7 +285,16 @@ async def test_jwt_takes_precedence_and_restricts_roles(
     monkeypatch.setattr(jobs, "list_jobs", fake_list_jobs)
 
     def bearer(role: str) -> dict[str, str]:
-        token = jwt.encode({"sub": "tester", "roles": [role]}, secret, algorithm="HS256")
+        token = jwt.encode(
+            {
+                "sub": "tester",
+                "roles": [role],
+                "tenant": "tenant-a",
+                "exp": dt.datetime.now(dt.UTC) + dt.timedelta(minutes=5),
+            },
+            secret,
+            algorithm="HS256",
+        )
         return {"Authorization": f"Bearer {token}"}
 
     viewer = await client.get("/v1/jobs/queue", headers=bearer("viewer"))
@@ -317,7 +336,16 @@ async def test_authorized_note_writes_enforce_analyst_and_admin_roles(
     monkeypatch.setattr(notes_router, "delete_note", fake_delete_note)
 
     def bearer(role: str) -> dict[str, str]:
-        token = jwt.encode({"sub": "tester", "roles": [role]}, secret, algorithm="HS256")
+        token = jwt.encode(
+            {
+                "sub": "tester",
+                "roles": [role],
+                "tenant": "tenant-a",
+                "exp": dt.datetime.now(dt.UTC) + dt.timedelta(minutes=5),
+            },
+            secret,
+            algorithm="HS256",
+        )
         return {"Authorization": f"Bearer {token}"}
 
     created = await client.post(
@@ -399,7 +427,16 @@ async def test_production_note_reads_require_jwt_and_viewer_role(
     monkeypatch.setattr(notes_router, "get_note", fake_get_note)
 
     def bearer(role: str) -> dict[str, str]:
-        token = jwt.encode({"sub": "tester", "roles": [role]}, secret, algorithm="HS256")
+        token = jwt.encode(
+            {
+                "sub": "tester",
+                "roles": [role],
+                "tenant": "tenant-a",
+                "exp": dt.datetime.now(dt.UTC) + dt.timedelta(minutes=5),
+            },
+            secret,
+            algorithm="HS256",
+        )
         return {"Authorization": f"Bearer {token}"}
 
     list_path = "/v1/notes?city_id=city_porto_mvp"

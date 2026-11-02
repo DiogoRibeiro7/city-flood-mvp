@@ -254,7 +254,7 @@ export default function App() {
     setNotes([]);
     if (!cityId) return;
     let active = true;
-    // Token edits are saved on every keystroke; wait until input settles.
+    // Applying credentials reloads the app; debounce changes to the selected city.
     const handle = window.setTimeout(() => {
       fetchNotes(cityId)
         .then((rows) => {
@@ -270,7 +270,7 @@ export default function App() {
       active = false;
       window.clearTimeout(handle);
     };
-  }, [cityId, jwtToken]);
+  }, [cityId]);
 
   useEffect(() => {
     if (!activeNoteId) return;
@@ -296,7 +296,7 @@ export default function App() {
       active = false;
       window.clearTimeout(handle);
     };
-  }, [activeNoteId, notes, jwtToken]);
+  }, [activeNoteId, notes]);
 
   useEffect(() => {
     if (!selected) return;
@@ -954,15 +954,20 @@ export default function App() {
             <label htmlFor="jwt-token">JWT token</label>
             <input
               id="jwt-token"
-              type="text"
+              type="password"
               value={jwtToken}
               onChange={(e) => {
                 const next = e.target.value;
                 setJwtToken(next);
-                setAuthToken(next);
               }}
               placeholder="Paste bearer token"
+              autoComplete="off"
             />
+            <button onClick={() => {
+              setAuthToken(jwtToken.trim());
+              // Reload also discards all data caches and requests from the previous identity.
+              window.location.reload();
+            }}>Apply token</button>
           </div>
           <div className="asset-meta">
             <div className="control-group">
