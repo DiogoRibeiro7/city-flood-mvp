@@ -36,8 +36,11 @@ bounded downloads, provenance, atomic writes and verified reruns. The
 [quality characterization](../runbooks/noaa_ghcnh_quality.md) records prompt 8's
 assumed-grid availability, clipped interval support, gaps, sampling and freshness.
 Its JSON/Markdown reports contain reproducible analytical results for pinned
-inputs; HTTP retrieval metadata changes between runs. Event evaluation and the
-case study remain incomplete.
+inputs; HTTP retrieval metadata changes between runs. The
+[event evaluation protocol](../evaluation/event-protocol.md) records prompt 9's
+label requirements and tested onset-matching/scoring functions. The tests use
+controlled labels; independent real-event validation and the case study remain
+incomplete.
 The inventory distinguishes deterministic software assertions from observed
 hydrological or operational evidence.
 

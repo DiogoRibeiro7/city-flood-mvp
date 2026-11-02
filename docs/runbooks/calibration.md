@@ -61,3 +61,7 @@ Responses include operator notes and use `Cache-Control: private, no-store`.
 ## Notes
 - Overrides are applied by month if present, otherwise fall back to `season=all`.
 - Recommended thresholds are percentiles of telemetry values (rain gauge + pipe fill ratio).
+- The [event evaluation protocol](../evaluation/event-protocol.md) separates
+  development/calibration periods from held-out evaluation, requires independent
+  labels and reviewed negative periods, and defines onset matching and timing
+  uncertainty. Percentile recommendations do not establish detector accuracy.

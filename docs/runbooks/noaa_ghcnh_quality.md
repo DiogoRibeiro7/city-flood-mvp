@@ -102,8 +102,10 @@ trace timestamp was 2010-01-11 00:00 UTC and supplies no quantitative depth.
 
 These findings constrain the next evaluation protocol: sparse six-hour totals
 cannot validate the application's 15-minute intensity detector, and there are
-no independently verified flood labels in this dataset. G5 remains open for
-evaluation and a reproducible descriptive case study.
+no independently verified flood labels in this dataset. The
+[event evaluation protocol](../evaluation/event-protocol.md) provides label
+requirements and tested scoring functions; G5 remains open for independent
+real-event validation and a reproducible descriptive case study.
 
 ## Offline checks
 

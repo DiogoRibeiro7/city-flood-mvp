@@ -69,7 +69,10 @@ Build on a reviewed RC baseline, in this order:
    and safe reruns with provenance. The [quality report](docs/runbooks/noaa_ghcnh_quality.md)
    reports availability on an assumed grid and clipped interval support from
    selected reports, and separates missing, trace and zero rainfall.
-   Evaluation and the case study remain open.
+   The [event evaluation protocol](docs/evaluation/event-protocol.md) now defines
+   reviewed evidence windows, onset matching, lead time and station-day metrics,
+   with controlled software tests. Real-event validation and the case study
+   remain open; no independent flood labels have been established.
 2. **Verify reliability and security (prompts 11-13).** Complete observable
    API/ingest/worker objectives and scraping, a disposable backup/restore and
    worker recovery drill, and a focused multi-process security review. Resolve
