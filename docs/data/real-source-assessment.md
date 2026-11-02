@@ -221,7 +221,9 @@ CI result is asserted by this local record.
 
 ## Quality follow-up (2026-11-02)
 
-The [reproducible quality report](../runbooks/noaa_ghcnh_quality.md) records a
-new successful checksummed HTTP acquisition and measured coverage, sampling,
-gaps and historical freshness. The source assessment above remains the
-2026-10-31 selection record; evaluation and the descriptive case study follow.
+The [quality report](../runbooks/noaa_ghcnh_quality.md) records a
+new successful checksummed HTTP acquisition. Quantitative support is sparse:
+30/264 hours from selected reports, and 6/44 slots on an assumed six-hour grid.
+G5 remains open for evaluation and the descriptive case study. The report also
+describes sampling, gaps and historical freshness; it does not certify station
+completeness. The assessment above remains the 2026-10-31 selection record.

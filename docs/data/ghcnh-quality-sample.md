@@ -52,30 +52,31 @@ Quantitative sampling: `{'timestamps': 6, 'delta_minutes_histogram': [{'minutes'
 | 2010-01-04T12:00:00+00:00 | 2010-01-10T06:00:00+00:00 | 8280 |
 | 2010-01-10T12:00:00+00:00 | 2010-01-12T00:00:00+00:00 | 2160 |
 
-| UTC day/window start | Quantitative reports | Zero | Trace | Missing rainfall | Supported / window minutes |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 2010-01-01T00:00:00+00:00 | 2 | 0 | 0 | 46 | 360 / 1440 |
-| 2010-01-02T00:00:00+00:00 | 0 | 0 | 0 | 48 | 360 / 1440 |
-| 2010-01-03T00:00:00+00:00 | 2 | 0 | 0 | 46 | 360 / 1440 |
-| 2010-01-04T00:00:00+00:00 | 1 | 0 | 0 | 47 | 360 / 1440 |
-| 2010-01-05T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 / 1440 |
-| 2010-01-06T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 / 1440 |
-| 2010-01-07T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 / 1440 |
-| 2010-01-08T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 / 1440 |
-| 2010-01-09T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 / 1440 |
-| 2010-01-10T00:00:00+00:00 | 1 | 0 | 0 | 47 | 360 / 1440 |
-| 2010-01-11T00:00:00+00:00 | 0 | 0 | 1 | 48 | 0 / 1440 |
+| UTC day/window start | Quantitative reports | Zero | Trace | Missing rainfall | Rejected / conflicting states | Supported / window minutes |
+| --- | ---: | ---: | ---: | ---: | --- | ---: |
+| 2010-01-01T00:00:00+00:00 | 2 | 0 | 0 | 46 | 0 | 360 / 1440 |
+| 2010-01-02T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 | 360 / 1440 |
+| 2010-01-03T00:00:00+00:00 | 2 | 0 | 0 | 46 | 0 | 360 / 1440 |
+| 2010-01-04T00:00:00+00:00 | 1 | 0 | 0 | 47 | 0 | 360 / 1440 |
+| 2010-01-05T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 | 0 / 1440 |
+| 2010-01-06T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 | 0 / 1440 |
+| 2010-01-07T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 | 0 / 1440 |
+| 2010-01-08T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 | 0 / 1440 |
+| 2010-01-09T00:00:00+00:00 | 0 | 0 | 0 | 48 | 0 | 0 / 1440 |
+| 2010-01-10T00:00:00+00:00 | 1 | 0 | 0 | 47 | 0 | 360 / 1440 |
+| 2010-01-11T00:00:00+00:00 | 0 | 0 | 1 | 48 | 0 | 0 / 1440 |
 
 Limitations:
 
 - Blank source QC is unverified, not passed QC; quantitative means eligible under the ingestion policy.
 - Missing, rejected and trace rainfall are not observed zero; trace amounts are not quantitatively supported.
+- Weather-report sampling and freshness include conflicting timestamps as reporting activity; quantitative rainfall excludes conflicts.
 - Cadence and stale thresholds are declared analysis assumptions, not verified station schedules or service objectives.
 - Coverage unions six-hour intervals from eligible report timestamps in [start,end). It clips the left edge and excludes reports at/after end, so the right edge is censored.
 - Interval support does not resolve sub-hourly timing, establish flood events or validate detector accuracy.
 
 Sources (CC0-1.0; Menne et al., NOAA NCEI):
 
-- [Station-year 2010](https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv), retrieved 2026-11-02T10:47:12.192725+00:00; mode `http`; SHA-256 `1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7`.
+- [Station-year 2010](https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv), retrieved 2026-11-02T10:47:12.192725+00:00; mode `http`; upstream SHA-256 `1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7`.
 
 [Dataset DOI](https://doi.org/10.25921/jp3d-3v19); [provider format documentation](https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh_DOCUMENTATION.pdf).

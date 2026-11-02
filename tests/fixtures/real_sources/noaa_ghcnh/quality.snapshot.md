@@ -34,6 +34,7 @@ Limitations:
 
 - Blank source QC is unverified, not passed QC; quantitative means eligible under the ingestion policy.
 - Missing, rejected and trace rainfall are not observed zero; trace amounts are not quantitatively supported.
+- Weather-report sampling and freshness include conflicting timestamps as reporting activity; quantitative rainfall excludes conflicts.
 - Cadence and stale thresholds are declared analysis assumptions, not verified station schedules or service objectives.
 - Coverage unions six-hour intervals from eligible report timestamps in [start,end). It clips the left edge and excludes reports at/after end, so the right edge is censored.
 - Interval support does not resolve sub-hourly timing, establish flood events or validate detector accuracy.
@@ -41,6 +42,6 @@ Limitations:
 
 Sources (CC0-1.0; Menne et al., NOAA NCEI):
 
-- [Station-year 2010](https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv), retrieved 2026-10-31T10:26:51.355574+00:00; mode `recorded_fixture`; SHA-256 `8f38fcb576a56d697acbd85868ffa7a7d0d77d536bd4f61647d25459682f0385`.
+- [Station-year 2010](https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv), retrieved 2026-10-31T10:26:51.355574+00:00; mode `recorded_fixture`; upstream SHA-256 `1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7`; excerpt SHA-256 `8f38fcb576a56d697acbd85868ffa7a7d0d77d536bd4f61647d25459682f0385`.
 
 [Dataset DOI](https://doi.org/10.25921/jp3d-3v19); [provider format documentation](https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh_DOCUMENTATION.pdf).

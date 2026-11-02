@@ -57,6 +57,7 @@
   "limitations": [
     "Blank source QC is unverified, not passed QC; quantitative means eligible under the ingestion policy.",
     "Missing, rejected and trace rainfall are not observed zero; trace amounts are not quantitatively supported.",
+    "Weather-report sampling and freshness include conflicting timestamps as reporting activity; quantitative rainfall excludes conflicts.",
     "Cadence and stale thresholds are declared analysis assumptions, not verified station schedules or service objectives.",
     "Coverage unions six-hour intervals from eligible report timestamps in [start,end). It clips the left edge and excludes reports at/after end, so the right edge is censored.",
     "Interval support does not resolve sub-hourly timing, establish flood events or validate detector accuracy."

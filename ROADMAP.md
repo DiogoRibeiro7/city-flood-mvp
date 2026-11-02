@@ -67,7 +67,8 @@ Build on a reviewed RC baseline, in this order:
    Its sparse 6/12-hour totals do not validate the 15-minute detector;
    the [bounded provider CLI](docs/runbooks/noaa_ghcnh.md) now verifies ingestion
    and safe reruns with provenance. The [quality report](docs/runbooks/noaa_ghcnh_quality.md)
-   measures actual coverage and separates missing, trace and zero rainfall.
+   reports availability on an assumed grid and clipped interval support from
+   selected reports, and separates missing, trace and zero rainfall.
    Evaluation and the case study remain open.
 2. **Verify reliability and security (prompts 11-13).** Complete observable
    API/ingest/worker objectives and scraping, a disposable backup/restore and

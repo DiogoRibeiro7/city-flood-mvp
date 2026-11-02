@@ -36,6 +36,13 @@ completed source evidence; it never substitutes synthetic metrics. Each output
 file is replaced atomically, but the pair is not a transaction: compare the
 `analysis_version` in both files if an output write fails.
 
+On POSIX systems, new report files use mode `0644` so other users/services can
+read these public-data artifacts. Replacing an existing report preserves its
+access mode, including restrictive `0600` permissions. Windows uses filesystem
+ACLs. Invalid timestamps/checksum syntax name the offending CLI option in the
+failure report, including timestamps whose UTC conversion exceeds the supported
+date range.
+
 The analysis version hashes the report/adapter versions, station, UTC window,
 policy, scope and source payload hashes. Retrieval timestamps remain in source
 provenance but do not change this version. Numeric results are reproducible
@@ -61,6 +68,14 @@ Quantitative eligibility does not establish passed provider QC. No interpolation
 rainfall sums across gaps, flood labels, scores or sub-hourly measurements are
 generated. The existing database QA job uses regular live-telemetry assumptions;
 this report does not change its flags or rules.
+
+Weather-report sampling and freshness deliberately include conflicting
+timestamps: they prove reporting activity even though their rainfall values
+are ambiguous. Conflicts remain excluded from quantitative rainfall support,
+sampling and freshness. The daily Markdown table includes every rejected or
+conflicting state alongside the zero/positive, trace and missing categories.
+For recorded fixtures, source citations label the upstream annual-file hash
+and the selected excerpt hash separately.
 
 ## Observed result
 
@@ -122,3 +137,16 @@ Local checks on 2026-11-02, using Python 3.12.10:
 
 No hosted CI result or present-day station availability is asserted by these
 local checks. The broader Python version matrix was not rerun locally.
+
+Review follow-up on 2026-11-02: lint, formatting (157 files) and mypy (74 source
+files) passed again. The full Windows Python 3.12.10 unit
+suite passed **438 tests**, with three POSIX permission cases skipped and the
+same Alembic warning. Both NOAA test modules passed **all 80 cases** in a
+disposable Linux `python:3.12-slim` container (Python 3.12.16), including creation
+with mode `0644` and replacement preserving modes `0600` and `0640`. Its repository
+mount was read-only; file-mode assertions ran in the container's temporary
+filesystem. No database was accessed.
+
+The recorded live report was re-rendered with corrected labels and daily states;
+its analytical values, source hashes and HTTP retrieval metadata were preserved.
+The follow-up did not download new observations or claim a new live acquisition.

@@ -151,7 +151,9 @@ def characterize(
 ) -> dict[str, Any]:
     """Report one station/window only after all requested annual chunks validate.
 
-    Exact duplicates collapse; conflicting timestamp groups are entirely excluded.
+    Exact duplicates collapse; conflicting groups cannot supply quantitative rainfall.
+    Weather-report sampling/freshness includes conflicting timestamps as evidence
+    of reporting activity, independently of quantitative rainfall eligibility.
     Fixture selections describe rows only, never station completeness or freshness.
     """
     groups: dict[dt.datetime, list[tuple[int, dict[str, str], SourceChunk]]] = defaultdict(list)
@@ -259,6 +261,7 @@ def characterize(
         "limitations": [
             "Blank source QC is unverified, not passed QC; quantitative means eligible under the ingestion policy.",
             "Missing, rejected and trace rainfall are not observed zero; trace amounts are not quantitatively supported.",
+            "Weather-report sampling and freshness include conflicting timestamps as reporting activity; quantitative rainfall excludes conflicts.",
             "Cadence and stale thresholds are declared analysis assumptions, not verified station schedules or service objectives.",
             "Coverage unions six-hour intervals from eligible report timestamps in [start,end). It clips the left edge and excludes reports at/after end, so the right edge is censored.",
             "Interval support does not resolve sub-hourly timing, establish flood events or validate detector accuracy.",
@@ -398,14 +401,28 @@ def render_markdown(report: dict[str, Any]) -> str:
                 for gap in support["unsupported_intervals"]
             ],
             "",
-            "| UTC day/window start | Quantitative reports | Zero | Trace | Missing rainfall | Supported / window minutes |",
-            "| --- | ---: | ---: | ---: | ---: | ---: |",
+            "| UTC day/window start | Quantitative reports | Zero | Trace | Missing rainfall | Rejected / conflicting states | Supported / window minutes |",
+            "| --- | ---: | ---: | ---: | ---: | --- | ---: |",
         ]
         for day in report["daily"]:
             states = day["states"]
             zero = states.get("observed_zero", 0)
+            rejected = (
+                "; ".join(
+                    f"{state}: {count}"
+                    for state, count in sorted(states.items())
+                    if state
+                    not in {
+                        "observed_positive",
+                        "observed_zero",
+                        "trace_rainfall",
+                        "missing_rainfall",
+                    }
+                )
+                or "0"
+            )
             lines.append(
-                f"| {day['start']} | {zero + states.get('observed_positive', 0)} | {zero} | {states.get('trace_rainfall', 0)} | {states.get('missing_rainfall', 0)} | {day['supported_minutes']:g} / {day['window_minutes']:g} |"
+                f"| {day['start']} | {zero + states.get('observed_positive', 0)} | {zero} | {states.get('trace_rainfall', 0)} | {states.get('missing_rainfall', 0)} | {rejected} | {day['supported_minutes']:g} / {day['window_minutes']:g} |"
             )
         lines.append("")
     lines += [
@@ -417,8 +434,12 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
     ]
     for source in report["sources"]:
+        upstream_hash = source.get("original_sha256", source["sha256"])
+        excerpt_hash = (
+            f"; excerpt SHA-256 `{source['sha256']}`" if "original_sha256" in source else ""
+        )
         lines.append(
-            f"- [Station-year {source['year']}]({source['url']}), retrieved {source['retrieved_at']}; mode `{source['mode']}`; SHA-256 `{source['sha256']}`."
+            f"- [Station-year {source['year']}]({source['url']}), retrieved {source['retrieved_at']}; mode `{source['mode']}`; upstream SHA-256 `{upstream_hash}`{excerpt_hash}."
         )
     lines += [
         "",
