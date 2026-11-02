@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     tenant_quota_burst: int = 40
     request_max_bytes: int = Field(default=1_000_000, ge=1)
     request_timeout_s: float = Field(default=10.0, gt=0)
+    ingest_expected_active: bool = False
 
     analytics_version: str = "v1"
     analytics_window_days: int = 1

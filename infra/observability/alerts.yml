@@ -1,95 +1,137 @@
+# Proposed objectives and example alerts; operational attainment is unverified.
 groups:
-  - name: floodmvp-api-slo
-    rules:
-      - alert: ApiHigh5xxRate
-        expr: |
-          sum(rate(http_requests_errors_total{status_class="5xx"}[5m]))
-          /
-          sum(rate(http_requests_total[5m])) > 0.02
-        for: 10m
-        labels:
-          severity: page
-          service: api
-        annotations:
-          summary: "API 5xx rate above 2% (10m)"
-          description: "5xx error rate over the last 10 minutes exceeded 2%."
-
-      - alert: ApiLatencyP95High
-        expr: |
-          histogram_quantile(0.95, sum(rate(http_request_latency_seconds_bucket[5m])) by (le))
-          > 0.75
-        for: 10m
-        labels:
-          severity: page
-          service: api
-        annotations:
-          summary: "API p95 latency above 750ms (10m)"
-          description: "Overall API p95 latency exceeded 750ms."
-
-      - alert: IngestLatencyP95High
-        expr: |
-          histogram_quantile(
-            0.95,
-            sum(rate(http_request_latency_seconds_bucket{path="/v1/telemetry/events:batch"}[5m])) by (le)
-          ) > 1.5
-        for: 10m
-        labels:
-          severity: page
-          service: ingest
-        annotations:
-          summary: "Ingest p95 latency above 1.5s (10m)"
-          description: "Ingest endpoint p95 latency exceeded 1.5s."
-
-  - name: floodmvp-analytics-slo
-    rules:
-      - alert: AnalyticsQueueLagHigh
-        expr: |
-          histogram_quantile(
-            0.95,
-            sum(rate(job_queue_age_seconds_bucket{job_type="analytics_run"}[5m])) by (le)
-          ) > 300
-        for: 15m
-        labels:
-          severity: page
-          service: analytics
-        annotations:
-          summary: "Analytics job queue lag above 5m (15m)"
-          description: "Analytics jobs are waiting too long before processing."
-
-      - alert: AnalyticsJobFailures
-        expr: |
-          increase(job_queue_failed_total{job_type="analytics_run"}[15m]) > 3
-        for: 10m
-        labels:
-          severity: ticket
-          service: analytics
-        annotations:
-          summary: "Multiple analytics job failures"
-          description: "More than 3 analytics jobs failed over the last 15 minutes."
-
-  - name: floodmvp-jobs
-    rules:
-      - alert: ExportQueueLagHigh
-        expr: |
-          histogram_quantile(
-            0.95,
-            sum(rate(job_queue_age_seconds_bucket{job_type="export_csv"}[5m])) by (le)
-          ) > 300
-        for: 15m
-        labels:
-          severity: ticket
-          service: exports
-        annotations:
-          summary: "Export queue lag above 5m (15m)"
-          description: "Export jobs are waiting too long before processing."
-
-      - alert: JobFailureSpike
-        expr: |
-          increase(job_queue_failed_total[15m]) > 5
-        for: 10m
-        labels:
-          severity: ticket
-          service: jobs
-        annotations:
-          summary: "Job failures spike"
-          description: "More than 5 job failures in the last 15 minutes."
+- name: floodmvp-proposed-objectives
+  rules:
+  - record: floodmvp:api_requests:rate5m
+    expr: sum(rate(http_requests_total{job="floodmvp-backend",path!~"/metrics|/v1/health"}[5m]))
+  - record: floodmvp:api_errors:rate5m
+    expr: sum(rate(http_requests_total{job="floodmvp-backend",path!~"/metrics|/v1/health",status=~"5.."}[5m])) or (floodmvp:api_requests:rate5m
+      * 0)
+  - record: floodmvp:api_availability:ratio5m
+    expr: 1 - floodmvp:api_errors:rate5m / floodmvp:api_requests:rate5m
+  - record: floodmvp:api_fast:ratio5m
+    expr: sum(rate(http_request_latency_seconds_bucket{job="floodmvp-backend",path!~"/metrics|/v1/health",le="0.75"}[5m]))
+      / sum(rate(http_request_latency_seconds_count{job="floodmvp-backend",path!~"/metrics|/v1/health"}[5m]))
+  - record: floodmvp:ingest_fresh:ratio5m
+    expr: sum(rate(ingest_event_delay_seconds_bucket{job="floodmvp-backend",le="300.0"}[5m])) / sum(rate(ingest_events_total{job="floodmvp-backend",outcome="accepted"}[5m]))
+  - record: floodmvp:ingest_invalid:ratio5m
+    expr: sum(rate(ingest_events_total{job="floodmvp-backend",outcome="invalid"}[5m])) / sum(rate(ingest_events_total{job="floodmvp-backend",outcome=~"accepted|invalid"}[5m]))
+  - record: floodmvp:analytics_timely:ratio1h
+    expr: sum(increase(job_completion_latency_seconds_bucket{job="floodmvp-worker",job_type="analytics_run",outcome="completed",le="300.0"}[1h]))
+      / sum(increase(job_completion_latency_seconds_count{job="floodmvp-worker",job_type="analytics_run"}[1h]))
+  - alert: MetricsTargetDown
+    expr: up{job=~"floodmvp-backend|floodmvp-worker"} == 0 or absent(up{job="floodmvp-backend"}) or absent(up{job="floodmvp-worker"})
+    for: 2m
+    labels:
+      severity: page
+      service: monitoring
+    annotations:
+      summary: API or worker scrape unavailable
+      description: Check the process, private scrape address and network. Missing scrapes are unknown service health, not
+        successful requests.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response
+  - alert: ApiHigh5xxRate
+    expr: (1 - floodmvp:api_availability:ratio5m > 0.02) and (floodmvp:api_requests:rate5m > 100 / 300)
+    for: 10m
+    labels:
+      severity: page
+      service: api
+    annotations:
+      summary: API 5xx fraction above 2%
+      description: Inspect request IDs and DB errors. Threshold uses a five-minute window, at least 100 requests, sustained
+        for ten minutes; probes are excluded.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response
+  - alert: ApiLatencyP95High
+    expr: (floodmvp:api_fast:ratio5m < 0.95) and (floodmvp:api_requests:rate5m > 100 / 300)
+    for: 10m
+    labels:
+      severity: page
+      service: api
+    annotations:
+      summary: Fewer than 95% of API requests finish within 750ms
+      description: Inspect slow route templates and DB latency; this measures response-start latency, not download completion.
+        Five-minute window, at least 100 requests, sustained ten minutes.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response
+  - alert: IngestInvalidFractionHigh
+    expr: (floodmvp:ingest_invalid:ratio5m > 0.01) and (sum(increase(ingest_events_total{job="floodmvp-backend",outcome=~"accepted|invalid"}[5m]))
+      > 100)
+    for: 10m
+    labels:
+      severity: ticket
+      service: ingest
+    annotations:
+      summary: Invalid event fraction above 1%
+      description: Inspect producer validation errors. Duplicate rows are excluded; malformed or unauthorized batches appear
+        in HTTP metrics instead. Five-minute window sustained ten minutes.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response
+  - alert: IngestFreshnessLow
+    expr: (floodmvp:ingest_fresh:ratio5m < 0.95) and (sum(increase(ingest_events_total{job="floodmvp-backend",outcome="accepted"}[5m]))
+      > 100) and (max(ingest_expected_active{job="floodmvp-backend"}) == 1)
+    for: 10m
+    labels:
+      severity: ticket
+      service: ingest
+    annotations:
+      summary: Fewer than 95% of live API events arrive within five minutes
+      description: Check producer clocks, network and timestamp anomalies. Disable live-feed expectations for backfills. Five-minute
+        event window, at least 100 inserts, sustained ten minutes.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response
+  - alert: IngestNoArrivals
+    expr: (time() - max({__name__=~"ingest_last_commit_timestamp_seconds|process_start_time_seconds",job="floodmvp-backend"})
+      > 600) and (max(ingest_expected_active{job="floodmvp-backend"}) == 1)
+    for: 5m
+    labels:
+      severity: ticket
+      service: ingest
+    annotations:
+      summary: Expected live feed has no new inserted events
+      description: Check producer connectivity and rejection counters. Ten-minute arrival/startup grace sustained five minutes.
+        Replays and duplicates do not reset arrival time.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response
+  - alert: QueueSnapshotUnavailable
+    expr: job_queue_collection_success{job="floodmvp-backend"} == 0 or time() - job_queue_collection_timestamp_seconds{job="floodmvp-backend"}
+      > 60
+    for: 2m
+    labels:
+      severity: ticket
+      service: jobs
+    annotations:
+      summary: Committed queue snapshot unavailable or stale
+      description: Check PostgreSQL connectivity and query timeouts. Cached backlog values are unusable until collection succeeds;
+        do not interpret failure as an empty queue.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response
+  - alert: DueJobAgeHigh
+    expr: (job_queue_oldest_due_age_seconds{job="floodmvp-backend"} > 300) and on(job,instance) (job_queue_collection_success
+      == 1) and on(job,instance) (time() - job_queue_collection_timestamp_seconds < 60)
+    for: 5m
+    labels:
+      severity: ticket
+      service: jobs
+    annotations:
+      summary: Due unfinished work is older than five minutes
+      description: Inspect worker scrape/poll health, retries and pending jobs. This committed backlog can include active
+        work because the worker holds its transaction through processing. Do not blindly requeue locked work.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response
+  - alert: WorkerPollStalled
+    expr: time() - worker_last_poll_timestamp_seconds{job="floodmvp-worker"} > 300
+    for: 5m
+    labels:
+      severity: ticket
+      service: jobs
+    annotations:
+      summary: Worker has not finished a poll or attempt for five minutes
+      description: Inspect the active job and DB locks. The metrics server may still respond while processing is stuck; do
+        not infer healthy progress from up alone.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response
+  - alert: AnalyticsCompletionLow
+    expr: (floodmvp:analytics_timely:ratio1h < 0.95) and (sum(increase(job_completion_latency_seconds_count{job="floodmvp-worker",job_type="analytics_run"}[1h]))
+      >= 10)
+    for: 10m
+    labels:
+      severity: ticket
+      service: analytics
+    annotations:
+      summary: Fewer than 95% of terminal analytics jobs succeeded within five minutes
+      description: Inspect committed failures, retries and end-to-end completion latency. One-hour window with at least ten
+        terminal jobs, sustained ten minutes. Always inspect due backlog for jobs that never finish.
+      runbook_url: https://github.com/DiogoRibeiro7/city-flood-mvp/blob/develop/docs/runbooks/observability.md#alert-response

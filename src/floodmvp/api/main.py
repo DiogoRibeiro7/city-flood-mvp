@@ -9,12 +9,13 @@ import uuid
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 
-from fastapi import Request
+from fastapi import Depends, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from floodmvp.api.openapi import ContractFastAPI
@@ -35,12 +36,16 @@ from floodmvp.common.logging import configure_logging, log_json
 from floodmvp.config.settings import settings
 from floodmvp.observability.metrics import (
     HTTP_ERRORS,
+    INGEST_EXPECTED_ACTIVE,
     REQUEST_COUNT,
     REQUEST_LATENCY,
     TENANT_HTTP_ERRORS,
     TENANT_REQUEST_COUNT,
     TENANT_REQUEST_LATENCY,
+    tenant_label,
 )
+from floodmvp.observability.queue import collect_queue_snapshot
+from floodmvp.storage.db import get_session
 
 configure_logging()
 
@@ -142,21 +147,27 @@ def _finish_request(
     # Requests rejected before routing have no matched route and use a fixed label.
     route_path = getattr(request.scope.get("route"), "path", None)
     metrics_path = route_path if isinstance(route_path, str) else "<unmatched>"
-    method = request.method
+    method = (
+        request.method
+        if request.method
+        in {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE", "CONNECT"}
+        else "OTHER"
+    )
+    metrics_tenant = tenant_label(tenant_id)
     status_code = response.status_code
     REQUEST_COUNT.labels(method=method, path=metrics_path, status=str(status_code)).inc()
     REQUEST_LATENCY.labels(method=method, path=metrics_path).observe(duration)
     TENANT_REQUEST_COUNT.labels(
-        tenant=tenant_id, method=method, path=metrics_path, status=str(status_code)
+        tenant=metrics_tenant, method=method, path=metrics_path, status=str(status_code)
     ).inc()
-    TENANT_REQUEST_LATENCY.labels(tenant=tenant_id, method=method, path=metrics_path).observe(
+    TENANT_REQUEST_LATENCY.labels(tenant=metrics_tenant, method=method, path=metrics_path).observe(
         duration
     )
     if status_code >= 400:
         status_class = "4xx" if status_code < 500 else "5xx"
         HTTP_ERRORS.labels(method=method, path=metrics_path, status_class=status_class).inc()
         TENANT_HTTP_ERRORS.labels(
-            tenant=tenant_id, method=method, path=metrics_path, status_class=status_class
+            tenant=metrics_tenant, method=method, path=metrics_path, status_class=status_class
         ).inc()
     log_json(
         logging.INFO,
@@ -281,6 +292,17 @@ async def add_request_id(
                 request_id=request_id,
             ),
         )
+    except Exception:
+        # Starlette's outer server-error handler emits the 500 response. Count it
+        # here before re-raising; otherwise availability silently omits crashes.
+        _finish_request(
+            request,
+            Response(status_code=500),
+            request_id=request_id,
+            tenant_id=tenant_id,
+            started_at=started_at,
+        )
+        raise
     return _finish_request(
         request, response, request_id=request_id, tenant_id=tenant_id, started_at=started_at
     )
@@ -334,7 +356,9 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
 
 
 @app.get("/metrics")
-async def metrics() -> Response:
+async def metrics(session: AsyncSession = Depends(get_session)) -> Response:
+    await collect_queue_snapshot(session)
+    INGEST_EXPECTED_ACTIVE.set(int(settings.ingest_expected_active))
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 

@@ -27,7 +27,9 @@ interpreter. The host runner itself uses only the standard library.
    stored values/counts to prove replay does not duplicate input. Run the
    existing analytics code over that fixed interval.
 4. Start API, worker, web, Prometheus and Grafana. Poll their HTTP readiness and
-   check that Vite serves the actual randomly assigned API address. Query cities,
+   require healthy API and worker Prometheus targets. Retain the target response
+   in `prometheus-targets.json`. Check
+   that Vite serves the actual randomly assigned API address. Query cities,
    assets, observations, events, city status and summary; assert exact rainfall
    observations and the presence of synthetic rain/overflow events.
 5. Queue a CSV export over HTTP. A **separate worker container** must complete
@@ -38,6 +40,10 @@ interpreter. The host runner itself uses only the standard library.
    queued analytics job completes. This step uses the scheduler's current-time
    window, which may contain no fixture observations; it verifies scheduling and
    execution, not current hydrological coverage or detector accuracy.
+   Require Prometheus to observe the worker's committed analytics completion
+   counter, retain `prometheus-completion.json`, and submit every provisioned
+   Grafana panel query to Prometheus. This checks query syntax/execution, not
+   browser rendering or achieved service levels.
 7. Stop the scheduler/worker consumers, then run the existing ingestion
    authentication/replay/concurrency and export/report SQL-failure regression
    scripts in the backend. The export script drives its own worker, avoiding

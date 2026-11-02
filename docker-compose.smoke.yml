@@ -41,7 +41,7 @@ services:
 
   worker:
     <<: *app
-    command: ["python", "-m", "floodmvp.jobs.queue_worker", "--poll", "0.5"]
+    command: ["python", "-m", "floodmvp.jobs.queue_worker", "--poll", "0.5", "--metrics-host", "0.0.0.0"]
 
   scheduler:
     <<: *app

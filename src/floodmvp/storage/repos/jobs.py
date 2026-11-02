@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from floodmvp.common.ids import new_id
 from floodmvp.models.db import JobQueue
-from floodmvp.observability.metrics import JOB_COMPLETED, JOB_ENQUEUED, JOB_FAILED, JOB_RETRIED
+from floodmvp.observability.metrics import JOB_ENQUEUED, job_type_label
 
 
 @dataclass(frozen=True)
@@ -43,7 +43,7 @@ async def enqueue_job(
         )
     )
     await session.flush()
-    JOB_ENQUEUED.labels(job_type=job_type).inc()
+    JOB_ENQUEUED.labels(job_type=job_type_label(job_type)).inc()
     return EnqueuedJob(job_id=job_id, job_type=job_type, payload=payload)
 
 
@@ -75,7 +75,6 @@ async def mark_job_success(session: AsyncSession, job: JobQueue) -> None:
     job.locked_at = None
     job.locked_by = None
     await session.flush()
-    JOB_COMPLETED.labels(job_type=job.job_type).inc()
 
 
 async def mark_job_failed(
@@ -88,11 +87,9 @@ async def mark_job_failed(
     job.locked_by = None
     if job.attempts >= job.max_attempts:
         job.status = "failed"
-        JOB_FAILED.labels(job_type=job.job_type).inc()
     else:
         job.status = "queued"
         job.scheduled_at = dt.datetime.now(dt.UTC) + dt.timedelta(seconds=backoff_seconds)
-        JOB_RETRIED.labels(job_type=job.job_type).inc()
     await session.flush()
 
 

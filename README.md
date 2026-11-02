@@ -33,6 +33,11 @@ figures and an observation timeline with [one command](docs/runbooks/noaa_case_s
 It is descriptive: independent real-event labels remain unavailable and no
 prediction accuracy is established.
 
+The [observability runbook](docs/runbooks/observability.md) defines proposed
+API, ingestion, queue and analytics objectives, with worker scraping, bounded
+metrics, tested alert examples and diagnostic dashboards. Operational attainment
+and recovery objectives remain unverified.
+
 ## What’s included
 
 - Multi-city synthetic assets + telemetry + analytics
@@ -67,14 +72,18 @@ the stack to other users or networks.
 2. Start services
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build db backend web
 ```
 
 3. Seed synthetic assets + telemetry + analytics
 
 ```bash
 bash ./scripts/seed_all.sh
+docker compose up -d --build worker prometheus grafana
 ```
+
+Start the worker after the seed script has applied migrations. The API and
+worker share the exports volume; the worker metrics port stays inside Compose.
 
 4. Open
 

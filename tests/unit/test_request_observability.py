@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import AsyncGenerator, AsyncIterator
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -24,6 +25,52 @@ METRIC_NAMES = (
     "TENANT_REQUEST_LATENCY",
     "TENANT_HTTP_ERRORS",
 )
+
+
+@pytest.mark.asyncio
+async def test_unhandled_exception_is_counted_once_before_propagating(observed):
+    collectors, _ = observed
+    api_main._RATE_LIMITS.clear()
+    api_main._TENANT_LIMITS.clear()
+    request = Request(
+        {"type": "http", "method": "GET", "path": "/v1/crash", "headers": [], "query_string": b""}
+    )
+    request._body = b""
+
+    async def crash(_request):
+        raise RuntimeError("controlled failure")
+
+    with pytest.raises(RuntimeError, match="controlled failure"):
+        await api_main.add_request_id(request, crash)
+    assert recorded_statuses(collectors["REQUEST_COUNT"]) == ["500"]
+    assert collectors["HTTP_ERRORS"].labels.call_args.kwargs["status_class"] == "5xx"
+
+
+def test_metric_labels_hide_tenant_ids_raw_urls_and_arbitrary_methods(observed):
+    collectors, _ = observed
+    request = Request(
+        {
+            "type": "http",
+            "method": "CUSTOM-SECRET",
+            "path": "/v1/notes/private-id",
+            "headers": [],
+            "query_string": b"",
+            "route": SimpleNamespace(path="/v1/notes/{note_id}"),
+        }
+    )
+    api_main._finish_request(
+        request,
+        Response(status_code=200),
+        request_id="private-request",
+        tenant_id="private-tenant",
+        started_at=0,
+    )
+    assert collectors["TENANT_REQUEST_COUNT"].labels.call_args.kwargs == {
+        "tenant": "authenticated",
+        "method": "OTHER",
+        "path": "/v1/notes/{note_id}",
+        "status": "200",
+    }
 
 
 @pytest.fixture()
