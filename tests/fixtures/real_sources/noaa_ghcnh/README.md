@@ -11,6 +11,13 @@ manifest when copying the data. These files are source observations; they
 contain no flood labels and no synthetic values. Selection is curated, so
 the fixture is unsuitable for measuring coverage.
 
+`quality.snapshot.json` and `quality.snapshot.md` describe only these selected
+rows. Coverage, missing-interval, sampling and freshness metrics are suppressed.
+The snapshot test omits the manifest-byte hash (platform line endings can differ)
+while preserving the PSV hash and source provenance. See the
+[quality runbook](../../../../docs/runbooks/noaa_ghcnh_quality.md) for the separate
+observed archive-window report and reproduction commands.
+
 The PSV preserves the full upstream schema, blank cells and source flags.
 In particular, the `0.0` six-hour value on January 11 has measurement code
 `T` (trace); it is not an observed zero-rainfall interval. All nonempty rainfall

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "report_version": "1",
+  "adapter_version": "1",
+  "status": "characterized",
+  "scope": "selected_rows_only",
+  "station_id": "POMU0068545",
+  "start": "2010-01-01T00:00:00+00:00",
+  "end": "2010-01-12T00:00:00+00:00",
+  "field": "precipitation_6_hour",
+  "format_version": "1.1.0",
+  "license": "CC0-1.0",
+  "dataset_doi": "https://doi.org/10.25921/jp3d-3v19",
+  "policy": {
+    "expected_cadence_minutes": 360,
+    "stale_after_minutes": 1440
+  },
+  "sources": [
+    {
+      "year": 2010,
+      "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+      "sha256": "8f38fcb576a56d697acbd85868ffa7a7d0d77d536bd4f61647d25459682f0385",
+      "bytes": 15675,
+      "retrieved_at": "2026-10-31T10:26:51.355574+00:00",
+      "mode": "recorded_fixture",
+      "original_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7"
+    }
+  ],
+  "counts": {
+    "source_rows": 6,
+    "outside_window": 0,
+    "selected_rows": 6,
+    "unique_timestamps": 6,
+    "duplicate_extra_rows": 0,
+    "exact_duplicate_extra_rows": 0,
+    "conflicting_timestamps": 0,
+    "quantitative_observations": 2,
+    "states_by_unique_timestamp": {
+      "missing_rainfall": 3,
+      "observed_positive": 2,
+      "observed_zero": 0,
+      "trace_rainfall": 1
+    },
+    "issues_by_raw_row": {}
+  },
+  "issue_examples": [],
+  "unit_check": {
+    "status": "contract_only",
+    "expected_unit": "mm",
+    "interval_minutes": 360,
+    "embedded_unit_rows": 0,
+    "documentation": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/doc/ghcnh_DOCUMENTATION.pdf",
+    "limitation": "The fixed field defines mm over six hours. PSV has no per-row unit metadata; silent unit/scale changes cannot be inferred from numbers. Other duration fields are not combined."
+  },
+  "limitations": [
+    "Blank source QC is unverified, not passed QC; quantitative means eligible under the ingestion policy.",
+    "Missing, rejected and trace rainfall are not observed zero; trace amounts are not quantitatively supported.",
+    "Cadence and stale thresholds are declared analysis assumptions, not verified station schedules or service objectives.",
+    "Coverage unions six-hour intervals from eligible report timestamps in [start,end). It clips the left edge and excludes reports at/after end, so the right edge is censored.",
+    "Interval support does not resolve sub-hourly timing, establish flood events or validate detector accuracy.",
+    "Selected fixture rows are noncontiguous; station coverage, missing intervals, sampling and freshness are not assessed."
+  ],
+  "analysis_version": "bb244d7884d1bb4e78ce33daf536712076281396ec8ba2586a809296c6748b82",
+  "coverage": null,
+  "sampling": null,
+  "freshness": null,
+  "daily": []
+}

@@ -218,3 +218,10 @@ CI result is asserted by this local record.
 [snirh-catalogue]: https://dados.gov.pt/pt/datasets/rede-de-estacoes-hidrometricas-snirh/
 [snirh-api]: https://dados.gov.pt/api/1/datasets/rede-de-estacoes-hidrometricas-snirh/
 [dados-terms]: https://dados.gov.pt/pt/termos-de-utilizacao
+
+## Quality follow-up (2026-11-02)
+
+The [reproducible quality report](../runbooks/noaa_ghcnh_quality.md) records a
+new successful checksummed HTTP acquisition and measured coverage, sampling,
+gaps and historical freshness. The source assessment above remains the
+2026-10-31 selection record; evaluation and the descriptive case study follow.

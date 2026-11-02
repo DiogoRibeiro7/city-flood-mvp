@@ -10,7 +10,7 @@ import json
 import math
 import re
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -294,12 +294,12 @@ def load_fixture(path: Path, request: GHCNhRequest, limits: DownloadLimits) -> S
         raise GHCNhError("invalid or unreadable fixture manifest/payload") from exc
 
 
-def _parse_chunk(
+def iter_source_rows(
     chunk: SourceChunk,
-    batch: GHCNhBatch,
+    request: GHCNhRequest,
     limits: DownloadLimits,
-    seen: dict[dt.datetime, tuple[str, ...]],
-) -> None:
+) -> Iterator[tuple[int, dt.datetime, dict[str, str]]]:
+    """Validate the source structure without filtering or discarding quality evidence."""
     try:
         reader = csv.reader(
             io.StringIO(chunk.payload.decode("utf-8-sig")), delimiter="|", strict=True
@@ -313,8 +313,7 @@ def _parse_chunk(
             if len(fields) != len(header):
                 raise GHCNhError(f"malformed PSV row {number}: wrong column count")
             row = dict(zip(header, fields, strict=True))
-            batch.source_rows += 1
-            if row["STATION"] != batch.request.station_id:
+            if row["STATION"] != request.station_id:
                 raise GHCNhError(f"station mismatch at row {number}")
             if "T" not in row["DATE"]:
                 raise GHCNhError(f"DATE must include a time at row {number}")
@@ -325,31 +324,43 @@ def _parse_chunk(
             )
             if timestamp.year != chunk.year:
                 raise GHCNhError(f"station-year timestamp mismatch at row {number}")
-            if not batch.request.start <= timestamp < batch.request.end:
-                batch.outside_window += 1
-                continue
-            batch.stats.received += 1
-            signature = tuple(row[key] for key in REQUIRED_COLUMNS if key != "DATE")
-            if timestamp in seen:
-                if signature != seen[timestamp]:
-                    raise GHCNhError(f"conflicting duplicate at {timestamp.isoformat()}")
-                batch.duplicates += 1
-                continue
-            seen[timestamp] = signature
-            _normalize_row(row, timestamp, number, chunk, batch)
+            yield number, timestamp, row
     except (UnicodeError, csv.Error, ValueError, OverflowError) as exc:
         if isinstance(exc, GHCNhError):
             raise
         raise GHCNhError("malformed GHCNh encoding, timestamp or PSV structure") from exc
 
 
-def _normalize_row(
+def _parse_chunk(
+    chunk: SourceChunk,
+    batch: GHCNhBatch,
+    limits: DownloadLimits,
+    seen: dict[dt.datetime, tuple[str, ...]],
+) -> None:
+    for number, timestamp, row in iter_source_rows(chunk, batch.request, limits):
+        batch.source_rows += 1
+        if not batch.request.start <= timestamp < batch.request.end:
+            batch.outside_window += 1
+            continue
+        batch.stats.received += 1
+        signature = tuple(row[key] for key in REQUIRED_COLUMNS if key != "DATE")
+        if timestamp in seen:
+            if signature != seen[timestamp]:
+                raise GHCNhError(f"conflicting duplicate at {timestamp.isoformat()}")
+            batch.duplicates += 1
+            continue
+        seen[timestamp] = signature
+        normalize_row(row, timestamp, number, chunk, batch)
+
+
+def normalize_row(
     row: dict[str, str],
     timestamp: dt.datetime,
     number: int,
     chunk: SourceChunk,
     batch: GHCNhBatch,
 ) -> None:
+    """Apply the shared ingestion eligibility policy to one structurally valid row."""
     raw = row[FIELD]
     if not raw.strip():
         batch.stats.add_rejection("missing_rainfall")
@@ -421,6 +432,44 @@ def _normalize_row(
     batch.stats.accepted += 1
 
 
+def iter_chunks(
+    request: GHCNhRequest,
+    *,
+    client: httpx.Client | None = None,
+    fixture_manifest: Path | None = None,
+    expected_hashes: dict[int, str] | None = None,
+    limits: DownloadLimits = DownloadLimits(),
+    sleep: Callable[[float], None] = time.sleep,
+    clock: Callable[[], float] = time.monotonic,
+) -> Iterator[SourceChunk]:
+    """Yield bounded, optionally pinned source chunks for ingestion or quality analysis."""
+    expected_hashes = expected_hashes or {}
+    if set(expected_hashes) - set(request.years) or any(
+        not re.fullmatch(r"[0-9a-f]{64}", h) for h in expected_hashes.values()
+    ):
+        raise GHCNhError("expected hashes must name requested years and lowercase SHA-256 values")
+    if client is None and fixture_manifest is None:
+        with httpx.Client() as owned_client:
+            yield from iter_chunks(
+                request,
+                client=owned_client,
+                expected_hashes=expected_hashes,
+                limits=limits,
+                sleep=sleep,
+                clock=clock,
+            )
+        return
+    for year in request.years:
+        if fixture_manifest is not None:
+            chunk = load_fixture(fixture_manifest, request, limits)
+        else:
+            assert client is not None
+            chunk = download_chunk(client, request, year, limits, sleep=sleep, clock=clock)
+        if year in expected_hashes and chunk.provenance["sha256"] != expected_hashes[year]:
+            raise GHCNhError(f"upstream checksum changed for {year}")
+        yield chunk
+
+
 def acquire(
     request: GHCNhRequest,
     *,
@@ -432,32 +481,18 @@ def acquire(
     clock: Callable[[], float] = time.monotonic,
 ) -> GHCNhBatch:
     """Fully acquire/validate every year before exposing a batch to persistence."""
-    expected_hashes = expected_hashes or {}
-    if set(expected_hashes) - set(request.years) or any(
-        not re.fullmatch(r"[0-9a-f]{64}", h) for h in expected_hashes.values()
-    ):
-        raise GHCNhError("expected hashes must name requested years and lowercase SHA-256 values")
-    if client is None and fixture_manifest is None:
-        with httpx.Client() as owned_client:
-            return acquire(
-                request,
-                client=owned_client,
-                expected_hashes=expected_hashes,
-                limits=limits,
-                sleep=sleep,
-                clock=clock,
-            )
     batch = GHCNhBatch(request)
     seen: dict[dt.datetime, tuple[str, ...]] = {}
     try:
-        for year in request.years:
-            if fixture_manifest is not None:
-                chunk = load_fixture(fixture_manifest, request, limits)
-            else:
-                assert client is not None
-                chunk = download_chunk(client, request, year, limits, sleep=sleep, clock=clock)
-            if year in expected_hashes and chunk.provenance["sha256"] != expected_hashes[year]:
-                raise GHCNhError(f"upstream checksum changed for {year}")
+        for chunk in iter_chunks(
+            request,
+            client=client,
+            fixture_manifest=fixture_manifest,
+            expected_hashes=expected_hashes,
+            limits=limits,
+            sleep=sleep,
+            clock=clock,
+        ):
             _parse_chunk(chunk, batch, limits, seen)
             batch.sources.append(chunk.provenance)
     except GHCNhError as exc:
