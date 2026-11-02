@@ -2,25 +2,20 @@
 
 ## Backup
 
-### Database logical backup
-1) Create a logical dump from the host:
-   `docker compose exec -T db pg_dump -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-floodmvp} -Fc > backup.dump`
-2) Store the dump in secure storage.
-
-### Volume snapshot (fast path)
-- For local Docker: stop the stack and copy the volume folder (`db_data`).
-- For production: take a storage snapshot of the Postgres volume.
+Use the [disposable recovery drill](deployment/backup_restore_drills.md) to
+exercise a logical backup on synthetic data with checksums and recorded
+database/extension versions: `poetry run python -m scripts.recovery_drill`.
+It copies the binary archive without shell text redirection. Configure secure
+storage, schedules, retention and PITR separately for an actual deployment.
 
 ## Restore
 
-### Restore from pg_dump
-1) Ensure the target DB is empty or drop/recreate it.
-2) Restore:
-   `docker compose exec -T db pg_restore -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-floodmvp} --clean --if-exists < backup.dump`
-3) Restart backend to re-init caches if needed.
-
-### Restore from volume snapshot
-- Replace the Postgres data volume with the snapshot, then start services.
+Restore to a separate empty destination and preserve the source. Follow the
+[Timescale restore and manual cutover steps](deployment/backup_restore_drills.md#manual-recovery-decisions),
+including pre/post restore calls, fail-on-error behavior, data/schema validation
+and write reconciliation. Do not replace the application's database or volume
+to test a backup. Physical snapshots require a deployment-specific consistency
+and recovery procedure; they are not tested by the logical drill.
 
 ## Retention
 
@@ -68,10 +63,14 @@
 ## Daily ops
 ### Queue state
 - Inspect `GET /v1/jobs/queue` with an administrator credential when investigating
-  exports or analytics workers. `locked_at` and `locked_by` identify only an
-  actively running attempt; they are cleared on completion, failure, or retry.
+  exports or analytics workers. The worker keeps its claim and handler in one
+  transaction, so a queued row can represent active locked work. Confirm worker
+  activity and DB locks; persisted lock fields alone do not prove a live owner.
 - A queued retry retains `last_error` for diagnosis until it succeeds or is
   manually retried. Check `scheduled_at` before assuming the queue is stalled.
+- Use the [recovery decision guide](deployment/backup_restore_drills.md#manual-recovery-decisions)
+  before restarting workers or repairing an abandoned job. Automatic backoff,
+  killed-claim rollback and stale-job detection are covered by the disposable drill.
 
 ### Alerts triage
 1) Check Prometheus alerts and identify the impacted service (API, ingest, analytics).
@@ -83,7 +82,9 @@
 ### Incident response
 1) Open an incident record with time, scope, and primary responder.
 2) Mitigate impact (scale backend, pause heavy jobs, or apply rate limits).
-3) Validate recovery using `/v1/health` and `/metrics`.
+3) Validate recovery using `/v1/health`, actual data reads, queue outcomes and
+   `/metrics`; record recovery duration and the last protected write using the
+   [drill measurement definitions](deployment/backup_restore_drills.md#measurement-definitions).
 4) Communicate resolution with a short summary and next actions.
 5) Schedule a postmortem if impact lasted > 30 minutes.
 

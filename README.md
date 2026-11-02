@@ -208,7 +208,10 @@ See `docs/deployment/iac_and_secrets.md` for IaC structure and secrets managemen
 
 ## Backup/restore
 
-See `docs/deployment/backup_restore_drills.md` for RTO/RPO targets and drill checklists.
+Run `poetry run python -m scripts.recovery_drill` for a disposable synthetic
+backup/restore, worker interruption/restart, retry and stale-job detection drill.
+See [the recovery runbook](docs/deployment/backup_restore_drills.md) for safeguards,
+measured evidence, proposed RTO/RPO targets and manual incident actions.
 
 ## Security review
 
