@@ -1,7 +1,8 @@
 # v0.9.0-rc1 candidate checklist
 
-This prepares an auditable synthetic demonstration candidate. It does not
-authorize a tag or publication. Current package/API metadata remains 0.1.0.
+This preserves the prompt 5 preparation record for the earlier proposed synthetic
+candidate. Current metadata and the release decision are in the
+[v1 readiness review](v1-readiness.md); no tag or publication is authorized here.
 Read the [version policy](version-policy.md), [acceptance gates](v1-acceptance.md),
 [API audit](api-contract-audit.md) and [migration runbook](../runbooks/migrations.md).
 

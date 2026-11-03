@@ -1,8 +1,10 @@
 [tool.poetry]
 name = "city-flood-mvp"
-version = "0.1.0"
-description = "Synthetic city flood monitoring MVP: FastAPI + TimescaleDB + PostGIS + web app"
-authors = ["You <you@example.com>"]
+version = "1.0.0rc1"
+description = "Flood monitoring demonstration with synthetic scenarios and descriptive NOAA rainfall analysis"
+authors = ["Diogo Ribeiro"]
+license = "MIT"
+repository = "https://github.com/DiogoRibeiro7/city-flood-mvp"
 readme = "README.md"
 packages = [{include = "floodmvp", from = "src"}]
 

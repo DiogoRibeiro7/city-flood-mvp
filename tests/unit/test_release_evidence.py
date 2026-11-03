@@ -5,6 +5,8 @@ import json
 import tomllib
 from pathlib import Path
 
+import yaml
+
 from floodmvp.api.main import app
 from scripts.release_manifest import ROOT, artifact_hashes
 
@@ -12,9 +14,11 @@ from scripts.release_manifest import ROOT, artifact_hashes
 def test_release_versions_agree() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     web = json.loads((ROOT / "web/package.json").read_text(encoding="utf-8"))
-    # Python spells the planned 0.9.0-rc1 release as 0.9.0rc1 (PEP 440).
+    # Python uses PEP 440's rc spelling; web/API/citation use the SemVer spelling.
     assert project["tool"]["poetry"]["version"] == web["version"].replace("-rc", "rc")
     assert app.version == web["version"]
+    citation = yaml.safe_load((ROOT / "CITATION.cff").read_text(encoding="utf-8"))
+    assert citation["version"] == web["version"]
 
 
 def test_evidence_hashes_detect_changes_and_ignore_their_own_manifest(tmp_path: Path) -> None:

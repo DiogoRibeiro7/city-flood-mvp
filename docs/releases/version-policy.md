@@ -1,7 +1,8 @@
 # Version and runtime policy
 
-Current Python, web and API metadata remain **0.1.0**. The next target is a
-synthetic demonstration candidate named **v0.9.0-rc1**, not an issued release.
+Metadata is staged as **1.0.0rc1** for Python and **1.0.0-rc1** for web/API/citation.
+This is an unreleased candidate for the v1.0.0 demonstration, not an issued release.
+The [final readiness review](v1-readiness.md) records the current no-go decision.
 The [candidate checklist](rc-checklist.md) and [v1 gates](v1-acceptance.md) govern
 readiness. Version changes alone do not establish readiness.
 
@@ -11,11 +12,12 @@ Keep these values aligned in the same reviewed change:
 
 | Location | Stable example | First candidate example |
 | --- | --- | --- |
-| `pyproject.toml`, `tool.poetry.version` | `0.9.0` | `0.9.0rc1` |
-| `web/package.json`, `version` | `0.9.0` | `0.9.0-rc1` |
-| FastAPI version in `src/floodmvp/api/main.py` | `0.9.0` | `0.9.0-rc1` |
-| Regenerated `docs/openapi/public.yaml`, `info.version` | `0.9.0` | `0.9.0-rc1` |
-| Proposed Git tag, only with explicit approval | `v0.9.0` | `v0.9.0-rc1` |
+| `pyproject.toml`, `tool.poetry.version` | `1.0.0` | `1.0.0rc1` |
+| `web/package.json`, `version` | `1.0.0` | `1.0.0-rc1` |
+| FastAPI version in `src/floodmvp/api/main.py` | `1.0.0` | `1.0.0-rc1` |
+| Regenerated `docs/openapi/public.yaml`, `info.version` | `1.0.0` | `1.0.0-rc1` |
+| `CITATION.cff`, `version` | `1.0.0` | `1.0.0-rc1` |
+| Proposed Git tag, only with explicit approval | `v1.0.0` | `v1.0.0-rc1` |
 
 The release-version test checks package/API alignment, including Python's
 candidate spelling; the existing snapshot test checks the public schema.

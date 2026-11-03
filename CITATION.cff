@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, cite this repository and the exact commit used.
+  This metadata describes an unreleased candidate, not a published v1.0.0 release.
+type: software
+title: City Flood MVP
+abstract: >-
+  A flood monitoring and decision-support demonstration using FastAPI,
+  TimescaleDB, PostGIS and React. Includes deterministic synthetic scenarios,
+  source and quality inspection, descriptive analysis of recorded NOAA rainfall,
+  and disposable verification and recovery workflows. It does not establish
+  calibrated flood prediction or municipal production readiness.
+authors:
+  - family-names: Ribeiro
+    given-names: Diogo
+repository-code: https://github.com/DiogoRibeiro7/city-flood-mvp
+url: https://github.com/DiogoRibeiro7/city-flood-mvp
+version: "1.0.0-rc1"
+license: MIT
+keywords:
+  - rainfall
+  - flood monitoring
+  - decision support
+  - reproducibility

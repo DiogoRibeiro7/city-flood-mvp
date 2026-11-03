@@ -11,7 +11,9 @@
 
 City Flood MVP is a synthetic **city-scale flood monitoring demonstration**. It models drainage networks (pipes, rivers, gauges), generates telemetry, runs event and hotspot analytics, and presents the results in a web UI. Generic file and HTTP adapters already support external telemetry. Their presence does not establish a validated real-world data integration, and the analytics confidence scores are heuristic scores rather than calibrated flood probabilities.
 
-The next targets are `v0.9.0-rc1` and an evidence-backed `v1.0.0` demonstration.
+Unreleased `1.0.0-rc1` metadata prepares an evidence-backed `v1.0.0` demonstration.
+The [2026-11-03 readiness review](docs/releases/v1-readiness.md) records a **no-go**
+for publication while security and contract/migration gates remain open.
 See the [versioned roadmap](ROADMAP.md), [implementation audit](docs/releases/implementation-audit.md),
 and [release acceptance gates](docs/releases/v1-acceptance.md) for observed checks
 and unresolved gaps. Municipal production readiness, tenant data isolation, and
@@ -101,7 +103,7 @@ python -m scripts.smoke_stack
 Requires Python 3.12+ and Docker Compose; no application `.env` or pre-started
 services are needed. See the [smoke runbook](docs/runbooks/smoke.md) for isolation,
 failure injection, diagnostics, cleanup and the shared CI/manual workflow.
-The [candidate checklist](docs/releases/rc-checklist.md) records release checks,
+The [v1 publication checklist](docs/releases/v1-release-checklist.md) records release checks,
 artifact commands and the current no-go decision; the [version policy](docs/releases/version-policy.md)
 defines the tested runtime matrix. No candidate has been tagged or published.
 
