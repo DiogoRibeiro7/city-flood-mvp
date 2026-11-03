@@ -32,6 +32,10 @@ go/no-go decision and exact verification evidence.
 
 ### Fixed
 
+- Updated the Python dependency graph to clear the 51 known advisory matches
+  in the release-readiness scan. Added malformed JWT rejection regressions;
+  eight formerly uncaught claim-type errors now return HTTP 401. See the
+  [remediation evidence](docs/releases/python-dependency-remediation.md).
 - API validation serialization, mixed-timezone job bounds, and schema statuses
   inconsistent with runtime HTTP 400 responses.
 - Scheduler JSON city extraction and ORM defaults that froze timestamps at
