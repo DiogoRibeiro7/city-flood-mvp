@@ -1,5 +1,8 @@
 # Implementation and verification audit
 
+This historical review is supplemented by the [2026-11-03 final readiness
+record](v1-readiness.md), including current checks, scans and remaining gates.
+
 Audit date: 2026-10-30. Baseline: `develop` at
 `5b4a600b1c4e73638284b54113de53e3339f7ca2`.
 Both the remote default and integration branch were verified as `develop`.

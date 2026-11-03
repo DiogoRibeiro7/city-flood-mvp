@@ -53,7 +53,7 @@ from floodmvp.storage.db import get_session
 
 configure_logging()
 
-app = ContractFastAPI(title="City Flood MVP API", version="0.1.0")
+app = ContractFastAPI(title="City Flood MVP API", version="1.0.0-rc1")
 
 
 class _TokenBucket:

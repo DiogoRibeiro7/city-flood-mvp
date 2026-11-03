@@ -1,5 +1,8 @@
 # API contract audit
 
+This historical review is supplemented by the [2026-11-03 final readiness
+record](v1-readiness.md), including current checks, scans and remaining gates.
+
 Audit date: 2026-10-30. Baseline: `develop` at
 `e71e8316283b3531c2a4061ded5eab15d15a809e` (prompt 2 merged).
 The audit compared 34 operations across 31 paths in the live FastAPI schema,

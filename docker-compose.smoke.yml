@@ -8,6 +8,12 @@ x-app: &app
     SMOKE_PROJECT: ${SMOKE_PROJECT}
     CITY_IDS: city_porto_mvp
     ANALYTICS_PIPE_LIMIT: "1"
+    # Preflight polls and the fast browser workflow share the Docker gateway IP.
+    # Keep quotas active, with a test-only budget for this disposable stack.
+    RATE_LIMIT_RPS: "20"
+    RATE_LIMIT_BURST: "100"
+    TENANT_QUOTA_RPS: "20"
+    TENANT_QUOTA_BURST: "100"
     EXPORT_DIR: /app/data/exports
   volumes:
     - exports:/app/data/exports
