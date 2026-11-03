@@ -1,0 +1,1374 @@
+{
+  "recorded_date": "2026-11-03",
+  "recommendation": "NO-GO",
+  "metadata_version": "1.0.0-rc1",
+  "baseline_revision": "fd046be8a54083fad57317336c70fc7290e05910",
+  "application_revision": "dae0dc048a34af80d66af44797241b1ef5ae9f3b",
+  "smoke_budget_revision": "d9c54053e017ababb9ad095823a59575b4aa0d42",
+  "artifact_root": "test-results/v1-readiness",
+  "platform": "Windows; Docker Linux containers; fresh local Python environments on the same host",
+  "python_tests": [
+    {
+      "environment": "312",
+      "passed": 662,
+      "skipped": 3,
+      "junit_seconds": 139.828,
+      "exit_code": 0,
+      "artifact": "python-312/pytest.xml",
+      "cleanup": "removed"
+    },
+    {
+      "environment": "313",
+      "passed": 662,
+      "skipped": 3,
+      "junit_seconds": 142.027,
+      "exit_code": 0,
+      "artifact": "python-313/pytest.xml",
+      "cleanup": "removed"
+    },
+    {
+      "environment": "314",
+      "passed": 662,
+      "skipped": 3,
+      "junit_seconds": 142.348,
+      "exit_code": 0,
+      "artifact": "python-314/pytest.xml",
+      "cleanup": "removed"
+    }
+  ],
+  "skips": [
+    {
+      "test": "tests.unit.test_noaa_quality.test_atomic_report_modes_are_readable_or_preserve_existing_access[None]",
+      "reason": "POSIX access modes are not Windows ACLs"
+    },
+    {
+      "test": "tests.unit.test_noaa_quality.test_atomic_report_modes_are_readable_or_preserve_existing_access[384]",
+      "reason": "POSIX access modes are not Windows ACLs"
+    },
+    {
+      "test": "tests.unit.test_noaa_quality.test_atomic_report_modes_are_readable_or_preserve_existing_access[416]",
+      "reason": "POSIX access modes are not Windows ACLs"
+    }
+  ],
+  "python_audit": {
+    "tool": "pip-audit 2.9.0",
+    "exit_code": 1,
+    "scope": "All 81 locked package entries, including optional/development/platform-specific dependencies; advisory matches do not establish runtime reachability.",
+    "packages": [
+      {
+        "name": "anyio",
+        "version": "4.12.1",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-4025",
+            "fix_versions": [
+              "4.14.2"
+            ],
+            "aliases": [
+              "GHSA-82r6-8w77-94w6",
+              "CVE-2026-63374"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4024",
+            "fix_versions": [
+              "4.14.2"
+            ],
+            "aliases": [
+              "GHSA-5p39-cfhj-2xmp",
+              "CVE-2026-64847"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "certifi",
+        "version": "2026.1.4",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-4320",
+            "fix_versions": [
+              "2026.10.18"
+            ],
+            "aliases": [
+              "GHSA-6q48-6c7w-9gw2"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "filelock",
+        "version": "3.20.3",
+        "advisories": [
+          {
+            "id": "GHSA-8mx5-7m5m-r77g",
+            "fix_versions": [
+              "4.2.1"
+            ],
+            "aliases": [
+              "CVE-2026-112910"
+            ]
+          },
+          {
+            "id": "GHSA-69hj-f68j-2879",
+            "fix_versions": [
+              "4.2.1"
+            ],
+            "aliases": [
+              "CVE-2026-112909"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "idna",
+        "version": "3.11",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-215",
+            "fix_versions": [
+              "3.15"
+            ],
+            "aliases": [
+              "GHSA-65pc-fj4g-8rjx",
+              "CVE-2026-45409"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "mako",
+        "version": "1.3.10",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-2617",
+            "fix_versions": [
+              "1.3.12"
+            ],
+            "aliases": [
+              "CVE-2026-44307",
+              "GHSA-2h4p-vjrc-8xpq"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "pydantic-settings",
+        "version": "2.13.1",
+        "advisories": [
+          {
+            "id": "GHSA-4xgf-cpjx-pc3j",
+            "fix_versions": [
+              "2.14.2"
+            ],
+            "aliases": [
+              "CVE-2026-58203"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "pygments",
+        "version": "2.19.2",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-2987",
+            "fix_versions": [
+              "2.20.0"
+            ],
+            "aliases": [
+              "CVE-2026-4539",
+              "GHSA-5239-wwwm-4pmq"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "pyjwt",
+        "version": "2.12.1",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-179",
+            "fix_versions": [
+              "2.13.0"
+            ],
+            "aliases": [
+              "GHSA-xgmm-8j9v-c9wx",
+              "CVE-2026-48526"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-175",
+            "fix_versions": [
+              "2.13.0"
+            ],
+            "aliases": [
+              "GHSA-993g-76c3-p5m4",
+              "CVE-2026-48522"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-177",
+            "fix_versions": [
+              "2.13.0"
+            ],
+            "aliases": [
+              "CVE-2026-48524",
+              "GHSA-fhv5-28vv-h8m8"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-178",
+            "fix_versions": [
+              "2.13.0"
+            ],
+            "aliases": [
+              "CVE-2026-48525",
+              "GHSA-w7vc-732c-9m39"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4145",
+            "fix_versions": [
+              "2.14.0"
+            ],
+            "aliases": [
+              "CVE-2026-102268",
+              "GHSA-ffc3-869f-jxw9"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4146",
+            "fix_versions": [],
+            "aliases": [
+              "CVE-2026-103001",
+              "GHSA-gvp8-978c-rx2q"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4149",
+            "fix_versions": [
+              "2.14.0"
+            ],
+            "aliases": [
+              "GHSA-p4g4-x82p-q773",
+              "CVE-2026-102271"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4152",
+            "fix_versions": [
+              "2.14.0"
+            ],
+            "aliases": [
+              "CVE-2026-102274",
+              "GHSA-w6j9-cwv2-h6wq"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4144",
+            "fix_versions": [
+              "2.14.0"
+            ],
+            "aliases": [
+              "GHSA-9v7f-9g4p-ffgj",
+              "CVE-2026-102267"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4148",
+            "fix_versions": [
+              "2.14.0"
+            ],
+            "aliases": [
+              "CVE-2026-102270",
+              "GHSA-jwrc-g2q2-pq5p"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4140",
+            "fix_versions": [
+              "2.14.0"
+            ],
+            "aliases": [
+              "CVE-2026-101917",
+              "GHSA-2gx3-rcp4-g85q"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4141",
+            "fix_versions": [
+              "2.15.0"
+            ],
+            "aliases": [
+              "CVE-2026-101918",
+              "GHSA-42vr-xj54-vc7v"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4147",
+            "fix_versions": [
+              "2.14.0"
+            ],
+            "aliases": [
+              "CVE-2026-102269",
+              "GHSA-hxm8-2xgr-2p9m"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4183",
+            "fix_versions": [
+              "2.15.0"
+            ],
+            "aliases": [
+              "GHSA-x33g-cr3x-6449",
+              "CVE-2026-102275"
+            ]
+          },
+          {
+            "id": "GHSA-jq35-7prp-9v3f",
+            "fix_versions": [
+              "2.13.0"
+            ],
+            "aliases": [
+              "PYSEC-2026-176",
+              "CVE-2026-48523"
+            ]
+          },
+          {
+            "id": "GHSA-pxh4-856f-4h89",
+            "fix_versions": [
+              "2.14.0"
+            ],
+            "aliases": []
+          }
+        ]
+      },
+      {
+        "name": "pytest",
+        "version": "9.0.2",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-1845",
+            "fix_versions": [
+              "9.0.3"
+            ],
+            "aliases": [
+              "GHSA-6w46-j5rx-g56g",
+              "CVE-2025-71176"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "starlette",
+        "version": "0.52.1",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-161",
+            "fix_versions": [
+              "1.0.1"
+            ],
+            "aliases": [
+              "GHSA-86qp-5c8j-p5mr",
+              "CVE-2026-48710",
+              "X41-2026-002"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-249",
+            "fix_versions": [
+              "1.3.1"
+            ],
+            "aliases": [
+              "GHSA-82w8-qh3p-5jfq",
+              "CVE-2026-54283"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-248",
+            "fix_versions": [
+              "1.3.0"
+            ],
+            "aliases": [
+              "CVE-2026-54282",
+              "GHSA-jp82-jpqv-5vv3"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-2281",
+            "fix_versions": [
+              "1.1.0"
+            ],
+            "aliases": [
+              "GHSA-wqp7-x3pw-xc5r",
+              "CVE-2026-48818"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-2280",
+            "fix_versions": [
+              "1.1.0"
+            ],
+            "aliases": [
+              "GHSA-x746-7m8f-x49c",
+              "CVE-2026-48817"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "urllib3",
+        "version": "2.6.3",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-142",
+            "fix_versions": [
+              "2.7.0"
+            ],
+            "aliases": [
+              "CVE-2026-44432",
+              "GHSA-mf9v-mfxr-j63j"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-141",
+            "fix_versions": [
+              "2.7.0"
+            ],
+            "aliases": [
+              "CVE-2026-44431",
+              "GHSA-qccp-gfcp-xxvc"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4177",
+            "fix_versions": [
+              "2.8.0"
+            ],
+            "aliases": [
+              "GHSA-vxq7-64xx-v4gw",
+              "CVE-2026-97689"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4176",
+            "fix_versions": [
+              "2.8.0"
+            ],
+            "aliases": [
+              "CVE-2026-97688",
+              "GHSA-gh4c-6fx4-qh6g"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4175",
+            "fix_versions": [
+              "2.8.0"
+            ],
+            "aliases": [
+              "CVE-2026-97687",
+              "GHSA-8988-9cw3-xx77"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "virtualenv",
+        "version": "20.36.1",
+        "advisories": [
+          {
+            "id": "PYSEC-2026-4011",
+            "fix_versions": [
+              "21.7.12"
+            ],
+            "aliases": [
+              "GHSA-94p9-xgh2-xp45",
+              "CVE-2026-102930"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4012",
+            "fix_versions": [
+              "21.7.11"
+            ],
+            "aliases": [
+              "CVE-2026-102938",
+              "GHSA-9h9j-4vrj-gf7g"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4014",
+            "fix_versions": [
+              "21.7.12"
+            ],
+            "aliases": [
+              "CVE-2026-102937",
+              "GHSA-x78j-v8h9-3j2q"
+            ]
+          },
+          {
+            "id": "PYSEC-2026-4013",
+            "fix_versions": [
+              "21.7.13"
+            ],
+            "aliases": [
+              "CVE-2026-102925",
+              "GHSA-p58f-9548-mpm2"
+            ]
+          },
+          {
+            "id": "GHSA-c947-3pg5-gm8q",
+            "fix_versions": [
+              "21.14.2"
+            ],
+            "aliases": [
+              "CVE-2026-113732"
+            ]
+          },
+          {
+            "id": "GHSA-5vjq-rrrf-7h2q",
+            "fix_versions": [
+              "21.14.4"
+            ],
+            "aliases": [
+              "CVE-2026-113726"
+            ]
+          },
+          {
+            "id": "GHSA-8rjx-v5ww-45pp",
+            "fix_versions": [
+              "21.14.2"
+            ],
+            "aliases": [
+              "CVE-2026-113776"
+            ]
+          },
+          {
+            "id": "GHSA-vxj4-q4g9-crj7",
+            "fix_versions": [
+              "21.14.7"
+            ],
+            "aliases": [
+              "CVE-2026-113725"
+            ]
+          },
+          {
+            "id": "GHSA-c978-59m8-c77v",
+            "fix_versions": [
+              "21.14.9"
+            ],
+            "aliases": [
+              "CVE-2026-113722"
+            ]
+          },
+          {
+            "id": "GHSA-494p-63j8-28p3",
+            "fix_versions": [
+              "21.14.9"
+            ],
+            "aliases": [
+              "CVE-2026-113714"
+            ]
+          },
+          {
+            "id": "GHSA-6w3r-xr62-4xcp",
+            "fix_versions": [
+              "21.14.9"
+            ],
+            "aliases": [
+              "CVE-2026-113723"
+            ]
+          },
+          {
+            "id": "GHSA-qmx5-4p3x-wvqf",
+            "fix_versions": [
+              "21.14.9"
+            ],
+            "aliases": [
+              "CVE-2026-113715"
+            ]
+          },
+          {
+            "id": "GHSA-fc2g-4w5p-6whm",
+            "fix_versions": [
+              "21.14.9"
+            ],
+            "aliases": [
+              "CVE-2026-113720"
+            ]
+          },
+          {
+            "id": "GHSA-cx28-75q4-x26q",
+            "fix_versions": [
+              "21.14.9"
+            ],
+            "aliases": [
+              "CVE-2026-113717"
+            ]
+          },
+          {
+            "id": "GHSA-394h-qwmc-48pf",
+            "fix_versions": [
+              "21.14.9"
+            ],
+            "aliases": [
+              "CVE-2026-113718"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "web_audit": {
+    "command": "corepack yarn npm audit --all --recursive --json",
+    "exit_code": 1,
+    "scope": "Workspace direct/transitive dependencies, including development/build tools; no runtime reachability claim.",
+    "severity_counts": {
+      "moderate": 21,
+      "high": 17,
+      "low": 2,
+      "critical": 1
+    },
+    "advisories": [
+      {
+        "package": "brace-expansion",
+        "ID": 1115543,
+        "URL": "https://github.com/advisories/GHSA-f886-m6hf-6m8v",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=4.0.0 <5.0.5",
+        "Tree Versions": [
+          "5.0.2"
+        ]
+      },
+      {
+        "package": "brace-expansion",
+        "ID": 1120311,
+        "URL": "https://github.com/advisories/GHSA-jxxr-4gwj-5jf2",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=5.0.0 <5.0.6",
+        "Tree Versions": [
+          "5.0.2"
+        ]
+      },
+      {
+        "package": "brace-expansion",
+        "ID": 1123898,
+        "URL": "https://github.com/advisories/GHSA-3jxr-9vmj-r5cp",
+        "Severity": "high",
+        "Vulnerable Versions": ">=3.0.0 <5.0.7",
+        "Tree Versions": [
+          "5.0.2"
+        ]
+      },
+      {
+        "package": "brace-expansion",
+        "ID": 1130591,
+        "URL": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+        "Severity": "high",
+        "Vulnerable Versions": ">=4.0.0 <5.0.8",
+        "Tree Versions": [
+          "5.0.2"
+        ]
+      },
+      {
+        "package": "brace-expansion",
+        "ID": 1130734,
+        "URL": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+        "Severity": "high",
+        "Vulnerable Versions": ">=4.0.0 <5.0.9",
+        "Tree Versions": [
+          "5.0.2"
+        ]
+      },
+      {
+        "package": "brace-expansion",
+        "ID": 1240103,
+        "URL": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=4.0.0 <5.0.12",
+        "Tree Versions": [
+          "5.0.2"
+        ]
+      },
+      {
+        "package": "brace-expansion",
+        "ID": 1240107,
+        "URL": "https://github.com/advisories/GHSA-qhr7-859c-m2p7",
+        "Severity": "high",
+        "Vulnerable Versions": ">=4.0.0 <5.0.11",
+        "Tree Versions": [
+          "5.0.2"
+        ]
+      },
+      {
+        "package": "brace-expansion",
+        "ID": 1240111,
+        "URL": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p",
+        "Severity": "high",
+        "Vulnerable Versions": ">=4.0.0 <5.0.10",
+        "Tree Versions": [
+          "5.0.2"
+        ]
+      },
+      {
+        "package": "esbuild",
+        "ID": 1120680,
+        "URL": "https://github.com/advisories/GHSA-g7r4-m6w7-qqqr",
+        "Severity": "low",
+        "Vulnerable Versions": ">=0.27.3 <0.28.1",
+        "Tree Versions": [
+          "0.27.4"
+        ]
+      },
+      {
+        "package": "glob",
+        "ID": 1244013,
+        "URL": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=9.0.0 <=14.0.1",
+        "Tree Versions": [
+          "13.0.1"
+        ]
+      },
+      {
+        "package": "ip-address",
+        "ID": 1118827,
+        "URL": "https://github.com/advisories/GHSA-v2v4-37r5-5v8g",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<=10.1.0",
+        "Tree Versions": [
+          "10.1.0"
+        ]
+      },
+      {
+        "package": "ip-address",
+        "ID": 1130722,
+        "URL": "https://github.com/advisories/GHSA-mwp4-54f8-5fhr",
+        "Severity": "high",
+        "Vulnerable Versions": "<=10.3.0",
+        "Tree Versions": [
+          "10.1.0"
+        ]
+      },
+      {
+        "package": "ip-address",
+        "ID": 1239948,
+        "URL": "https://github.com/advisories/GHSA-rpw4-54j3-4h4q",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<=10.5.0",
+        "Tree Versions": [
+          "10.1.0"
+        ]
+      },
+      {
+        "package": "ip-address",
+        "ID": 1240097,
+        "URL": "https://github.com/advisories/GHSA-j6r3-76f7-8jcv",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<=10.7.0",
+        "Tree Versions": [
+          "10.1.0"
+        ]
+      },
+      {
+        "package": "ip-address",
+        "ID": 1240098,
+        "URL": "https://github.com/advisories/GHSA-h3mg-xc3c-68pw",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<=10.7.0",
+        "Tree Versions": [
+          "10.1.0"
+        ]
+      },
+      {
+        "package": "ip-address",
+        "ID": 1242883,
+        "URL": "https://github.com/advisories/GHSA-rxp7-6hxx-x8q5",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<=10.7.3",
+        "Tree Versions": [
+          "10.1.0"
+        ]
+      },
+      {
+        "package": "minimatch",
+        "ID": 1244012,
+        "URL": "https://github.com/advisories/GHSA-g3hv-75wg-m249",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<11.0.1",
+        "Tree Versions": [
+          "10.2.4"
+        ]
+      },
+      {
+        "package": "nanoid",
+        "ID": 1138811,
+        "URL": "https://github.com/advisories/GHSA-28wg-ghj8-5hjv",
+        "Severity": "high",
+        "Vulnerable Versions": "<3.3.16",
+        "Tree Versions": [
+          "3.3.11"
+        ]
+      },
+      {
+        "package": "nanoid",
+        "ID": 1139427,
+        "URL": "https://github.com/advisories/GHSA-2v37-7h3g-55p8",
+        "Severity": "high",
+        "Vulnerable Versions": "<3.3.18",
+        "Tree Versions": [
+          "3.3.11"
+        ]
+      },
+      {
+        "package": "nanoid",
+        "ID": 1153189,
+        "URL": "https://github.com/advisories/GHSA-xwg4-73v4-xw9w",
+        "Severity": "high",
+        "Vulnerable Versions": "<3.3.12",
+        "Tree Versions": [
+          "3.3.11"
+        ]
+      },
+      {
+        "package": "postcss",
+        "ID": 1117015,
+        "URL": "https://github.com/advisories/GHSA-qx2v-qp2m-jg93",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<8.5.10",
+        "Tree Versions": [
+          "8.5.8"
+        ]
+      },
+      {
+        "package": "postcss",
+        "ID": 1124252,
+        "URL": "https://github.com/advisories/GHSA-6g55-p6wh-862q",
+        "Severity": "high",
+        "Vulnerable Versions": "<=8.5.11",
+        "Tree Versions": [
+          "8.5.8"
+        ]
+      },
+      {
+        "package": "postcss",
+        "ID": 1130709,
+        "URL": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<=8.5.22",
+        "Tree Versions": [
+          "8.5.8"
+        ]
+      },
+      {
+        "package": "postcss",
+        "ID": 1139510,
+        "URL": "https://github.com/advisories/GHSA-r28c-9q8g-f849",
+        "Severity": "high",
+        "Vulnerable Versions": "<=8.5.17",
+        "Tree Versions": [
+          "8.5.8"
+        ]
+      },
+      {
+        "package": "source-map-js",
+        "ID": 1241209,
+        "URL": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q",
+        "Severity": "high",
+        "Vulnerable Versions": ">=1.0.0 <1.2.2",
+        "Tree Versions": [
+          "1.2.1"
+        ]
+      },
+      {
+        "package": "tar",
+        "ID": 1120782,
+        "URL": "https://github.com/advisories/GHSA-vmf3-w455-68vh",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<=7.5.15",
+        "Tree Versions": [
+          "7.5.11"
+        ]
+      },
+      {
+        "package": "tar",
+        "ID": 1123939,
+        "URL": "https://github.com/advisories/GHSA-w8wr-v893-vjvp",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<=7.5.17",
+        "Tree Versions": [
+          "7.5.11"
+        ]
+      },
+      {
+        "package": "tar",
+        "ID": 1123940,
+        "URL": "https://github.com/advisories/GHSA-23hp-3jrh-7fpw",
+        "Severity": "critical",
+        "Vulnerable Versions": "<=7.5.18",
+        "Tree Versions": [
+          "7.5.11"
+        ]
+      },
+      {
+        "package": "tar",
+        "ID": 1123941,
+        "URL": "https://github.com/advisories/GHSA-8x88-c5mf-7j5w",
+        "Severity": "high",
+        "Vulnerable Versions": "<=7.5.17",
+        "Tree Versions": [
+          "7.5.11"
+        ]
+      },
+      {
+        "package": "tar",
+        "ID": 1123942,
+        "URL": "https://github.com/advisories/GHSA-gvwx-54wh-qm9j",
+        "Severity": "moderate",
+        "Vulnerable Versions": "<=7.5.16",
+        "Tree Versions": [
+          "7.5.11"
+        ]
+      },
+      {
+        "package": "tar",
+        "ID": 1145647,
+        "URL": "https://github.com/advisories/GHSA-r292-9mhp-454m",
+        "Severity": "high",
+        "Vulnerable Versions": "<=7.5.20",
+        "Tree Versions": [
+          "7.5.11"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1116231,
+        "URL": "https://github.com/advisories/GHSA-4w7w-66w2-5vf9",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=8.0.0 <=8.0.4",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1116233,
+        "URL": "https://github.com/advisories/GHSA-v2wj-q39q-566r",
+        "Severity": "high",
+        "Vulnerable Versions": ">=8.0.0 <=8.0.4",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1116236,
+        "URL": "https://github.com/advisories/GHSA-p9ff-h696-f583",
+        "Severity": "high",
+        "Vulnerable Versions": ">=8.0.0 <=8.0.4",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1120786,
+        "URL": "https://github.com/advisories/GHSA-v6wh-96g9-6wx3",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=8.0.0 <=8.0.15",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1242624,
+        "URL": "https://github.com/advisories/GHSA-698v-4r3x-3vcv",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=8.0.0 <=8.1.5",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1242653,
+        "URL": "https://github.com/advisories/GHSA-r825-w8mm-5pxw",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=8.0.0 <=8.1.5",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1242660,
+        "URL": "https://github.com/advisories/GHSA-587h-7wmj-h5pm",
+        "Severity": "high",
+        "Vulnerable Versions": ">=8.0.0 <=8.1.5",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1242726,
+        "URL": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw",
+        "Severity": "low",
+        "Vulnerable Versions": ">=8.0.0 <=8.1.5",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1242732,
+        "URL": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=8.0.0 <=8.1.5",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      },
+      {
+        "package": "vite",
+        "ID": 1243434,
+        "URL": "https://github.com/advisories/GHSA-fx2h-pf6j-xcff",
+        "Severity": "moderate",
+        "Vulnerable Versions": ">=8.0.0 <=8.0.15",
+        "Tree Versions": [
+          "8.0.1"
+        ]
+      }
+    ]
+  },
+  "secret_scan": {
+    "tool": "Gitleaks 8.30.1",
+    "image_digest": "sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f",
+    "history_exit_code": 1,
+    "bundle_exit_code": 0,
+    "history_findings": [
+      {
+        "commit": "2d07e4b46cb340a3a36136f7af927ab5c6e84818",
+        "file": "tests/unit/test_privileged_access.py",
+        "line": 189,
+        "rule": "generic-api-key",
+        "triage": "Controlled JWT secret assigned inside a unit test and used for monkeypatched settings/test signing; no deployed credential identified."
+      },
+      {
+        "commit": "8012e01a1db2d25caf988327866d8b61db6bce16",
+        "file": "tests/unit/test_request_limits.py",
+        "line": 65,
+        "rule": "generic-api-key",
+        "triage": "Controlled JWT secret assigned inside a unit test and used for monkeypatched settings/test signing; no deployed credential identified."
+      },
+      {
+        "commit": "8012e01a1db2d25caf988327866d8b61db6bce16",
+        "file": "tests/unit/test_request_limits.py",
+        "line": 117,
+        "rule": "generic-api-key",
+        "triage": "Controlled JWT secret assigned inside a unit test and used for monkeypatched settings/test signing; no deployed credential identified."
+      },
+      {
+        "commit": "9ecc011cc7fd6e40ec4561e4fba0c9a5801a789c",
+        "file": "tests/unit/test_privileged_access.py",
+        "line": 290,
+        "rule": "generic-api-key",
+        "triage": "Controlled JWT secret assigned inside a unit test and used for monkeypatched settings/test signing; no deployed credential identified."
+      },
+      {
+        "commit": "d861bdd3da09028867ed757ea980ab67144abc72",
+        "file": "tests/unit/test_privileged_access.py",
+        "line": 173,
+        "rule": "generic-api-key",
+        "triage": "Controlled JWT secret assigned inside a unit test and used for monkeypatched settings/test signing; no deployed credential identified."
+      },
+      {
+        "commit": "d861bdd3da09028867ed757ea980ab67144abc72",
+        "file": "tests/unit/test_privileged_access.py",
+        "line": 203,
+        "rule": "generic-api-key",
+        "triage": "Controlled JWT secret assigned inside a unit test and used for monkeypatched settings/test signing; no deployed credential identified."
+      }
+    ],
+    "limits": "Scan and contextual triage do not inventory deployed secrets or prove absence of credentials."
+  },
+  "case_study": {
+    "comparison": {
+      "observations.csv": {
+        "equal": true,
+        "left_sha256": "105ac466c8e99e9945deb77487c58e926cabbb77dad322562884b1f9835ffb13",
+        "right_sha256": "105ac466c8e99e9945deb77487c58e926cabbb77dad322562884b1f9835ffb13"
+      },
+      "daily.csv": {
+        "equal": true,
+        "left_sha256": "5105708218d461e91cba47a1ffe1d32ebd161feb0e3a2d10343effa70b7928f0",
+        "right_sha256": "5105708218d461e91cba47a1ffe1d32ebd161feb0e3a2d10343effa70b7928f0"
+      },
+      "timeline.csv": {
+        "equal": true,
+        "left_sha256": "50629e2e00f6951b0cb82f9754b2a6b091334b11cce052ddfcf56b017ac59cb7",
+        "right_sha256": "50629e2e00f6951b0cb82f9754b2a6b091334b11cce052ddfcf56b017ac59cb7"
+      },
+      "quality.json": {
+        "equal": true,
+        "left_sha256": "7204344b81ee6bed10b60a63e184c8ddfe6e92d519c88ef50e46e972380e5a38",
+        "right_sha256": "7204344b81ee6bed10b60a63e184c8ddfe6e92d519c88ef50e46e972380e5a38"
+      },
+      "report.md": {
+        "equal": true,
+        "left_sha256": "85d6392cc78ac73cd21fc4c9f85c3105e215b3909051e3107f6b0911cf513af7",
+        "right_sha256": "85d6392cc78ac73cd21fc4c9f85c3105e215b3909051e3107f6b0911cf513af7"
+      },
+      "rainfall.svg": {
+        "equal": true,
+        "left_sha256": "f42e59a38de67c96cf19c40386cc770cda9d560f12ee210829853ff29976d884",
+        "right_sha256": "f42e59a38de67c96cf19c40386cc770cda9d560f12ee210829853ff29976d884"
+      },
+      "rainfall.png": {
+        "equal": true,
+        "left_sha256": "8c2dbb4e7198d77b4150e78c5592d359275b72848081e252baff4be0417b8660",
+        "right_sha256": "8c2dbb4e7198d77b4150e78c5592d359275b72848081e252baff4be0417b8660"
+      },
+      "normalized_case_study_equal": true,
+      "excluded_fields": [
+        "ingestion.first_import.import_id",
+        "ingestion.replay.import_id"
+      ]
+    },
+    "runs": [
+      {
+        "artifact": "case-live/manifest.json",
+        "sha256": "8d3c39c416cb93cdb4ea23cc4887ed7013f12c8570af9a34a074ce332077370b",
+        "code": {
+          "revision": "dae0dc048a34af80d66af44797241b1ef5ae9f3b",
+          "dirty": false,
+          "python": "3.12.10",
+          "platform": "win32",
+          "packages": {
+            "city-flood-mvp": "1.0.0rc1",
+            "matplotlib": "3.11.2",
+            "SQLAlchemy": "2.0.48",
+            "httpx": "0.28.1"
+          },
+          "poetry_lock_sha256": "44426e6e2f10f37179a3506f2cfb57c8aad32bd7c14e65c25ab6dae4e47b9e9e"
+        },
+        "configuration": {
+          "station_id": "POMU0068545",
+          "asset_id": "porto_ghcnh_pedras_rubras",
+          "city_id": "porto_case_study",
+          "start": "2010-01-01T00:00:00+00:00",
+          "end": "2010-01-12T00:00:00+00:00",
+          "metric": "rain_6h_mean_mmph",
+          "expected_source_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+          "expected_cadence_minutes": 360,
+          "stale_after_minutes": 1440,
+          "wet_depth_threshold_mm": 0.0,
+          "database_image": "timescale/timescaledb-ha@sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9"
+        },
+        "acquisition": {
+          "mode": "live_http",
+          "sources": [
+            {
+              "year": 2010,
+              "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+              "sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+              "bytes": 14325059,
+              "retrieved_at": "2026-11-03T14:59:11.246787+00:00",
+              "mode": "http",
+              "attempts": 1,
+              "etag": "\"067d4bd961a53bb36dbe46ff7fa81987\"",
+              "last_modified": "Fri, 10 Jul 2026 16:15:47 GMT"
+            }
+          ]
+        },
+        "cleanup": "removed"
+      },
+      {
+        "artifact": "case-replay-313/manifest.json",
+        "sha256": "61f1100571f178078aeb2a6aaa8265b19208e0757b046fd415b93e1ad30f83e9",
+        "code": {
+          "revision": "dae0dc048a34af80d66af44797241b1ef5ae9f3b",
+          "dirty": false,
+          "python": "3.13.5",
+          "platform": "win32",
+          "packages": {
+            "city-flood-mvp": "1.0.0rc1",
+            "matplotlib": "3.11.2",
+            "SQLAlchemy": "2.0.48",
+            "httpx": "0.28.1"
+          },
+          "poetry_lock_sha256": "44426e6e2f10f37179a3506f2cfb57c8aad32bd7c14e65c25ab6dae4e47b9e9e"
+        },
+        "configuration": {
+          "station_id": "POMU0068545",
+          "asset_id": "porto_ghcnh_pedras_rubras",
+          "city_id": "porto_case_study",
+          "start": "2010-01-01T00:00:00+00:00",
+          "end": "2010-01-12T00:00:00+00:00",
+          "metric": "rain_6h_mean_mmph",
+          "expected_source_sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+          "expected_cadence_minutes": 360,
+          "stale_after_minutes": 1440,
+          "wet_depth_threshold_mm": 0.0,
+          "database_image": "timescale/timescaledb-ha@sha256:1cb0764fb549213391fb5a96822b3e143da5bd72c108e5e07f5d721eddf65af9"
+        },
+        "acquisition": {
+          "mode": "recorded_http_cache",
+          "sources": [
+            {
+              "year": 2010,
+              "url": "https://www.ncei.noaa.gov/oa/global-historical-climatology-network/hourly/access/by-year/2010/psv/GHCNh_POMU0068545_2010.psv",
+              "sha256": "1febfaa9832085295cb813e987de298c73298318bf6104a51abb1ba65397d1b7",
+              "bytes": 14325059,
+              "retrieved_at": "2026-11-03T14:59:11.246787+00:00",
+              "mode": "http",
+              "attempts": 1,
+              "etag": "\"067d4bd961a53bb36dbe46ff7fa81987\"",
+              "last_modified": "Fri, 10 Jul 2026 16:15:47 GMT"
+            }
+          ],
+          "input_manifest_sha256": "2f5caae6f37fbfdcae3ac5bd2c2964901f0081a9797161daf650345616e15298"
+        },
+        "cleanup": "removed"
+      }
+    ]
+  },
+  "stack_runs": [
+    {
+      "artifact": "smoke/city-flood-smoke-0317160e6f9f/result.json",
+      "sha256": "7b3a114cf31cfc02252f8c5a3f1a47e5d8a5e44c345051276da3336ab8a58f87",
+      "project": "city-flood-smoke-0317160e6f9f",
+      "status": "failed",
+      "phase": "operator",
+      "injected_failure": null,
+      "cleanup": "completed",
+      "elapsed_seconds": 137.906
+    },
+    {
+      "artifact": "smoke-negative/city-flood-smoke-45b2a5fad280/result.json",
+      "sha256": "3471106019c4e7f0a4b268b2df46acc99a045848075806bf630b63b9b04aca36",
+      "project": "city-flood-smoke-45b2a5fad280",
+      "status": "failed",
+      "phase": "export",
+      "injected_failure": "worker",
+      "cleanup": "completed",
+      "elapsed_seconds": 62.453
+    },
+    {
+      "artifact": "smoke-retry/city-flood-smoke-d1c7330a1605/result.json",
+      "sha256": "cf94afb3d1dbc27366eaaf2bbba9b76a03a1478df4c5f96b5ab71ec9dbbd8c04",
+      "project": "city-flood-smoke-d1c7330a1605",
+      "status": "passed",
+      "phase": "regressions",
+      "injected_failure": null,
+      "cleanup": "completed",
+      "elapsed_seconds": 107.39
+    },
+    {
+      "artifact": "recovery/city-flood-recovery-b058485cfc17/result.json",
+      "sha256": "c1eecdc10b4c581e26b1c3b15ccf24dbeac2c5430e6a0876a0bfe5856b7d75c0",
+      "project": "city-flood-recovery-b058485cfc17",
+      "status": "passed",
+      "phase": "stale_running_detection",
+      "injected_failure": null,
+      "cleanup": "completed",
+      "code_revision": "dae0dc048a34af80d66af44797241b1ef5ae9f3b",
+      "code_dirty": false,
+      "rpo_exposure_upper_bound": {
+        "measured_seconds": 12.266,
+        "proposed_target_seconds": 900,
+        "within_candidate_in_this_drill": true
+      },
+      "observed_data_loss": {
+        "post_backup_observations_missing": 1,
+        "pre_backup_observations_restored": 36,
+        "interpretation": "One deliberately committed post-backup observation is absent; no WAL replay was performed."
+      },
+      "database_recovery": {
+        "measured_seconds": 15.609,
+        "proposed_target_seconds": 14400,
+        "within_candidate_in_this_drill": true,
+        "scope": "Source-stop request through restore, equality checks and restored API data read; destination server pre-provisioned."
+      },
+      "worker_recovery": {
+        "measured_seconds": 12.547,
+        "proposed_target_seconds": 300,
+        "within_candidate_in_this_drill": true,
+        "scope": "SIGKILL request through rollback, same-container restart and exact CSV download verification.",
+        "completed_job": {
+          "attempts": 1,
+          "backlog": {
+            "due_export_jobs": 0.0,
+            "oldest_export_age_seconds": 0.0
+          },
+          "due": true,
+          "export_id": "recovery_export",
+          "export_status": "completed",
+          "has_error": false,
+          "job_id": "job_e64005d3b34d4f0a95c40d50316d72a1",
+          "lock_available": true,
+          "lock_metadata_cleared": true,
+          "row_count": 12,
+          "scheduled_at": "2026-11-03T14:54:02.150636+00:00",
+          "status": "completed"
+        }
+      },
+      "retry_recovery": {
+        "measured_seconds": 19.172,
+        "proposed_target_seconds": 300,
+        "within_candidate_in_this_drill": true,
+        "completed_job": {
+          "attempts": 2,
+          "backlog": {
+            "due_export_jobs": 0.0,
+            "oldest_export_age_seconds": 0.0
+          },
+          "due": true,
+          "export_id": "recovery_retry",
+          "export_status": "completed",
+          "has_error": false,
+          "job_id": "job_9d13f599a58c41769ce8f5a4cb67f2fb",
+          "lock_available": true,
+          "lock_metadata_cleared": true,
+          "row_count": 12,
+          "scheduled_at": "2026-11-03T15:04:59.225924+00:00",
+          "status": "completed"
+        }
+      },
+      "elapsed_seconds": 105.922
+    },
+    {
+      "artifact": "recovery-negative/city-flood-recovery-563a9a27c997/result.json",
+      "sha256": "0364a70ffedfd37115f745e23027f66dc74ce88a59936a764973061b93acf6bc",
+      "project": "city-flood-recovery-563a9a27c997",
+      "status": "failed",
+      "phase": "archive_integrity",
+      "injected_failure": "corrupt-backup",
+      "cleanup": "completed",
+      "code_revision": "d9c54053e017ababb9ad095823a59575b4aa0d42",
+      "code_dirty": false,
+      "elapsed_seconds": 47.422
+    }
+  ],
+  "distributions": [
+    {
+      "path": "python-dist/city_flood_mvp-1.0.0rc1-py3-none-any.whl",
+      "sha256": "41d77b794ce05804d9d565ee8f680dd58d75e16b5d6ccf4bd15311f018d4922b",
+      "bytes": 130092
+    },
+    {
+      "path": "python-dist/city_flood_mvp-1.0.0rc1.tar.gz",
+      "sha256": "46493f18cfd4ec31cae95b8e721eacb7781d90dbd4173099b009eb252280cbbb",
+      "bytes": 97446
+    }
+  ],
+  "wheel_metadata": {
+    "Name": "city-flood-mvp",
+    "Version": "1.0.0rc1",
+    "Author": "Diogo Ribeiro",
+    "License": "MIT",
+    "Requires-Python": ">=3.12,<4.0"
+  }
+}

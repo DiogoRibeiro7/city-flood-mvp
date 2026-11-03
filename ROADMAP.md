@@ -106,6 +106,12 @@ Build on a reviewed RC baseline, in this order:
    version metadata, changelog and established author/citation details, and give
    a go/no-go recommendation. Do not invent a DOI or publish a tag, GitHub
    Release, or deposit without explicit owner approval.
+   Prompt 15 preparation is complete: the [2026-11-03 readiness record](docs/releases/v1-readiness.md)
+   retains the fresh matrix, browser/stack/recovery and second-environment NOAA
+   reproduction, citation metadata and artifact hashes. The recommendation is
+   **NO-GO**: dependency remediation, API contract corrections and explicit legacy
+   schema disposition remain. The numbered preparation sequence is complete;
+   publication and those follow-up fixes require separate reviewed work.
 
 **Checkpoints:** after prompt 10, review provenance and scientific validity;
 after prompt 15, require all applicable v1 gates to pass. No release is approved

@@ -1,5 +1,8 @@
 # Dedicated-tenant security and process-quota review
 
+This historical review is supplemented by the [2026-11-03 final readiness
+record](v1-readiness.md), including current checks, scans and remaining gates.
+
 Review date: 2026-11-02. Baseline: `develop` at
 `2b19a2ca072301f22e1729b53d3ae4e4c536aa83` (merged recovery drill, PR #154).
 The default/integration branch was verified as `develop`. Open PRs inspected

@@ -43,6 +43,8 @@ go/no-go decision and exact verification evidence.
   remains limited to one API process/replica for process-local quotas.
 - Smoke database readiness now requires TCP availability instead of accepting the
   temporary Unix-socket bootstrap server. Browser JUnit paths match CI retention.
+- Disposable smoke quotas now have an explicit automation budget after the final
+  browser run exposed HTTP 429 from shared-gateway traffic; production defaults are unchanged.
 
 ### Changed
 
