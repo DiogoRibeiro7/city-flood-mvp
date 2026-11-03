@@ -15,6 +15,13 @@ It returns 1 on assertion, readiness, build, command or cleanup failure. Use
 `poetry run python -m scripts.smoke_stack` if Poetry selects your Python 3.12
 interpreter. The host runner itself uses only the standard library.
 
+Add `--operator` to exercise the live browser workflow described in
+[operator evidence](../ui-workflows.md); it requires the web dependencies and
+Playwright Chromium installed on the host. The disposable Compose stack uses
+20 requests/second and a burst of 100 for both IP and tenant quotas because
+preflight polls and automated browser requests share the Docker gateway IP.
+Quotas remain active; production defaults and their dedicated tests are unchanged.
+
 ## What it verifies
 
 1. Build the existing backend and web Dockerfiles. A dedicated
@@ -51,8 +58,8 @@ interpreter. The host runner itself uses only the standard library.
 8. Save diagnostics and remove this run's containers, networks, data/export
    volumes and two built image tags. Shared base images remain cached.
 
-This smoke checks web serving/configuration, not rendered browser interaction
-or accessibility. It does not prove real-data validity, migration/model
+Without `--operator`, this smoke checks web serving/configuration only.
+Neither mode proves real-data validity, migration/model
 equivalence, recovery objectives or tenant isolation. The synthetic inputs and
 CSV are deterministic; generated job/run IDs and operational timestamps are not.
 
