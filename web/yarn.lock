@@ -5,6 +5,17 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
+"@axe-core/playwright@npm:^4.14.0":
+  version: 4.14.0
+  resolution: "@axe-core/playwright@npm:4.14.0"
+  dependencies:
+    axe-core: "npm:~4.14.0"
+  peerDependencies:
+    playwright-core: ">= 1.0.0"
+  checksum: 10c0/a42bca2305bbb80a374be9ff6642cac7b45f5f0aef1be9170ae42617c3423501ab1a33c8581641a71554a0c6a69f6ca512a5cc6e320ed197339a9ac4edfa713c
+  languageName: node
+  linkType: hard
+
 "@emnapi/core@npm:^1.7.1":
   version: 1.9.0
   resolution: "@emnapi/core@npm:1.9.0"
@@ -594,6 +605,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axe-core@npm:~4.14.0":
+  version: 4.14.0
+  resolution: "axe-core@npm:4.14.0"
+  checksum: 10c0/8aaa0bf748e0dcf202e8f837951a37b28b4b62d639bed58c07a6890bf035ed6a11ede9f4006db9ca8041db821dc80476c27cff08fd70afa9195ee58fb995a958
+  languageName: node
+  linkType: hard
+
 "balanced-match@npm:^4.0.2":
   version: 4.0.3
   resolution: "balanced-match@npm:4.0.3"
@@ -640,6 +658,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "city-flood-mvp-web@workspace:."
   dependencies:
+    "@axe-core/playwright": "npm:^4.14.0"
     "@playwright/test": "npm:^1.55.1"
     "@types/leaflet": "npm:^1.9.12"
     "@types/react": "npm:^19.2.14"
@@ -648,6 +667,7 @@ __metadata:
     esbuild: "npm:^0.27.4"
     leaflet: "npm:^1.9.4"
     playwright: "npm:^1.55.1"
+    playwright-core: "npm:1.58.2"
     prettier: "npm:^3.2.5"
     react: "npm:^19.2.4"
     react-dom: "npm:^19.2.4"

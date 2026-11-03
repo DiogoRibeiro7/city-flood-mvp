@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: ".",
   testMatch: "api_auth.spec.ts",
   outputDir: "../../test-results/web/security",
-  reporter: [["list"], ["junit", { outputFile: "../test-results/web/security.xml" }]],
+  reporter: [["list"], ["junit", { outputFile: "../../test-results/web/security.xml" }]],
   workers: 1,
   timeout: 60000,
   use: { baseURL: "http://127.0.0.1:5177", headless: true },

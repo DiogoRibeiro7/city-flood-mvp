@@ -20,6 +20,8 @@ test("all data reads use the runtime JWT and logout removes it", async ({ page }
     await api.fetchAssets("city-a");
     await api.fetchMetrics("asset-a");
     await api.fetchObservations("asset-a", "rain_mmph", "2026-01-01", "2026-01-02");
+    await api.fetchObservationEvidence("asset-a", "rain_mmph", "2026-01-01", "2026-01-02", "");
+    await api.fetchEventRun("event-a");
     await api.fetchObservationsCompare("asset-a", "rain_mmph", "2026-01-01", "2026-01-02", "base", "compare");
     await api.fetchScenarios();
     await api.fetchCityStatus("city-a");
@@ -34,7 +36,7 @@ test("all data reads use the runtime JWT and logout removes it", async ({ page }
     await api.fetchCities();
     return observed;
   });
-  expect(requests).toHaveLength(15);
+  expect(requests).toHaveLength(17);
   for (const request of requests.slice(0, -1)) {
     expect(request.authorization, request.url).toBe("Bearer synthetic-browser-token");
   }

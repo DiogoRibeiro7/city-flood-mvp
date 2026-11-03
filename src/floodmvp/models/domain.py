@@ -61,6 +61,26 @@ class ObservationsOut(BaseModel):
     request_id: str
 
 
+class ObservationEvidenceOut(BaseModel):
+    ts: dt.datetime
+    value: float | None
+    quality_flag: str
+    source: str
+    source_type: str
+    source_id: str | None
+    scenario_id: str | None
+    measurement_context: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+class ObservationsEvidenceOut(BaseModel):
+    asset_id: str
+    metric: str
+    scenario_id: str | None
+    rows: list[ObservationEvidenceOut]
+    has_more: bool
+    next_offset: int | None
+
+
 class ScenarioRunOut(BaseModel):
     scenario_id: str
     name: str

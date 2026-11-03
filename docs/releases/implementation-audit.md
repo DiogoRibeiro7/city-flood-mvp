@@ -59,6 +59,11 @@ The [security follow-up](security-review.md) records prompt 13's dedicated-tenan
 admission, deployed read authentication, measured process-local quota behavior,
 single-process deployment constraint and browser credential regressions. It does
 not establish shared-database row isolation or complete the dependency review.
+The [operator evidence workflow](../ui-workflows.md) records prompt 14's raw
+provenance/quality inspection, producing-run explanations, shared historical
+windows and browser assertions through notes, comparison and CSV. The original
+inventory below remains a dated baseline; the follow-up records the implemented
+scope, verification and remaining scientific/accessibility limitations.
 
 ## Current feature inventory
 
