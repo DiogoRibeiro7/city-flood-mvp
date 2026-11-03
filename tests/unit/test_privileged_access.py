@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import secrets
 from collections.abc import AsyncGenerator
 from types import SimpleNamespace
 from typing import Any
@@ -487,3 +488,83 @@ async def test_production_note_reads_allow_legacy_api_key(
     assert listed.json()[0]["title"] == detail.json()["title"] == "Inspection"
     assert missing.status_code == 404
     assert missing.json()["error"]["code"] == "NOTE_NOT_FOUND"
+
+
+@pytest.fixture()
+def production_signing_key(
+    production_without_credentials: None, monkeypatch: pytest.MonkeyPatch
+) -> str:
+    key = secrets.token_hex(32)
+    monkeypatch.setattr(settings, "jwt_secret", key)
+    monkeypatch.setattr(settings, "jwt_audience", None)
+    monkeypatch.setattr(settings, "jwt_issuer", None)
+    return key
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("claim", ["exp", "nbf", "iat"])
+@pytest.mark.parametrize("value", [None, [], {}], ids=["null", "array", "object"])
+async def test_malformed_jwt_numeric_dates_return_unauthorized(
+    client: AsyncClient,
+    production_signing_key: str,
+    monkeypatch: pytest.MonkeyPatch,
+    claim: str,
+    value: Any,
+) -> None:
+    """Malformed signed claims must not crash quota identity or reach a repository."""
+
+    async def unexpected_repository_access(*args: Any, **kwargs: Any) -> list[Any]:
+        pytest.fail("Malformed credentials reached the job repository")
+
+    monkeypatch.setattr(jobs, "list_jobs", unexpected_repository_access)
+    claims = {
+        "sub": "tester",
+        "roles": ["admin"],
+        "tenant": "tenant-a",
+        "exp": dt.datetime.now(dt.UTC) + dt.timedelta(minutes=5),
+        claim: value,
+    }
+    token = jwt.encode(claims, production_signing_key, algorithm="HS256")
+
+    response = await client.get("/v1/jobs/queue", headers={"Authorization": f"Bearer {token}"})
+
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "UNAUTHORIZED"
+    assert response.headers["x-request-id"]
+
+
+@pytest.mark.asyncio
+async def test_deeply_nested_jwt_returns_unauthorized_and_next_request_succeeds(
+    client: AsyncClient, production_signing_key: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Exercise PyJWT's recursion guard through both middleware and endpoint auth."""
+    calls = 0
+
+    async def fake_list_jobs(*args: Any, **kwargs: Any) -> list[Any]:
+        nonlocal calls
+        calls += 1
+        return []
+
+    monkeypatch.setattr(jobs, "list_jobs", fake_list_jobs)
+    # Sign raw bytes so generating the fixture does not parse its nested JSON.
+    payload = b'{"nested":' + b"[" * 1500 + b"0" + b"]" * 1500 + b"}"
+    malformed = jwt.PyJWS().encode(payload, production_signing_key, algorithm="HS256")
+    rejected = await client.get("/v1/jobs/queue", headers={"Authorization": f"Bearer {malformed}"})
+    assert rejected.status_code == 401
+    assert rejected.json()["error"]["code"] == "UNAUTHORIZED"
+    assert calls == 0
+
+    valid = jwt.encode(
+        {
+            "sub": "tester",
+            "roles": ["admin"],
+            "tenant": "tenant-a",
+            "exp": dt.datetime.now(dt.UTC) + dt.timedelta(minutes=5),
+        },
+        production_signing_key,
+        algorithm="HS256",
+    )
+    accepted = await client.get("/v1/jobs/queue", headers={"Authorization": f"Bearer {valid}"})
+    assert accepted.status_code == 200
+    assert accepted.json() == []
+    assert calls == 1

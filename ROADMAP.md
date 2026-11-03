@@ -112,6 +112,9 @@ Build on a reviewed RC baseline, in this order:
    **NO-GO**: dependency remediation, API contract corrections and explicit legacy
    schema disposition remain. The numbered preparation sequence is complete;
    publication and those follow-up fixes require separate reviewed work.
+   The [Python dependency follow-up](docs/releases/python-dependency-remediation.md)
+   now clears the locked Python advisories with a fresh matrix and live stack
+   verification. Web dependencies/tooling are the next security follow-up.
 
 **Checkpoints:** after prompt 10, review provenance and scientific validity;
 after prompt 15, require all applicable v1 gates to pass. No release is approved
