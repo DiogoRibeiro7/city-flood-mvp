@@ -31,6 +31,12 @@ class ContractFastAPI(FastAPI):
             "name": "X-API-Key",
             "description": "Deployment-scoped legacy key, accepted only when JWT is disabled. Never embed in browser code.",
         }
+        schemes["IngestBearer"] = {
+            "type": "http",
+            "scheme": "bearer",
+            "description": "Server-to-server INGEST_TOKEN. Deployment JWTs and API keys do not authorize ingestion.",
+        }
+        spec["security"] = []
 
         for route in self.routes:
             if not isinstance(route, APIRoute) or not route.include_in_schema:
@@ -65,6 +71,13 @@ class ContractFastAPI(FastAPI):
                         response["content"]["application/json"]["schema"] = {
                             "$ref": "#/components/schemas/ErrorResponse"
                         }
+                for status, response in responses.items():
+                    if status.isdigit() and int(status) >= 400:
+                        media = response.get("content", {}).get("application/json")
+                        if isinstance(media, dict):
+                            media.setdefault(
+                                "schema", {"$ref": "#/components/schemas/ErrorResponse"}
+                            )
                 # Preserve any deliberately declared 422 response. Only the
                 # automatic FastAPI validation response is handled as HTTP 400.
                 validation = responses.get("422", {})

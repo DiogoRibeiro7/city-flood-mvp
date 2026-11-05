@@ -97,8 +97,10 @@ def _is_finite_number(value: Any) -> bool:
 @router.post(
     "/telemetry/events:batch",
     response_model=IngestResponse,
+    openapi_extra={"security": [{"IngestBearer": []}]},
     responses={
         401: RESP_UNAUTHORIZED_BEARER,
+        503: error_response("AUTH_NOT_CONFIGURED", "Ingestion authentication is not configured"),
         400: {
             "content": {
                 "application/json": {

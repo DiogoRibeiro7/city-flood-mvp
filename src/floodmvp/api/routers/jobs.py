@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Header, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from floodmvp.api.openapi_examples import error_response
 from floodmvp.common.auth import require_privileged_access
 from floodmvp.common.errors import AppError
 from floodmvp.models.db import JobQueue
@@ -44,7 +45,11 @@ async def queue_list(
     return [_to_out(j) for j in rows]
 
 
-@router.get("/jobs/queue/{job_id}", response_model=JobQueueOut)
+@router.get(
+    "/jobs/queue/{job_id}",
+    response_model=JobQueueOut,
+    responses={404: error_response("JOB_NOT_FOUND", "Job not found")},
+)
 async def queue_get(
     job_id: str,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
@@ -58,7 +63,11 @@ async def queue_get(
     return _to_out(job)
 
 
-@router.post("/jobs/queue/{job_id}/retry", response_model=JobQueueOut)
+@router.post(
+    "/jobs/queue/{job_id}/retry",
+    response_model=JobQueueOut,
+    responses={400: error_response("JOB_NOT_RETRYABLE", "Job not retryable")},
+)
 async def queue_retry(
     job_id: str,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),
@@ -75,7 +84,11 @@ async def queue_retry(
     return _to_out(job)
 
 
-@router.post("/jobs/queue/{job_id}/cancel", response_model=JobQueueOut)
+@router.post(
+    "/jobs/queue/{job_id}/cancel",
+    response_model=JobQueueOut,
+    responses={400: error_response("JOB_NOT_CANCELLABLE", "Job not cancellable")},
+)
 async def queue_cancel(
     job_id: str,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),

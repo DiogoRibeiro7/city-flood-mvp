@@ -604,7 +604,18 @@ async def get_job(
 
 @router.get(
     "/analytics/jobs/{job_id}/download",
+    response_class=FileResponse,
     responses={
+        200: {
+            "description": "Completed CSV export or CSV report attachment",
+            "content": {"text/csv": {"schema": {"type": "string", "format": "binary"}}},
+            "headers": {
+                "Content-Disposition": {
+                    "description": "Attachment with the export filename",
+                    "schema": {"type": "string"},
+                }
+            },
+        },
         401: RESP_UNAUTHORIZED_API_KEY,
         403: RESP_FORBIDDEN_API_KEY,
         400: {
@@ -674,4 +685,4 @@ async def download_job(
             details={"job_id": job_id},
             status_code=404,
         )
-    return FileResponse(file_path, filename=file_path.name)
+    return FileResponse(file_path, filename=file_path.name, media_type="text/csv")

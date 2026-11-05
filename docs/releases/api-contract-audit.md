@@ -2,6 +2,9 @@
 
 This historical review is supplemented by the [2026-11-03 final readiness
 record](v1-readiness.md), including current checks, scans and remaining gates.
+The [2026-11-05 response/pagination follow-up](api-response-contract.md) addresses
+the CSV, error, authentication-declaration and timestamp-tie findings below;
+this page retains the original audit results.
 
 Audit date: 2026-10-30. Baseline: `develop` at
 `e71e8316283b3531c2a4061ded5eab15d15a809e` (prompt 2 merged).

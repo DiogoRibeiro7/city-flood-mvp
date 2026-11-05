@@ -32,6 +32,10 @@ go/no-go decision and exact verification evidence.
 
 ### Fixed
 
+- CSV download media/disposition declarations, missing note/queue/middleware
+  error responses, distinct ingestion-token authentication documentation, and
+  deterministic event/note ordering for timestamp ties. See the
+  [response contract follow-up](docs/releases/api-response-contract.md).
 - Updated the web dependency graph to clear 41 recorded advisory entries and
   replaced the unavailable Prettier mirror with the installed locked formatter.
   Node 24 now requires at least 24.15.0 for optional native-build tooling. See the
@@ -72,9 +76,10 @@ go/no-go decision and exact verification evidence.
 - Synthetic scenarios and descriptive recorded rainfall are separate evidence.
   Independent flood-event labels are absent; six-hour means cannot validate the
   15-minute detector. Accuracy, calibrated flood probability and lead time are not established.
-- Legacy timestamp nullability, optional Timescale policies, CSV/auth schema
-  gaps and pagination ties remain tracked in the acceptance gates.
-- Dependency audit findings require remediation and retesting. Shared-database
+- Legacy timestamp nullability and optional Timescale policies remain tracked
+  in the acceptance gates; the recorded API response gaps have a tested follow-up.
+- Current dependency audits report zero findings within their recorded scope.
+  Shared-database
   tenancy, multiple API processes, operational SLO attainment and municipal
   production readiness remain unsupported.
 - See the [v1 readiness review](docs/releases/v1-readiness.md) and

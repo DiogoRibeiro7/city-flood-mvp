@@ -138,7 +138,11 @@ async def list_events(
     )
     if event_type:
         q = q.where(AnalyticsEvent.event_type == event_type)
-    q = q.order_by(desc(AnalyticsEvent.start_ts)).offset(offset).limit(limit)
+    q = (
+        q.order_by(desc(AnalyticsEvent.start_ts), AnalyticsEvent.event_id.asc())
+        .offset(offset)
+        .limit(limit)
+    )
     res = await session.execute(q)
     return list(res.scalars().all())
 

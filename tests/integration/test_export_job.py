@@ -127,6 +127,9 @@ async def test_export_job_csv(
 
     res_dl = await app_client.get(f"/v1/analytics/jobs/{body['job_id']}/download")
     assert res_dl.status_code == 200
+    assert res_dl.headers["content-type"].split(";")[0] == "text/csv"
+    filename = Path(status.json()["file_path"]).name
+    assert res_dl.headers["content-disposition"] == f'attachment; filename="{filename}"'
     content = res_dl.text
     assert "asset_id,metric,ts,value" in content
     assert asset_id in content

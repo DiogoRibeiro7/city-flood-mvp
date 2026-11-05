@@ -85,8 +85,6 @@ def _add_error_components(spec: dict[str, Any]) -> None:
             _replace_response_ref(resp, "404", "NotFound")
             _replace_response_ref(resp, "409", "Conflict")
 
-    _add_security_schemes(spec)
-
 
 def _replace_response_ref(responses: dict[str, Any], status: str, ref_name: str) -> None:
     val = responses.get(status)
@@ -129,40 +127,10 @@ def _replace_response_ref(responses: dict[str, Any], status: str, ref_name: str)
 
 
 def _is_bearer_auth(op: dict[str, Any]) -> bool:
-    return any(param.get("name") == "Authorization" for param in op.get("parameters", []) or [])
-
-
-def _add_security_schemes(spec: dict[str, Any]) -> None:
-    components = spec.setdefault("components", {})
-    security_schemes = components.setdefault("securitySchemes", {})
-    security_schemes.setdefault(
-        "BearerAuth",
-        {"type": "http", "scheme": "bearer"},
+    return any(
+        "BearerAuth" in requirement or "IngestBearer" in requirement
+        for requirement in op.get("security", [])
     )
-    security_schemes.setdefault(
-        "ApiKeyAuth",
-        {"type": "apiKey", "in": "header", "name": "X-API-Key"},
-    )
-
-    # Default: no auth required unless specified by operation.
-    spec["security"] = []
-
-    for path_item in spec.get("paths", {}).values():
-        if not isinstance(path_item, dict):
-            continue
-        for op in path_item.values():
-            if not isinstance(op, dict):
-                continue
-            if "security" in op:
-                continue
-            if _is_bearer_auth(op):
-                op["security"] = [{"BearerAuth": []}]
-            elif _is_api_key_auth(op):
-                op["security"] = [{"ApiKeyAuth": []}]
-
-
-def _is_api_key_auth(op: dict[str, Any]) -> bool:
-    return any(param.get("name") == "X-API-Key" for param in op.get("parameters", []) or [])
 
 
 if __name__ == "__main__":
