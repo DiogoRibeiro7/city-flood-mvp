@@ -14,7 +14,15 @@ import pytest
 
 from scripts.seed_smoke import require_smoke_database
 from scripts.smoke_fixture import RAIN_ID, RAIN_VALUES, START
-from scripts.smoke_stack import SmokeError, Stack, job_completed, run, verify_csv, wait_for
+from scripts.smoke_stack import (
+    SmokeError,
+    Stack,
+    exercise,
+    job_completed,
+    run,
+    verify_csv,
+    wait_for,
+)
 
 
 @pytest.fixture()
@@ -176,3 +184,81 @@ def test_command_timeout_preserves_output(tmp_path: Path, monkeypatch: pytest.Mo
     with pytest.raises(SmokeError, match="exceeded 1s"):
         stack.command("build", timeout=1)
     assert "partial build output" in (stack.artifacts / "commands.log").read_text()
+
+
+def test_cold_pull_can_exceed_startup_deadline_without_extending_readiness(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fake_clock: list[float]
+) -> None:
+    stack = Stack(tmp_path)
+
+    def docker(
+        argv: list[str], *, timeout: float, **kwargs: object
+    ) -> subprocess.CompletedProcess[str]:
+        if "pull" in argv:
+            # Model a cold download longer than the normal 120-second command budget.
+            if timeout < 180:
+                raise subprocess.TimeoutExpired(argv, timeout, output="db Downloading")
+            fake_clock[0] += 180
+        return subprocess.CompletedProcess(argv, 0, "", "")
+
+    command = Mock(side_effect=docker)
+    monkeypatch.setattr("scripts.smoke_stack.subprocess.run", command)
+    readiness = Mock(side_effect=SmokeError("stop at readiness probe"))
+    monkeypatch.setattr("scripts.smoke_stack.wait_for", readiness)
+    args = argparse.Namespace(pull_timeout=600, build_timeout=900, timeout=30)
+    report: dict[str, object] = {}
+
+    with pytest.raises(SmokeError, match="stop at readiness probe"):
+        exercise(stack, args, report)
+
+    pull, build, startup = command.call_args_list
+    assert pull.args[0][len(stack.compose) :] == ["pull", "db", "prometheus", "grafana"]
+    assert pull.kwargs["timeout"] == 600
+    assert build.kwargs["timeout"] == 900
+    assert startup.args[0][len(stack.compose) :] == [
+        "up",
+        "-d",
+        "--no-build",
+        "--pull",
+        "never",
+        "db",
+    ]
+    assert startup.kwargs["timeout"] == 120
+    assert readiness.call_args.args[-1] == 30
+    assert fake_clock == [180.0]
+    assert report["phase"] == "database"
+
+
+@pytest.mark.parametrize("failure", ["timeout", "registry"])
+def test_pull_failure_stops_before_build_or_startup_and_preserves_cleanup(
+    failure: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    stack = Stack(tmp_path)
+    monkeypatch.setattr("scripts.smoke_stack.Stack", lambda artifacts: stack)
+
+    def docker(
+        argv: list[str], *, timeout: float, **kwargs: object
+    ) -> subprocess.CompletedProcess[str]:
+        if "pull" in argv:
+            if failure == "timeout":
+                raise subprocess.TimeoutExpired(argv, timeout, output=b"partial image download")
+            return subprocess.CompletedProcess(argv, 1, "", "registry unavailable")
+        return subprocess.CompletedProcess(argv, 0, "", "")
+
+    command = Mock(side_effect=docker)
+    monkeypatch.setattr("scripts.smoke_stack.subprocess.run", command)
+    args = argparse.Namespace(
+        artifacts=tmp_path, keep=False, inject_failure=None, pull_timeout=600, build_timeout=900
+    )
+
+    assert run(args) == 1
+    report = json.loads((stack.artifacts / "result.json").read_text(encoding="utf-8"))
+    assert report["status"] == "failed"
+    assert report["phase"] == "pull"
+    assert report["cleanup"] == "completed"
+    log = (stack.artifacts / "commands.log").read_text(encoding="utf-8")
+    assert ("partial image download" if failure == "timeout" else "registry unavailable") in log
+    commands = [call.args[0] for call in command.call_args_list]
+    assert not any("build" in argv or "up" in argv for argv in commands)
+    assert stack.compose + ["down", "--volumes", "--remove-orphans"] in commands
+    assert (stack.artifacts / "services.log").is_file()

@@ -103,6 +103,30 @@ drill and real-data experiments were not repeated in this web-only change.
 The preceding Python PR's [hosted CI run succeeded](https://github.com/DiogoRibeiro7/city-flood-mvp/actions/runs/41673841042);
 CI for this PR's final SHA remains separate evidence.
 
+## Hosted smoke timeout follow-up
+
+The [first hosted CI run](https://github.com/DiogoRibeiro7/city-flood-mvp/actions/runs/42055766858)
+passed static checks, all three backend Python versions and the web job. Its
+full-stack job failed before database startup: `compose up` was still downloading
+the 1.79 GB TimescaleDB layer (about 402 MB received) when the generic 120-second
+command deadline expired. The earlier local smoke used cached images.
+
+The smoke runner now pulls the database, Prometheus and Grafana images in a
+separate `pull` phase with a configurable `--pull-timeout` (1,200 seconds by
+default). All service startup commands use `--pull never`; their 120-second
+command budget and the service readiness deadlines remain unchanged. Download
+errors retain partial logs and follow the existing diagnostics/cleanup path.
+The [smoke runbook](../runbooks/smoke.md) documents the new phase and option.
+
+Focused smoke/recovery unit tests pass (**50 tests**), including a simulated
+180-second cold pull, independent startup/readiness deadlines, and registry or
+pull-timeout failures that stop before building or starting services and still
+clean up. Repository Ruff lint/format and mypy (83 source files) also pass.
+The repaired local smoke with `--operator` passes in **192.610 seconds**, including
+the live browser workflow and automatic cleanup. Its report and logs are under
+`test-results/pr160-ci-fix/smoke/city-flood-smoke-f055514be280/`. Local images were
+cached; the hosted CI result is needed to verify the cold-download path.
+
 ## Evidence and release disposition
 
 The [verification summary](evidence/web-security-2026-11-05/verification-summary.json)
