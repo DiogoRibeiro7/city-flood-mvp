@@ -1,9 +1,9 @@
 # v1.0.0 readiness review — 2026-11-03
 
-Follow-up: the [Python dependency remediation](python-dependency-remediation.md)
-clears the 51 locked Python advisory matches with new verification. The findings
-below remain the original audit record; web advisories and other release gates
-still keep publication at **NO-GO**.
+Follow-ups: [Python dependency remediation](python-dependency-remediation.md)
+and [web dependency remediation](web-dependency-remediation.md) clear the recorded
+lockfile findings and broken Prettier hook. The findings below remain the original
+audit record. Publication remains **NO-GO** while API/migration gates are open.
 
 **Recommendation: NO-GO for publishing v1.0.0.** Dependency advisories and
 unresolved migration/API contract differences keep G2, G4 and G6 open. Passing

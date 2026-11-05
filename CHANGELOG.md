@@ -32,6 +32,10 @@ go/no-go decision and exact verification evidence.
 
 ### Fixed
 
+- Updated the web dependency graph to clear 41 recorded advisory entries and
+  replaced the unavailable Prettier mirror with the installed locked formatter.
+  Node 24 now requires at least 24.15.0 for optional native-build tooling. See the
+  [web remediation evidence](docs/releases/web-dependency-remediation.md).
 - Updated the Python dependency graph to clear the 51 known advisory matches
   in the release-readiness scan. Added malformed JWT rejection regressions;
   eight formerly uncaught claim-type errors now return HTTP 401. See the

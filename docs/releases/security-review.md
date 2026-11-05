@@ -1,9 +1,9 @@
 # Dedicated-tenant security and process-quota review
 
-Follow-up: the [Python dependency remediation](python-dependency-remediation.md)
-clears the 51 locked Python advisory matches with new verification. The findings
-below remain the original audit record; web advisories and other release gates
-still keep publication at **NO-GO**.
+Follow-ups: [Python dependency remediation](python-dependency-remediation.md)
+and [web dependency remediation](web-dependency-remediation.md) clear the recorded
+lockfile findings and broken Prettier hook. The findings below remain the original
+audit record. Publication remains **NO-GO** while API/migration gates are open.
 
 This historical review is supplemented by the [2026-11-03 final readiness
 record](v1-readiness.md), including current checks, scans and remaining gates.
