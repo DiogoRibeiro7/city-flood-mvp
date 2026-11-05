@@ -1,5 +1,9 @@
 # Python dependency remediation — 2026-11-03
 
+Follow-up: the [2026-11-05 web remediation](web-dependency-remediation.md) clears
+the web findings and repairs the Prettier hook recorded below. This document
+retains its original Python-focused verification scope.
+
 The locked Python audit now reports **zero known advisories across 82 packages**,
 down from **51 matches across 12 packages** in the merged readiness baseline.
 No advisory was ignored. This clears the observed Python lockfile findings;

@@ -40,7 +40,7 @@ revision IDs are independent; retain the head and upgrade prerequisites in evide
 | --- | --- | --- |
 | Backend tests | Python 3.12, 3.13, 3.14; unit + integration + migrations per version | Backend image uses Python 3.14; record exact patches/platform |
 | Static checks | Python 3.12 once | Locked Ruff/mypy; local hooks use Poetry |
-| Web | Node 24, Yarn 4.1.1, Corepack 0.35.0 | Web image also uses Node 24 |
+| Web | Node 24.15.0 or later within 24.x, Yarn 4.1.1, Corepack 0.35.0 | Web image uses Node 24; native-build tooling requires at least 24.15.0 |
 | Python installs | Poetry 2.2.1 with committed `poetry.lock` | Same Poetry version in backend image |
 | Database checks | PostgreSQL 16 / TimescaleDB 2.25.0 OSS, PostGIS | Fresh disposable resources and explicit test names |
 
@@ -48,6 +48,12 @@ Python metadata currently permits 3.12 and later within Python 3; the matrix
 states what this project verifies. New runtime versions need install,
 type/build, unit/database and container-smoke evidence before joining that
 matrix. Hosted runner/container patches may differ from the laptop.
+
+Install the locked web dependencies before using the Prettier pre-commit hook:
+run `corepack yarn install --immutable` from `web/`. The local hook runs that
+installed Prettier from the repository root, so pre-commit's `web/...` filenames
+resolve correctly. It formats selected supported files and ignores unknown file
+types; it does not fetch a second formatter from the archived mirror repository.
 
 ## Dependencies and provenance
 

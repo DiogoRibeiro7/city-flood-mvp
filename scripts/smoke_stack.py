@@ -229,10 +229,13 @@ def exercise(stack: Stack, args: argparse.Namespace, report: dict[str, Any]) -> 
         report["phase"] = name
         print(f"[{name}] {stack.project}", flush=True)
 
+    phase("pull")
+    # Cold registry downloads need their own budget, before service startup.
+    stack.command("pull", "db", "prometheus", "grafana", timeout=args.pull_timeout)
     phase("build")
     stack.command("build", "backend", "web", timeout=args.build_timeout)
     phase("database")
-    stack.command("up", "-d", "--no-build", "db")
+    stack.command("up", "-d", "--no-build", "--pull", "never", "db")
     wait_for(
         "database readiness",
         lambda: (
@@ -267,10 +270,10 @@ def exercise(stack: Stack, args: argparse.Namespace, report: dict[str, Any]) -> 
             raise SmokeError(f"Seed/reseed verification failed: {seeded}")
         report["seed"] = seeded
     phase("readiness")
-    stack.command("up", "-d", "--no-build", "backend", "worker")
+    stack.command("up", "-d", "--no-build", "--pull", "never", "backend", "worker")
     api = stack.base_url("backend", 8000)
     stack.configure_api(api)
-    stack.command("up", "-d", "--no-build", "web", "prometheus", "grafana")
+    stack.command("up", "-d", "--no-build", "--pull", "never", "web", "prometheus", "grafana")
     web = stack.base_url("web", 5173)
     report["endpoints"] = {"api": api, "web": web}
     wait_for(
@@ -407,7 +410,7 @@ def exercise(stack: Stack, args: argparse.Namespace, report: dict[str, Any]) -> 
         )
     phase("scheduler")
     # Start only after assertions over the fixed historical analytics run.
-    stack.command("up", "-d", "--no-build", "scheduler")
+    stack.command("up", "-d", "--no-build", "--pull", "never", "scheduler")
 
     def scheduled() -> bool:
         jobs = json_request(f"{api}/v1/jobs/queue?job_type=analytics_run")
@@ -518,6 +521,12 @@ def main() -> int:
     )
     parser.add_argument("--job-timeout", type=positive_seconds, default=60)
     parser.add_argument("--build-timeout", type=positive_seconds, default=1200)
+    parser.add_argument(
+        "--pull-timeout",
+        type=positive_seconds,
+        default=1200,
+        help="Deadline for downloading database and monitoring images before startup",
+    )
     parser.add_argument(
         "--operator",
         action="store_true",

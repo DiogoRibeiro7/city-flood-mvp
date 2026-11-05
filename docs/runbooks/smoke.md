@@ -24,7 +24,8 @@ Quotas remain active; production defaults and their dedicated tests are unchange
 
 ## What it verifies
 
-1. Build the existing backend and web Dockerfiles. A dedicated
+1. Pull the database and monitoring images, then build the existing backend and
+   web Dockerfiles. A dedicated
    `docker-compose.smoke.yml` reuses the documented TimescaleDB, Prometheus and
    Grafana images/configuration and adds separate worker/scheduler services.
 2. Start a new test database, poll readiness, enable extensions through the
@@ -100,8 +101,14 @@ Each run prints its artifact directory under `test-results/smoke/<project>/`:
 
 Readiness uses bounded polls, not a fixed startup sleep. Defaults are 120 seconds
 per service, 60 seconds per queued job, 1,200 seconds for image builds, and
-bounded Docker command timeouts. Individual HTTP attempts time out after five
-seconds. The error includes the failed phase and last observed state/response.
+1,200 seconds for pulling the database and monitoring images. Use
+`--pull-timeout` to adjust the separate download deadline on a cold or slow
+runner. Downloads finish in the `pull` phase before any service starts; service
+startup uses `--pull never` and retains its 120-second command timeout. A pull
+failure records its output in `commands.log`, reports phase `pull`, and follows
+the normal diagnostics and cleanup path. Individual HTTP attempts time out
+after five seconds. The error includes the failed phase and last observed
+state/response.
 
 Exercise a real failure by stopping the worker immediately before enqueueing:
 

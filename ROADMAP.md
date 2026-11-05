@@ -114,7 +114,9 @@ Build on a reviewed RC baseline, in this order:
    publication and those follow-up fixes require separate reviewed work.
    The [Python dependency follow-up](docs/releases/python-dependency-remediation.md)
    now clears the locked Python advisories with a fresh matrix and live stack
-   verification. Web dependencies/tooling are the next security follow-up.
+   verification. The [web follow-up](docs/releases/web-dependency-remediation.md)
+   clears the web audit findings and repairs the locked Prettier hook. API contract
+   corrections and migration/schema disposition are the next implementation work.
 
 **Checkpoints:** after prompt 10, review provenance and scientific validity;
 after prompt 15, require all applicable v1 gates to pass. No release is approved
