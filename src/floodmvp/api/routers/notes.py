@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Header, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from floodmvp.api.openapi_examples import error_response
+from floodmvp.api.openapi_examples import error_response, error_responses
 from floodmvp.common.auth import require_privileged_access
 from floodmvp.common.errors import AppError
 from floodmvp.models.domain import NoteIn, NoteOut
@@ -25,6 +25,10 @@ async def notes(
     authorization: str | None = Header(default=None, alias="Authorization"),
     session: AsyncSession = Depends(get_session),
 ) -> list[NoteOut]:
+    """List notes by created_at descending, then note_id ascending for timestamp ties.
+
+    Offset pages are deterministic for unchanged data; concurrent writes can shift pages.
+    """
     require_privileged_access(x_api_key, authorization, {"viewer", "analyst", "admin"})
     response.headers["Cache-Control"] = "private, no-store"
     rows = await list_notes(
@@ -51,7 +55,11 @@ async def notes(
     ]
 
 
-@router.get("/notes/{note_id}", response_model=NoteOut)
+@router.get(
+    "/notes/{note_id}",
+    response_model=NoteOut,
+    responses={404: error_response("NOTE_NOT_FOUND", "Note not found")},
+)
 async def note(
     note_id: str,
     response: Response,
@@ -81,10 +89,12 @@ async def note(
     "/notes",
     response_model=NoteOut,
     responses={
-        404: {
-            **error_response(code="ASSET_NOT_FOUND", message="Asset not found in city"),
-            "description": "City, asset or event does not exist in the requested city",
-        }
+        404: error_responses(
+            "City, asset or event does not exist in the requested city",
+            ("CITY_NOT_FOUND", "City not found"),
+            ("ASSET_NOT_FOUND", "Asset not found in city"),
+            ("EVENT_NOT_FOUND", "Event not found in city"),
+        )
     },
 )
 async def create(
@@ -117,7 +127,9 @@ async def create(
     )
 
 
-@router.delete("/notes/{note_id}")
+@router.delete(
+    "/notes/{note_id}", responses={404: error_response("NOTE_NOT_FOUND", "Note not found")}
+)
 async def remove(
     note_id: str,
     x_api_key: str | None = Header(default=None, alias="X-API-Key"),

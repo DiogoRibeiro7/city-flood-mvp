@@ -29,7 +29,8 @@ not satisfy an end-to-end release gate.
    preserve compatibility and regenerate the snapshot only when needed.
    The [contract audit](docs/releases/api-contract-audit.md) fixes validation
    status/error serialization and job UTC handling, with passing regression
-   evidence. CSV media types, auth declarations, and pagination ties remain open.
+   evidence. The [response contract follow-up](docs/releases/api-response-contract.md)
+   corrects CSV media types, error/auth declarations and event/note pagination ties.
 4. **Verify database upgrades (prompt 4).** Retain the existing test-name guard.
    Exercise Alembic from zero and over representative data on a disposable DB;
    compare constraints, indexes, timestamps, extensions, and ORM expectations.
@@ -115,8 +116,9 @@ Build on a reviewed RC baseline, in this order:
    The [Python dependency follow-up](docs/releases/python-dependency-remediation.md)
    now clears the locked Python advisories with a fresh matrix and live stack
    verification. The [web follow-up](docs/releases/web-dependency-remediation.md)
-   clears the web audit findings and repairs the locked Prettier hook. API contract
-   corrections and migration/schema disposition are the next implementation work.
+   clears the web audit findings and repairs the locked Prettier hook. The
+   [API response follow-up](docs/releases/api-response-contract.md) corrects the
+   recorded contract gaps; migration/schema disposition is the next implementation work.
 
 **Checkpoints:** after prompt 10, review provenance and scientific validity;
 after prompt 15, require all applicable v1 gates to pass. No release is approved

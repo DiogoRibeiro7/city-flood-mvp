@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from floodmvp.api.openapi import ContractFastAPI
+from floodmvp.api.openapi_examples import MIDDLEWARE_RESPONSES
 from floodmvp.api.routers import (
     analytics,
     assets,
@@ -53,7 +54,9 @@ from floodmvp.storage.db import get_session
 
 configure_logging()
 
-app = ContractFastAPI(title="City Flood MVP API", version="1.0.0-rc1")
+app = ContractFastAPI(
+    title="City Flood MVP API", version="1.0.0-rc1", responses=MIDDLEWARE_RESPONSES
+)
 
 
 class _TokenBucket:

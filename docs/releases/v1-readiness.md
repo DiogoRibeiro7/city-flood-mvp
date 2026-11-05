@@ -3,7 +3,9 @@
 Follow-ups: [Python dependency remediation](python-dependency-remediation.md)
 and [web dependency remediation](web-dependency-remediation.md) clear the recorded
 lockfile findings and broken Prettier hook. The findings below remain the original
-audit record. Publication remains **NO-GO** while API/migration gates are open.
+audit record. The [API response follow-up](api-response-contract.md) addresses
+the recorded G4 media/error/auth declarations and pagination ties. Publication
+remains **NO-GO** pending migration disposition and the final scoped review.
 
 **Recommendation: NO-GO for publishing v1.0.0.** Dependency advisories and
 unresolved migration/API contract differences keep G2, G4 and G6 open. Passing

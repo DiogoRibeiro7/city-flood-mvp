@@ -63,14 +63,65 @@ def test_public_openapi_snapshot_matches_live_routes_and_responses() -> None:
         ("get", "/v1/analytics/jobs/{job_id}/download", "400", "JOB_NOT_READY"),
         ("get", "/v1/analytics/jobs/{job_id}/download", "404", "JOB_NOT_FOUND"),
         ("get", "/v1/analytics/jobs/{job_id}/download", "404", "JOB_FILE_NOT_FOUND"),
+        ("get", "/v1/notes/{note_id}", "404", "NOTE_NOT_FOUND"),
+        ("delete", "/v1/notes/{note_id}", "404", "NOTE_NOT_FOUND"),
+        ("post", "/v1/notes", "404", "CITY_NOT_FOUND"),
+        ("post", "/v1/notes", "404", "ASSET_NOT_FOUND"),
+        ("post", "/v1/notes", "404", "EVENT_NOT_FOUND"),
+        ("get", "/v1/jobs/queue/{job_id}", "404", "JOB_NOT_FOUND"),
+        ("post", "/v1/jobs/queue/{job_id}/retry", "400", "JOB_NOT_RETRYABLE"),
+        ("post", "/v1/jobs/queue/{job_id}/cancel", "400", "JOB_NOT_CANCELLABLE"),
+        ("post", "/v1/telemetry/events:batch", "503", "AUTH_NOT_CONFIGURED"),
     ],
 )
+@pytest.mark.parametrize("spec", [app.openapi(), build_public_spec()], ids=["live", "public"])
 def test_public_openapi_keeps_specific_error_codes(
-    method: str, path: str, status: str, expected_code: str
+    method: str, path: str, status: str, expected_code: str, spec: dict[str, Any]
 ) -> None:
-    spec = build_public_spec()
-
     assert expected_code in _documented_error_codes(spec, method, path, status)
+
+
+@pytest.mark.parametrize("spec", [app.openapi(), build_public_spec()], ids=["live", "public"])
+def test_csv_download_has_only_csv_success_and_json_errors(spec: dict[str, Any]) -> None:
+    responses = spec["paths"]["/v1/analytics/jobs/{job_id}/download"]["get"]["responses"]
+    assert responses["200"]["content"] == {
+        "text/csv": {"schema": {"type": "string", "format": "binary"}}
+    }
+    assert responses["200"]["headers"]["Content-Disposition"]["schema"] == {"type": "string"}
+    for status in ("400", "404", "413", "429", "504"):
+        assert responses[status]["content"]["application/json"]["schema"] == {
+            "$ref": "#/components/schemas/ErrorResponse"
+        }
+
+
+@pytest.mark.parametrize("spec", [app.openapi(), build_public_spec()], ids=["live", "public"])
+def test_every_operation_documents_middleware_rejections(spec: dict[str, Any]) -> None:
+    for path, operations in spec["paths"].items():
+        for method in operations:
+            for status, codes in (
+                ("413", {"REQUEST_TOO_LARGE"}),
+                ("429", {"RATE_LIMITED", "TENANT_RATE_LIMITED"}),
+                ("504", {"REQUEST_TIMEOUT"}),
+            ):
+                assert _documented_error_codes(spec, method, path, status) == codes
+
+
+@pytest.mark.parametrize("spec", [app.openapi(), build_public_spec()], ids=["live", "public"])
+def test_security_distinguishes_deployment_credentials_from_ingest_token(
+    spec: dict[str, Any],
+) -> None:
+    assert spec["security"] == []
+    for path, operations in spec["paths"].items():
+        for operation in operations.values():
+            if path in {"/v1/health", "/metrics"}:
+                assert not operation.get("security")
+            elif path == "/v1/telemetry/events:batch":
+                assert operation["security"] == [{"IngestBearer": []}]
+            else:
+                assert operation["security"] == [{"BearerAuth": []}, {"ApiKeyAuth": []}]
+                assert "JWT takes precedence" in operation["x-deployment-access"]
+                assert {"401", "403", "503"} <= operation["responses"].keys()
+    assert "INGEST_TOKEN" in spec["components"]["securitySchemes"]["IngestBearer"]["description"]
 
 
 def test_export_does_not_modify_fastapi_cached_schema() -> None:

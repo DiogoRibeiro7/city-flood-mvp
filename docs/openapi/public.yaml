@@ -13,6 +13,54 @@ paths:
           content:
             application/json:
               schema: {}
+        '413':
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
   /v1/health:
     get:
       tags:
@@ -29,6 +77,54 @@ paths:
                   type: string
                 type: object
                 title: Response Health V1 Health Get
+        '413':
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
   /v1/cities:
     get:
       tags:
@@ -66,43 +162,91 @@ paths:
               - city_id: city_porto_mvp
                 name: Porto
                 country: PT
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -151,9 +295,59 @@ paths:
                 city_id: city_porto_mvp
                 name: Porto
                 country: PT
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: CITY_NOT_FOUND
@@ -161,44 +355,42 @@ paths:
                   details:
                     city_id: city_missing
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -331,53 +523,101 @@ paths:
                 props:
                   diameter_m: 0.5
                   material: PVC
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: INVALID_ARGUMENT
                   message: bbox must be 'minLon,minLat,maxLon,maxLat'
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Bad Request
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -437,9 +677,59 @@ paths:
                 props:
                   diameter_m: 0.5
                   material: PVC
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: ASSET_NOT_FOUND
@@ -447,44 +737,42 @@ paths:
                   details:
                     asset_id: asset_missing
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -543,9 +831,59 @@ paths:
                 items:
                   $ref: '#/components/schemas/AssetOut'
                 title: Response Asset Upstream V1 Assets  Asset Id  Upstream Get
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: ASSET_NOT_FOUND
@@ -553,44 +891,42 @@ paths:
                   details:
                     asset_id: asset_missing
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -649,9 +985,59 @@ paths:
                 items:
                   $ref: '#/components/schemas/AssetOut'
                 title: Response Asset Downstream V1 Assets  Asset Id  Downstream Get
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: ASSET_NOT_FOUND
@@ -659,44 +1045,42 @@ paths:
                   details:
                     asset_id: asset_missing
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -788,55 +1172,103 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ObservationsEvidenceOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: NOT_FOUND
                   message: Not found
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -883,43 +1315,91 @@ paths:
                 name: heavy_rain_high_river
                 start_ts: '2026-02-01T00:00:00Z'
                 end_ts: '2026-02-02T00:00:00Z'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -977,43 +1457,91 @@ paths:
                 items:
                   $ref: '#/components/schemas/TelemetryQaOut'
                 title: Response Telemetry Qa V1 Telemetry Qa Get
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -1074,53 +1602,101 @@ paths:
               example:
               - fill_ratio
               - flow_m3s
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: SCENARIO_NOT_FOUND
                   message: Scenario not found
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -1230,65 +1806,113 @@ paths:
                 - ts: '2026-02-01T10:05:00Z'
                   value: 0.55
                 request_id: req_example
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: INVALID_ARGUMENT
                   message: '''to'' must be after ''from'''
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Bad Request
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: SCENARIO_NOT_FOUND
                   message: Scenario not found
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -1395,65 +2019,113 @@ paths:
                   compare: 0.55
                   delta: 0.13
                 request_id: req_example
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: INVALID_ARGUMENT
                   message: '''to'' must be after ''from'''
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Bad Request
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: SCENARIO_NOT_FOUND
                   message: Scenario not found
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -1498,8 +2170,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IngestResponse'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '401':
           $ref: '#/components/responses/UnauthorizedBearer'
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: AUTH_NOT_CONFIGURED
+                  message: Ingestion authentication is not configured
+                  details: {}
+                  request_id: req_example
+          description: Service Unavailable
         '400':
           content:
             application/json:
@@ -1515,6 +2247,8 @@ paths:
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: ASSET_NOT_FOUND
@@ -1522,23 +2256,21 @@ paths:
                   details:
                     asset_id: asset_missing
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '409':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: IDEMPOTENCY_CONFLICT
                   message: Idempotency-Key was already used for a different request
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Conflict
       security:
-      - BearerAuth: []
+      - IngestBearer: []
   /v1/jobs/queue:
     get:
       tags:
@@ -1597,41 +2329,89 @@ paths:
                 items:
                   $ref: '#/components/schemas/JobQueueOut'
                 title: Response Queue List V1 Jobs Queue Get
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -1678,41 +2458,101 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobQueueOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: JOB_NOT_FOUND
+                  message: Job not found
+                  details: {}
+                  request_id: req_example
+          description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -1759,44 +2599,102 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobQueueOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: JOB_NOT_RETRYABLE
+                  message: Job not retryable
+                  details: {}
+                  request_id: req_example
+          description: Bad Request
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
-        '400':
-          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
       - ApiKeyAuth: []
@@ -1840,44 +2738,102 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/JobQueueOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: JOB_NOT_CANCELLABLE
+                  message: Job not cancellable
+                  details: {}
+                  request_id: req_example
+          description: Bad Request
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
-        '400':
-          $ref: '#/components/responses/InvalidArgument'
       security:
       - BearerAuth: []
       - ApiKeyAuth: []
@@ -1928,43 +2884,91 @@ paths:
                 hotspots: 0
                 updated_at: '2026-02-02T12:23:13Z'
                 request_id: req_example
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -2027,43 +3031,91 @@ paths:
                   normal: 120
                   watch: 5
                   warning: 1
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -2139,43 +3191,91 @@ paths:
               - asset_id: pipe_123
                 score: 42.5
                 details: {}
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -2232,43 +3332,91 @@ paths:
                 items:
                   $ref: '#/components/schemas/AnalyticsRunOut'
                 title: Response Analytics Runs V1 Analytics Runs Get
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -2338,43 +3486,91 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CalibrationRecommendationOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -2432,43 +3628,91 @@ paths:
                   $ref: '#/components/schemas/CalibrationOverrideOut'
                 title: Response Analytics Calibration Overrides V1 Analytics Calibration
                   Overrides Get
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing API key
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Invalid API key
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -2512,55 +3756,103 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CalibrationOverrideOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: CITY_NOT_FOUND
                   message: City not found
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -2626,43 +3918,91 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnalyticsRunDiffOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           $ref: '#/components/responses/InvalidArgument'
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -2710,29 +4050,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExportJobOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing API key
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Invalid API key
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '400':
           content:
@@ -2774,14 +4162,14 @@ paths:
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -2826,29 +4214,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExportJobOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing API key
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Invalid API key
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '404':
           content:
@@ -2866,14 +4302,14 @@ paths:
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -2915,33 +4351,88 @@ paths:
           title: Authorization
       responses:
         '200':
-          description: Successful Response
+          description: Completed CSV export or CSV report attachment
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              description: Attachment with the export filename
+              schema:
+                type: string
+        '413':
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing API key
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Invalid API key
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '400':
           content:
@@ -2983,14 +4474,14 @@ paths:
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -3037,53 +4528,101 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AnalyticsRunOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '404':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: NOT_FOUND
                   message: Event or run not found
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -3099,6 +4638,12 @@ paths:
       tags:
       - events
       summary: Events
+      description: 'List events by start_ts descending, then event_id ascending for
+        timestamp ties.
+
+
+        Offset pages are deterministic for unchanged data; concurrent writes can shift
+        pages.'
       operationId: events_v1_events_get
       parameters:
       - name: city_id
@@ -3192,53 +4737,101 @@ paths:
                 - pipe_123
                 - pipe_456
                 summary: Overflow risk detected across 2 pipes.
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '400':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: INVALID_ARGUMENT
                   message: '''to'' must be after ''from'''
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Bad Request
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
       security:
       - BearerAuth: []
@@ -3252,6 +4845,12 @@ paths:
       tags:
       - notes
       summary: Notes
+      description: 'List notes by created_at descending, then note_id ascending for
+        timestamp ties.
+
+
+        Offset pages are deterministic for unchanged data; concurrent writes can shift
+        pages.'
       operationId: notes_v1_notes_get
       parameters:
       - name: city_id
@@ -3319,41 +4918,89 @@ paths:
                 items:
                   $ref: '#/components/schemas/NoteOut'
                 title: Response Notes V1 Notes Get
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -3399,53 +5046,117 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NoteOut'
-        '404':
+        '413':
           content:
             application/json:
-              example:
-                error:
-                  code: ASSET_NOT_FOUND
-                  message: Asset not found in city
-                  details: {}
-                  request_id: req_example
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
+        '404':
           description: City, asset or event does not exist in the requested city
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                city_not_found:
+                  value:
+                    error:
+                      code: CITY_NOT_FOUND
+                      message: City not found
+                      details: {}
+                      request_id: req_example
+                asset_not_found:
+                  value:
+                    error:
+                      code: ASSET_NOT_FOUND
+                      message: Asset not found in city
+                      details: {}
+                      request_id: req_example
+                event_not_found:
+                  value:
+                    error:
+                      code: EVENT_NOT_FOUND
+                      message: Event not found in city
+                      details: {}
+                      request_id: req_example
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -3492,41 +5203,101 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NoteOut'
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOTE_NOT_FOUND
+                  message: Note not found
+                  details: {}
+                  request_id: req_example
+          description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -3575,41 +5346,101 @@ paths:
                 additionalProperties:
                   type: string
                 title: Response Remove V1 Notes  Note Id  Delete
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TOO_LARGE
+                  message: Request body too large
+                  details: {}
+                  request_id: req_example
+          description: Request body exceeds configured REQUEST_MAX_BYTES; details
+            includes max_bytes.
+        '429':
+          description: Per-client or tenant request quota exceeded; tenant rejection
+            details includes tenant_id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rate_limited:
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: Too many requests
+                      details: {}
+                      request_id: req_example
+                tenant_rate_limited:
+                  value:
+                    error:
+                      code: TENANT_RATE_LIMITED
+                      message: Tenant request quota exceeded
+                      details: {}
+                      request_id: req_example
+        '504':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: REQUEST_TIMEOUT
+                  message: Request timed out
+                  details: {}
+                  request_id: req_example
+          description: Upload or handler exceeds configured REQUEST_TIMEOUT_S; details
+            includes timeout_s.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: NOTE_NOT_FOUND
+                  message: Note not found
+                  details: {}
+                  request_id: req_example
+          description: Not Found
         '401':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: UNAUTHORIZED
                   message: Missing, invalid or expired credential
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Missing, invalid or expired credential
         '403':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: FORBIDDEN
                   message: Credential, role or deployment tenant is not permitted
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Credential, role or deployment tenant is not permitted
         '503':
           content:
             application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
               example:
                 error:
                   code: AUTH_NOT_CONFIGURED
                   message: Deployment tenant or authentication is not configured
                   details: {}
                   request_id: req_example
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
           description: Deployment tenant or authentication is not configured
         '400':
           $ref: '#/components/responses/InvalidArgument'
@@ -4894,6 +6725,11 @@ components:
       name: X-API-Key
       description: Deployment-scoped legacy key, accepted only when JWT is disabled.
         Never embed in browser code.
+    IngestBearer:
+      type: http
+      scheme: bearer
+      description: Server-to-server INGEST_TOKEN. Deployment JWTs and API keys do
+        not authorize ingestion.
   responses:
     InvalidArgument:
       description: 'INVALID_ARGUMENT: Validation error'

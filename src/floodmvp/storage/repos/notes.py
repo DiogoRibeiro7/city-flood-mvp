@@ -21,7 +21,7 @@ async def list_notes(
         q = q.where(Note.asset_id == asset_id)
     if event_id:
         q = q.where(Note.event_id == event_id)
-    q = q.order_by(desc(Note.created_at)).offset(offset).limit(limit)
+    q = q.order_by(desc(Note.created_at), Note.note_id.asc()).offset(offset).limit(limit)
     res = await session.execute(q)
     return list(res.scalars().all())
 

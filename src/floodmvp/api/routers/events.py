@@ -68,6 +68,10 @@ async def events(
     offset: int = Query(0, ge=0),
     session: AsyncSession = Depends(get_session),
 ) -> list[EventOut]:
+    """List events by start_ts descending, then event_id ascending for timestamp ties.
+
+    Offset pages are deterministic for unchanged data; concurrent writes can shift pages.
+    """
     start = parse_query_timestamp(from_ts, "from")
     end = parse_query_timestamp(to_ts, "to")
     if end <= start:
